@@ -24,4 +24,14 @@ export class EkskulService {
             data: get
         }
     }
+
+    // Join Ekskul
+    async joinEkskul(req: { id: number}, ekskul_id: number){
+        const join = await this.databaseService.connection("member_ekskul")
+        .insert({ user_id: req.id, ekskul_id: ekskul_id, role: 'member'})
+        return {
+            message: "Berhasil Join Ekskul"
+        }
+    }
+
 }
