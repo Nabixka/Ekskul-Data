@@ -7,7 +7,6 @@ exports.up = function(knex) {
     table.increments()
     table.string('name')
     table.text('logo')
-    table.string('link_wa')
   })
 };
 

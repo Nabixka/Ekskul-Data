@@ -13,8 +13,7 @@ export class KegiatanService {
     async getListKegiatanEkskul(ekskul_id: number) {
         const getKegiatan = await this.databaseService.connection("kegiatan")
             .select("id", "title", "description", "location", "waktu")
-            .where("ekskul.id", ekskul_id)
-
+            .where("ekskul_id", ekskul_id)
 
         return {
             message: "Berhasil Mendapatkan List Kegiatan Ekskul",
@@ -22,20 +21,43 @@ export class KegiatanService {
         }
     }
 
+    // Get Detail Kegiatan
+    async getDetailKegiatan(kegiatan_id: number){
+        const getDetail = await this.databaseService.connection("kegiatan")
+        .select("id", "title", "description", "location", "waktu")
+        .where({id: kegiatan_id})
+
+        const finalPayload = {
+            id: getDetail.id,
+            title: getDetail.title,
+            description: getDetail.description,
+            location: getDetail.location,
+            waktu: getDetail.waktu
+        }
+
+        return {
+            message: "Berhasil Mendapatkan Detail Kegiatan",
+            data: finalPayload
+        }
+    }
+
     // Create Kegiatan
     async createKegiatan(
-        req: { id: number },
+        // req: { id: number },
         ekskul_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ) {
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
+        
+        const date = new Date(Number(data.waktu) * 1000)
+        const isoDate = date.toISOString()
 
-        const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
-        if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
+        // const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
+        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
 
-        const insertKegiatan = await this.databaseService.connection("kegiatan")
-            .insert({ ekskul_id: ekskul_id, title: data.title, description: data.description, location: data.location, waktu: data.waktu })
-            .returning("*")
+        const [insertKegiatan] = await this.databaseService.connection("kegiatan")
+            .insert({ ekskul_id: ekskul_id, title: data.title, description: data.description, location: data.location, waktu: isoDate })
+            .returning(["id", "title", "description", "location", "waktu"])
 
         return {
             message: "Berhasil Membuat Kegiatan",
@@ -71,9 +93,9 @@ export class KegiatanService {
     }
 
     // Delete Kegiatan
-    async deleteKegiatan(id: number, req: { id: number }) {
-        const isCorrectRole = await this.validateRole.checkRole(req.id, id)
-        if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
+    async deleteKegiatan(id: number, /* req: { id: number } */) {
+        // const isCorrectRole = await this.validateRole.checkRole(req.id, id)
+        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
 
         const deleteKegiatan = await this.databaseService.connection("kegiatan").delete().where("id", id)
 
