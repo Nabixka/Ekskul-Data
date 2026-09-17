@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
 import { ValidateKegiatanExist } from 'src/Pipe/ValidateKegiatanExist';
 import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
+import { AuthGuard } from 'src/auth/AuthGuard';
 
 @Controller('kegiatan')
 export class KegiatanController {
@@ -9,6 +10,7 @@ export class KegiatanController {
 
   // List Kegiatan
   @Get('/ekskul/:ekskul_id')
+  @UseGuards(AuthGuard)
   getListKegiatanByEkskul(
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ){
@@ -17,6 +19,7 @@ export class KegiatanController {
 
   // Detail Kegiatan
   @Get('/:kegiatan_id')
+  @UseGuards(AuthGuard)
   getDetailKegiatan(
     @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string
   ){
@@ -25,28 +28,36 @@ export class KegiatanController {
 
   // Create Kegiatan
   @Post('/ekskul/:ekskul_id')
+  @UseGuards(AuthGuard)
   createKegiatan(
+    @Request() req,
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
     @Body() data: { title: string, description: string, location: string, waktu: string}
   ){
-    return this.kegiatanService.createKegiatan(Number(ekskul_id), data)
+    return this.kegiatanService.createKegiatan(req.user, Number(ekskul_id), data)
   }
 
   // Update Kegiatan
-  @Put('/kegiatan_id')
+  @Put('/kegiatan_id/ekskul/:ekskul_id')
+  @UseGuards(AuthGuard)
   updateKegiatan(
+    @Request() req,
     @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
     @Body() data: { title: string, description: string, location: string, waktu: string}
   ){
-    return this.kegiatanService.updateKegiatan(Number(kegiatan_id), data)
+    return this.kegiatanService.updateKegiatan(req.user, Number(ekskul_id), Number(kegiatan_id), data)
   }
 
   // Delete Kegiatan
-  @Delete('/:kegiatan_id')
+  @Delete('/:kegiatan_id/ekskul/:ekskul_id')
+  @UseGuards(AuthGuard)
   deleteKegiatan(
-    @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string
+    @Request() req,
+    @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ){
-    return this.kegiatanService.deleteKegiatan(Number(kegiatan_id))
+    return this.kegiatanService.deleteKegiatan(req.user, Number(kegiatan_id), Number(ekskul_id))
   }
 
 }

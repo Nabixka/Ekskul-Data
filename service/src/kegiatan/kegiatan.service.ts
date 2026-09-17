@@ -1,13 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { ValidateRole } from 'src/Pipe/ValidateRole';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class KegiatanService {
     constructor(
         private readonly databaseService: DatabaseService,
-        private readonly validateRole: ValidateRole
-    ) { }
+        private readonly userService: UserService
+    ) {}
 
     // Get List Kegiatan
     async getListKegiatanEkskul(ekskul_id: number) {
@@ -43,17 +43,18 @@ export class KegiatanService {
 
     // Create Kegiatan
     async createKegiatan(
-        // req: { id: number },
+        req: { id: number },
         ekskul_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ) {
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
         
+        // Apakah Humas
+        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
+
         const date = new Date(Number(data.waktu) * 1000)
         const isoDate = date.toISOString()
-
-        // const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
-        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
 
         const [insertKegiatan] = await this.databaseService.connection("kegiatan")
             .insert({ ekskul_id: ekskul_id, title: data.title, description: data.description, location: data.location, waktu: isoDate })
@@ -67,14 +68,16 @@ export class KegiatanService {
 
     // Update Kegiatan
     async updateKegiatan(
-        // req: { id: number },
+        req: { id: number },
+        ekskul_id: number,
         kegiatan_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ){
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
 
-        // const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
-        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
+        // Apakah Humas
+        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const updateKegiatan = await this.databaseService.connection("kegiatan")
         .update({ title: data.title, description: data.description, location: data.location, waktu: data.waktu })
@@ -92,9 +95,10 @@ export class KegiatanService {
     }
 
     // Delete Kegiatan
-    async deleteKegiatan(id: number, /* req: { id: number } */) {
-        // const isCorrectRole = await this.validateRole.checkRole(req.id, id)
-        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
+    async deleteKegiatan(req: { id: number }, id: number, ekskul_id: number) {
+        // Apakah Humas
+        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const deleteKegiatan = await this.databaseService.connection("kegiatan").delete().where("id", id)
 
@@ -102,4 +106,5 @@ export class KegiatanService {
             message: "Berhasil Menghapus Kegiatan"
         }
     }
+
 }

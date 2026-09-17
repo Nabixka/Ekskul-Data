@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { EkskulService } from './ekskul.service';
 import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
+import { AuthGuard } from 'src/auth/AuthGuard';
 
 
 @Controller('ekskul')
@@ -12,12 +13,14 @@ export class EkskulController {
 
   // Get All Ekskul
   @Get()
+  @UseGuards(AuthGuard)
   getAllEkskul() {
     return this.ekskulService.getAllEkskul()
   }
 
   // Get One Ekskul
   @Get('/:ekskul_id')
+  @UseGuards(AuthGuard)
   getOneEkskul(
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ) {
@@ -26,6 +29,7 @@ export class EkskulController {
 
   // Create Ekskul
   @Post()
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('logo', {
       storage: diskStorage({
@@ -39,22 +43,26 @@ export class EkskulController {
     })
   )
   createEkskul(
+    @Request() req,
     @Body('name') name: string ,
     @UploadedFile() logo: Express.Multer.File,
   ) {
-    return this.ekskulService.createEkskul(name, logo)
+    return this.ekskulService.createEkskul(req.user, name, logo)
   }
 
   // Delete Ekskul
   @Delete('/:ekskul_id')
+  @UseGuards(AuthGuard)
   deleteEkskul(
+    @Request() req,
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ) {
-    return this.ekskulService.deleteEKskul(Number(ekskul_id))
+    return this.ekskulService.deleteEkskul(req.user, Number(ekskul_id))
   }
 
   // Join Ekskul
   @Post('/:ekskul_id/join')
+  @UseGuards(AuthGuard)
   joinEkskul(
     @Request() req,
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string

@@ -10,8 +10,8 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async jwtHelper(data: {name: string, nis: number}){
-        const payload = { name: data.name, nis: data.nis }
+    async jwtHelper(data: {id: number, name: string, nis: number}){
+        const payload = { id: data.id, name: data.name, nis: data.nis }
         return await this.jwtService.signAsync(payload)
     }
 
@@ -44,7 +44,7 @@ export class AuthService {
         const hashPassword = await bcrypt.hash(data.password, 10)
         const [register] = await this.databaseService.connection("users")
         .insert({name: data.name, nis: data.nis, password: hashPassword})
-        .returning(["name", "nis"])
+        .returning(["id", "name", "nis"])
 
         return {
             access_token: await this.jwtHelper(register)
