@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
 import { ValidateKegiatanExist } from 'src/Pipe/ValidateKegiatanExist';
 import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
@@ -30,6 +30,15 @@ export class KegiatanController {
     @Body() data: { title: string, description: string, location: string, waktu: string}
   ){
     return this.kegiatanService.createKegiatan(Number(ekskul_id), data)
+  }
+
+  // Update Kegiatan
+  @Put('/kegiatan_id')
+  updateKegiatan(
+    @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
+    @Body() data: { title: string, description: string, location: string, waktu: string}
+  ){
+    return this.kegiatanService.updateKegiatan(Number(kegiatan_id), data)
   }
 
   // Delete Kegiatan

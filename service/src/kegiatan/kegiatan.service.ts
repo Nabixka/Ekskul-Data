@@ -67,15 +67,14 @@ export class KegiatanService {
 
     // Update Kegiatan
     async updateKegiatan(
-        req: { id: number },
-        ekskul_id: number,
+        // req: { id: number },
         kegiatan_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ){
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
 
-        const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
-        if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
+        // const isCorrectRole = await this.validateRole.checkRole(req.id, ekskul_id)
+        // if (isCorrectRole.role != "Humas") throw new ForbiddenException("Maaf Anda Bukan Humas")
 
         const updateKegiatan = await this.databaseService.connection("kegiatan")
         .update({ title: data.title, description: data.description, location: data.location, waktu: data.waktu })
