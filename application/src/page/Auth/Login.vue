@@ -14,46 +14,47 @@ const router = useRouter()
 
 const handleLogin = async () => {
     isLoading.value = true
+    message.value = ''
+
     try {
         const res = await api.post('/auth/login', { nis: nis.value, password: password.value })
-            .then((response) => {
-                localStorage.setItem('token', response.data.access_token)
-            })
-            .then((navigate) => {
-                router.push('/dashboard')
-            })
-            .catch((error) => {
-                console.log(error)
-            })
         localStorage.setItem('token', res.data.access_token)
+        router.push('/dashboard')
     }
     catch (error) {
+        message.value = error.response.data?.message || "Terjadi Kesalahan Pada Sistem"
     }
     finally {
         isLoading.value = false
     }
+
 }
 
 </script>
 
 <template>
-    <section class="w-full min-h-screen flex">
+    <section class="w-full min-h-screen flex flex-col lg:flex-row">
         <aside
-            class="w-4/7 bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] min-h-screen flex items-center justify-center pr-5">
+            class="w-full lg:w-4/7 bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] pb-3 lg:min-h-screen flex flex-col lg:flex-row items-center justify-center lg:pr-5">
             <!-- Logo -->
             <img class="w-40" src="/logo.png">
-            <span class="flex flex-col gap-2">
-                <h1 class="text-white text-3xl font-bold">Pelaporan Data Ekstrakurikuler</h1>
+            <span class="flex flex-col gap-2 items-center">
+                <h1 class="text-white text-2xl lg:text-3xl font-bold">Pelaporan Data Ekstrakurikuler</h1>
                 <h5 class="text-white/90">Kelola data ekskul dengan lebih mudah, cepat, dan terorganisir</h5>
             </span>
         </aside>
 
-        <main class="w-3/7 bg-white min-h-screen flex justify-center items-center flex-col p-5 gap-5">
-            <div class="w-2/3 flex flex-col gap-5">
+        <main class="w-full lg:w-3/7 pt-25 lg:pt-0 bg-white lg:min-h-screen flex justify-center items-center flex-col p-5 gap-5">
+            <div class="lg:w-2/3 flex flex-col gap-5">
                 <!-- Title -->
                 <span class="flex flex-col gap-2">
                     <h3 class="text-3xl font-bold text-[#1D4ED8]">Selamat Datang</h3>
                     <h5 class="text-[#60A5FA] font-semibold">Masuk ke akun Anda untuk melanjutkan ke sistem Ekskul </h5>
+
+                    <div v-if="message"
+                        class="pl-2 py-2 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                        {{ message }}
+                    </div>
                 </span>
 
                 <!-- Form -->
@@ -69,8 +70,8 @@ const handleLogin = async () => {
                     <!-- Password -->
                     <div class="flex flex-col gap-1">
                         <label class="text-[#1D4ED8]">Password</label>
-                        <input required v-model="password" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
-                            placeholder="Masukkan Password">
+                        <input required v-model="password" class="py-2 p-2 border-2 border-gray-200 rounded-lg"
+                            type="text" placeholder="Masukkan Password">
                     </div>
 
                     <button :disabled="isLoading"
@@ -80,8 +81,7 @@ const handleLogin = async () => {
 
                 <!-- Register -->
                 <span class="justify-center flex text-[#60A5FA] gap-1 items-center">Belum punya akun?
-                    <RouterLink
-                        to="/auth/register" class="text-[#1D4ED8] font-semibold hover:cursor-pointer">Register
+                    <RouterLink to="/auth/register" class="text-[#1D4ED8] font-semibold hover:cursor-pointer">Register
                     </RouterLink>
                 </span>
             </div>
