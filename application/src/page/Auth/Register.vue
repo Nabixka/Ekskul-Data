@@ -3,11 +3,13 @@ import { ref } from 'vue';
 import { api } from '../../api';
 import { useRouter } from 'vue-router';
 
+const registerPayload = ref({
+    name: '',
+    nis: '',
+    password: ''
+})
 
-const nis = ref('')
-const password = ref('')
 const isLoading = ref(false)
-
 const message = ref('')
 
 const router = useRouter()
@@ -15,7 +17,7 @@ const router = useRouter()
 const handleLogin = async () => {
     isLoading.value = true
     try {
-        const res = await api.post('/auth/login', { nis: nis.value, password: password.value })
+        const res = await api.post('/auth/register', registerPayload.value)
             .then((response) => {
                 localStorage.setItem('token', response.data.access_token)
             })
@@ -52,24 +54,32 @@ const handleLogin = async () => {
             <div class="w-2/3 flex flex-col gap-5">
                 <!-- Title -->
                 <span class="flex flex-col gap-2">
-                    <h3 class="text-3xl font-bold text-[#1D4ED8]">Selamat Datang</h3>
-                    <h5 class="text-[#60A5FA] font-semibold">Masuk ke akun Anda untuk melanjutkan ke sistem Ekskul </h5>
+                    <h3 class="text-3xl font-bold text-[#1D4ED8]">Buat Akun</h3>
+                    <h5 class="text-[#60A5FA] font-semibold">Daftar untuk mulai menggunakan sistem pelaporan data ekskul
+                    </h5>
                 </span>
 
                 <!-- Form -->
                 <form @submit.prevent="handleLogin" class="flex flex-col gap-5">
 
+                    <!-- Nama -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[#1D4ED8]">Nama Lengkap</label>
+                        <input required v-model="registerPayload.name" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
+                            placeholder="Masukkan Nama Lengkap">
+                    </div>
+
                     <!-- Nis -->
                     <div class="flex flex-col gap-1">
                         <label class="text-[#1D4ED8]">NIS</label>
-                        <input required v-model="nis" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
+                        <input required v-model="registerPayload.nis" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
                             placeholder="Masukkan NIS">
                     </div>
 
                     <!-- Password -->
                     <div class="flex flex-col gap-1">
                         <label class="text-[#1D4ED8]">Password</label>
-                        <input required v-model="password" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
+                        <input required v-model="registerPayload.password" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="password"
                             placeholder="Masukkan Password">
                     </div>
 
@@ -79,9 +89,9 @@ const handleLogin = async () => {
                 </form>
 
                 <!-- Register -->
-                <span class="justify-center flex text-[#60A5FA] gap-1 items-center">Belum punya akun?
-                    <RouterLink
-                        to="/auth/register" class="text-[#1D4ED8] font-semibold hover:cursor-pointer">Register
+                <span class="justify-center flex text-[#60A5FA] gap-1 items-center">Sudah punya akun?
+                    <RouterLink 
+                        to="/auth/login" class="text-[#1D4ED8] font-semibold">Login
                     </RouterLink>
                 </span>
             </div>

@@ -7,7 +7,8 @@ exports.up = function(knex) {
     table.increments()
     table.string('name')
     table.integer('nis'),
-    table.text('password')
+    table.text('password'),
+    table.boolean('is_admin').defaultTo(false)
   })
 };
 

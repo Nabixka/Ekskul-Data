@@ -43,10 +43,11 @@ export class KegiatanService {
 
     // Create Kegiatan
     async createKegiatan(
-        req: { id: number },
+        req: { id: number, is_admin: boolean },
         ekskul_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ) {
+        if(req.is_admin !== false) throw new ForbiddenException("Osis Tidak Dapat Membuat Kegiatan")
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
         
         // Apakah Humas
@@ -68,19 +69,23 @@ export class KegiatanService {
 
     // Update Kegiatan
     async updateKegiatan(
-        req: { id: number },
+        req: { id: number, is_admin: boolean },
         ekskul_id: number,
         kegiatan_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ){
+        if(req.is_admin !== false) throw new ForbiddenException("Osis Tidak Dapat Membuat Kegiatan")
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
 
         // Apakah Humas
         const isHumas = await this.userService.getRole(req.id, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
+        const date = new Date(Number(data.waktu) * 1000)
+        const isoDate = date.toISOString()
+
         const updateKegiatan = await this.databaseService.connection("kegiatan")
-        .update({ title: data.title, description: data.description, location: data.location, waktu: data.waktu })
+        .update({ title: data.title, description: data.description, location: data.location, waktu: isoDate })
         .where({ id: kegiatan_id })
 
         const getUpdate = await this.databaseService.connection("kegiatan")
@@ -95,7 +100,11 @@ export class KegiatanService {
     }
 
     // Delete Kegiatan
-    async deleteKegiatan(req: { id: number }, id: number, ekskul_id: number) {
+    async deleteKegiatan(
+        req: { id: number}, 
+        id: number, 
+        ekskul_id: number
+    ){
         // Apakah Humas
         const isHumas = await this.userService.getRole(req.id, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")

@@ -10,13 +10,14 @@ export class AuthService {
         private jwtService: JwtService
     ) {}
 
-    async jwtHelper(data: {id: number, name: string, nis: number}){
-        const payload = { id: data.id, name: data.name, nis: data.nis }
+    async jwtHelper(data: {id: number, name: string, nis: number, is_admin: boolean }){
+        const payload = { id: data.id, name: data.name, nis: data.nis, is_admin: data.is_admin }
         return await this.jwtService.signAsync(payload)
     }
 
     async login(data: { nis: number, password: string}){
         if(!data.nis || !data.password) throw new BadRequestException("Harap Isi Semua Data")
+        if(isNaN(data.nis)) throw new BadRequestException("NIS Harus Angka")
         
         const exist = await this.databaseService.connection("users")
         .select("*")
@@ -34,6 +35,7 @@ export class AuthService {
 
     async register(data: {name: string, nis: number, password: string} ){
         if(!data.name || !data.nis || !data.password) throw new BadRequestException("Harap Isi Semua Data")
+        if(isNaN(data.nis)) throw new BadRequestException("NIS Harus Angka")
         
         const exist = await this.databaseService.connection("users")
         .select("nis")
@@ -43,8 +45,8 @@ export class AuthService {
         
         const hashPassword = await bcrypt.hash(data.password, 10)
         const [register] = await this.databaseService.connection("users")
-        .insert({name: data.name, nis: data.nis, password: hashPassword})
-        .returning(["id", "name", "nis"])
+        .insert({name: data.name, nis: data.nis, password: hashPassword, is_admin: false})
+        .returning(["id", "name", "nis", "is_admin"])
 
         return {
             access_token: await this.jwtHelper(register)

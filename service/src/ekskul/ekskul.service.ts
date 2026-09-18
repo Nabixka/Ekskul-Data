@@ -48,10 +48,8 @@ export class EkskulService {
     }
 
     // Create Ekskul
-    async createEkskul(req: { id: number }, name: string, logo: Express.Multer.File){
-        // Apakah Osis
-        const checkRole = await this.userService.getRole(req.id)
-        if(checkRole != "Osis") throw new ForbiddenException("Anda Tidak Berhak")
+    async createEkskul(req: { id: number, is_admin: boolean }, name: string, logo: Express.Multer.File){
+        if(req.is_admin !== true) throw new ForbiddenException("Hanya Osis Yang Dapat Melakukannya")
 
         if(!name || !logo) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
 
@@ -65,10 +63,8 @@ export class EkskulService {
     }
 
     // Delete Ekskul
-    async deleteEkskul(req: { id: number }, id: number){
-        // Apakah Osis
-        const checkRole = await this.userService.getRole(req.id)
-        if(checkRole != "Osis") throw new ForbiddenException("Anda Tidak Berhak")
+    async deleteEkskul(req: { id: number, is_admin: boolean }, id: number){
+        if(req.is_admin !== true) throw new ForbiddenException("Hanya Osis Yang Dapat Melakukannya")
 
         const del = await this.databaseService.connection("ekskul").delete().where({id: id})
 
@@ -78,7 +74,9 @@ export class EkskulService {
     }
 
     // Join Ekskul
-    async joinEkskul(req: { id: number}, ekskul_id: number){
+    async joinEkskul(req: { id: number, is_admin: boolean}, ekskul_id: number){
+        if(req.is_admin !== false) throw new ForbiddenException("Osis Mana Boleh Join Pake Akun Ini")
+            
         // Apakah Sudah Join
         const isAlreadyJoin = await this.userService.getRole(req.id, ekskul_id)
         if(isAlreadyJoin) throw new ConflictException("Anda Sudah Menjadi Anggota")
