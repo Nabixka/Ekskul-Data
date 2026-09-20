@@ -31,9 +31,9 @@ export class EkskulController {
   @Post()
   @UseGuards(AuthGuard)
   @UseInterceptors(
-    FileInterceptor('logo', {
+    FileInterceptor('banner', {
       storage: diskStorage({
-        destination: './uploads/ekskul/logo',
+        destination: './uploads/ekskul/banner',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
           const ext = extname(file.originalname)
@@ -45,9 +45,9 @@ export class EkskulController {
   createEkskul(
     @Request() req,
     @Body('name') name: string ,
-    @UploadedFile() logo: Express.Multer.File,
+    @UploadedFile() banner: Express.Multer.File,
   ) {
-    return this.ekskulService.createEkskul(req.user, name, logo)
+    return this.ekskulService.createEkskul(req.user, name, banner)
   }
 
   // Delete Ekskul

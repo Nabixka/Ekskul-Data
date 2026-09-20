@@ -6,7 +6,8 @@ exports.up = function(knex) {
   return knex.schema.createTable('ekskul', function(table){
     table.increments()
     table.string('name')
-    table.text('logo')
+    table.text('banner')
+    table.enum('bidang', ['Ketuhanan', 'Bela Negara', 'Teknologi', 'PJOK', 'Seni', 'Pendidikan'])
   })
 };
 

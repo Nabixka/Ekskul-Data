@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { api } from '../../api';
 import { useRouter } from 'vue-router';
 
@@ -27,8 +27,14 @@ const handleLogin = async () => {
     finally {
         isLoading.value = false
     }
-
 }
+
+onMounted(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+        router.push('/dashboard')
+    }
+})
 
 </script>
 

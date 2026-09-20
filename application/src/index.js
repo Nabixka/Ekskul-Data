@@ -2,6 +2,7 @@ import { createWebHistory, createRouter } from "vue-router";
 import Dashboard from "./page/MainPage/Dashboard.vue";
 import Login from "./page/Auth/Login.vue";
 import Register from "./page/Auth/Register.vue";
+import ListEkskul from "./page/MainPage/ListEkskul.vue";
 
 const routes = [
     {
@@ -15,7 +16,6 @@ const routes = [
         path: '/auth/login',
         name: "Login",
         component: Login,
-        meta: { showBar: false }
     },
     {
         path: '/auth/register',
@@ -28,7 +28,14 @@ const routes = [
     {
         path: '/dashboard',
         name: 'Dashboard',
-        component: Dashboard
+        component: Dashboard,
+        meta: { showBar: true }
+    },
+    {
+        path: '/list-ekskul',
+        name: "List Ekskul",
+        component: ListEkskul,
+        meta: { showBar: true }
     }
 
 ]

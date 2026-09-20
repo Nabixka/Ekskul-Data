@@ -48,13 +48,13 @@ export class EkskulService {
     }
 
     // Create Ekskul
-    async createEkskul(req: { id: number, is_admin: boolean }, name: string, logo: Express.Multer.File){
+    async createEkskul(req: { id: number, is_admin: boolean }, name: string, banner: Express.Multer.File){
         if(req.is_admin !== true) throw new ForbiddenException("Hanya Osis Yang Dapat Melakukannya")
 
-        if(!name || !logo) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
+        if(!name || !banner) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
 
-        const path = `/uploads/ekskul/logo/${logo.filename}`
-        const [create] = await this.databaseService.connection("ekskul").insert({ name: name, logo: path}).returning("*")
+        const path = `/uploads/ekskul/banner/${banner.filename}`
+        const [create] = await this.databaseService.connection("ekskul").insert({ name: name, banner: path}).returning("*")
 
         return {
             message: "Berhasil Membuat Ekskul",
