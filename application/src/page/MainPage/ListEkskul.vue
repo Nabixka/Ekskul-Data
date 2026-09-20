@@ -2,8 +2,10 @@
 import { ref, onMounted, computed } from 'vue';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
+import { useRouter } from 'vue-router';
 
 const API_URL = import.meta.env.VITE_API_URL
+const router = useRouter()
 
 const listEkskul = ref([])
 const searchEkskul = ref('')
@@ -37,12 +39,12 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="w-full flex justify-end min-h-screen bg-slate-50 font-sans">
+    <div class="w-full flex justify-end min-h-screen bg-slate-50">
         <div class="w-7/9 bg-slate-100 p-8 flex flex-col gap-6">
 
             <!-- Header Section -->
             <header
-                class="bg-gradient-to-br from-blue-600 to-blue-400 p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
+                class="bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
                 <span class="text-white/80 text-sm font-medium">Halo,</span>
                 <h1 class="font-bold text-2xl tracking-tight">Selamat Datang di List Ekskul</h1>
                 <p class="text-white/90 text-sm mt-1">
@@ -90,7 +92,7 @@ onMounted(() => {
 
                 <!-- Content Grid -->
                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="list in filteredEkskul" :key="list.id"
+                    <button @click="router.push(`/ekskul/${list.id}`)" v-for="list in filteredEkskul" :key="list.id"
                         class="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer">
                         <!-- Card Banner with Zoom Effect -->
                         <div class="w-full h-44 overflow-hidden relative bg-slate-100">
@@ -118,7 +120,7 @@ onMounted(() => {
                                 <Icon class="w-4 h-4" icon="grommet-icons:form-next" />
                             </div>
                         </div>
-                    </div>
+                    </button>
                 </div>
             </main>
         </div>

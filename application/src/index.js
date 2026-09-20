@@ -3,6 +3,7 @@ import Dashboard from "./page/MainPage/Dashboard.vue";
 import Login from "./page/Auth/Login.vue";
 import Register from "./page/Auth/Register.vue";
 import ListEkskul from "./page/MainPage/ListEkskul.vue";
+import EkskulDetail from "./page/MainPage/EkskulDetail.vue";
 
 const routes = [
     {
@@ -35,6 +36,12 @@ const routes = [
         path: '/list-ekskul',
         name: "List Ekskul",
         component: ListEkskul,
+        meta: { showBar: true }
+    },
+    {
+        path: '/ekskul/:id',
+        name: "Ekskul Detail",
+        component: EkskulDetail,
         meta: { showBar: true }
     }
 
