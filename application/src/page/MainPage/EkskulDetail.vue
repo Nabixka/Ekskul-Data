@@ -47,9 +47,9 @@ onMounted(() => {
 
 <template>
     <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="w-7/9 bg-slate-100 p-8 flex gap-6">
+        <div class="w-full lg:w-7/9 bg-slate-100 p-8 flex flex-col lg:flex-row gap-6">
 
-            <main class="w-5/6">
+            <main class="w-full lg:w-5/6">
 
                 <!-- Banner -->
                 <header :style="{ backgroundImage: `url(${API_URL}${ekskulDetail.ekskul?.banner})` }"
@@ -63,7 +63,7 @@ onMounted(() => {
 
             </main>
 
-            <aside class="w-1/6">
+            <aside class="w-full lg:w-1/6">
                 <button @click="handleJoinEkskul()" class="bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] text-white w-full rounded-lg py-1 font-semibold">Join Ekskul</button>
             </aside>
 
