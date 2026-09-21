@@ -29,6 +29,7 @@ export class AuthService {
         if(!comparePassword) throw new BadRequestException("Password Salah")
         
         return {
+            is_admin: exist.is_admin,
             access_token: await this.jwtHelper(exist)
         }
     }
@@ -49,6 +50,7 @@ export class AuthService {
         .returning(["id", "name", "nis", "is_admin"])
 
         return {
+            is_admin: register.is_admin,
             access_token: await this.jwtHelper(register)
         }
     }

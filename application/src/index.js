@@ -4,6 +4,9 @@ import Login from "./page/Auth/Login.vue";
 import Register from "./page/Auth/Register.vue";
 import ListEkskul from "./page/MainPage/ListEkskul.vue";
 import EkskulDetail from "./page/MainPage/EkskulDetail.vue";
+import DashboardAdmin from "./page/Admin/Dashboard.vue";
+import ListEkskulAdmin from "./page/Admin/ListEkskul.vue";
+import EkskulDetailAdmin from "./page/Admin/EkskulDetail.vue";
 
 const routes = [
     {
@@ -25,7 +28,7 @@ const routes = [
     },
 
 
-    // 
+    // Member
     {
         path: '/dashboard',
         name: 'Dashboard',
@@ -42,6 +45,26 @@ const routes = [
         path: '/ekskul/:id',
         name: "Ekskul Detail",
         component: EkskulDetail,
+        meta: { showBar: true }
+    },
+
+    // Admin
+    {
+        path: '/admin/dashboard',
+        name: "Dashboard Admin",
+        component: DashboardAdmin,
+        meta: { showBar: true }
+    },
+    {
+        path: '/admin/list-ekskul',
+        name: "List Ekskul Admin",
+        component: ListEkskulAdmin,
+        meta: { showBar: true }
+    },
+    {
+        path: '/admin/ekskul/:id',
+        name: "Ekskul Detail Admin",
+        component: EkskulDetailAdmin,
         meta: { showBar: true }
     }
 

@@ -19,7 +19,12 @@ const handleLogin = async () => {
     try {
         const res = await api.post('/auth/login', { nis: nis.value, password: password.value })
         localStorage.setItem('token', res.data.access_token)
-        router.push('/dashboard')
+        if(res.data.is_admin === true){
+            router.push('/admin/dashboard')
+        }
+        else{
+            router.push('/dashboard')
+        }
     }
     catch (error) {
         message.value = error.response.data?.message || "Terjadi Kesalahan Pada Sistem"

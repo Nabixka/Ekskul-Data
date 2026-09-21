@@ -20,14 +20,14 @@ export class EkskulService {
     }
 
     // Get One Ekskul
-    async getOneEkskul(id: number){
+    async getDetailEKskul(id: number){
         const getEkskul = await this.databaseService.connection("ekskul")
         .select("*")
         .where({id: id})
         .first()
         
         const getListMember = await this.databaseService.connection("member_ekskul")
-        .innerJoin("users", "users.id", "member_ekskul.user_id")
+        .innerJoin("users", "users.nis", "member_ekskul.nis_user")
         .select({
             name: "users.name",
             nis: "users.nis",
@@ -48,13 +48,13 @@ export class EkskulService {
     }
 
     // Create Ekskul
-    async createEkskul(req: { id: number, is_admin: boolean }, name: string, banner: Express.Multer.File){
-        if(req.is_admin !== true) throw new ForbiddenException("Hanya Osis Yang Dapat Melakukannya")
+    async createEkskul(req: { is_admin: boolean }, name: string, banner: Express.Multer.File, bidang: string){
+        if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")
 
-        if(!name || !banner) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
+        if(!name || !banner || !bidang) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
 
         const path = `/uploads/ekskul/banner/${banner.filename}`
-        const [create] = await this.databaseService.connection("ekskul").insert({ name: name, banner: path}).returning("*")
+        const [create] = await this.databaseService.connection("ekskul").insert({ name: name, banner: path, bidang: bidang}).returning("*")
 
         return {
             message: "Berhasil Membuat Ekskul",
@@ -63,8 +63,8 @@ export class EkskulService {
     }
 
     // Delete Ekskul
-    async deleteEkskul(req: { id: number, is_admin: boolean }, id: number){
-        if(req.is_admin !== true) throw new ForbiddenException("Hanya Osis Yang Dapat Melakukannya")
+    async deleteEkskul(req: { is_admin: boolean }, id: number){
+        if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")
 
         const del = await this.databaseService.connection("ekskul").delete().where({id: id})
 
@@ -74,16 +74,16 @@ export class EkskulService {
     }
 
     // Join Ekskul
-    async joinEkskul(req: { id: number, is_admin: boolean}, ekskul_id: number){
-        if(req.is_admin !== false) throw new ForbiddenException("Osis Mana Boleh Join Pake Akun Ini")
+    async joinEkskul(req: { nis: number, is_admin: boolean}, ekskul_id: number){
+        if(req.is_admin !== false) throw new ForbiddenException("Sekolah Mana Boleh Join Pake Akun Ini")
             
         // Apakah Sudah Join
-        const isAlreadyJoin = await this.userService.getRole(req.id, ekskul_id)
+        const isAlreadyJoin = await this.userService.getRole(req.nis, ekskul_id)
         if(isAlreadyJoin) throw new ConflictException("Anda Sudah Menjadi Anggota")
 
         // Join
         const join = await this.databaseService.connection("member_ekskul")
-        .insert({ user_id: req.id, ekskul_id: ekskul_id, role: 'Member'})
+        .insert({ nis_user: req.nis, ekskul_id: ekskul_id, role: 'Member'})
 
 
         return {

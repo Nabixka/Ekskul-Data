@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
 
 const listNav = ref([
     {
@@ -17,12 +17,25 @@ const listNav = ref([
         path: "/list-ekskul",
         icon: "fluent:people-community-24-filled"
     }
-]);
+])
+
+const adminList = ref([
+    {
+        name: "Dashboard",
+        path: "/admin/dashboard",
+        icon: "ant-design:home-filled" 
+    },
+    {
+        name: "List Ekskul",
+        path: "/admin/list-ekskul",
+        icon: "fluent:people-community-24-filled"
+    }
+])
 
 const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/');
-};
+    localStorage.removeItem('token')
+    router.push('/')
+}
 </script>
 
 <template>
@@ -38,7 +51,15 @@ const handleLogout = () => {
 
             <!-- Menu List -->
             <div class="flex flex-col gap-2 w-full">
-                <router-link v-for="list in listNav" :key="list.path"
+                <router-link v-if="route.path.startsWith('/admin')" v-for="list in adminList"
+                    :class="route.path.startsWith(list.path) ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white'"
+                    class="flex items-center gap-3 w-full py-2.5 px-4 font-medium rounded-xl transition-all"
+                    :to="list.path">
+                    <Icon width="20" :icon="list.icon" />
+                    <span>{{ list.name }}</span>
+                </router-link>
+
+                <router-link v-else v-for="list in listNav" :key="list.path"
                     :class="route.path.startsWith(list.path) ? 'bg-white/20 text-white shadow-sm' : 'text-white/80 hover:bg-white/10 hover:text-white'"
                     class="flex items-center gap-3 w-full py-2.5 px-4 font-medium rounded-xl transition-all"
                     :to="list.path">

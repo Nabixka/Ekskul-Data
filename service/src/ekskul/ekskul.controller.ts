@@ -21,10 +21,10 @@ export class EkskulController {
   // Get One Ekskul
   @Get('/:ekskul_id')
   @UseGuards(AuthGuard)
-  getOneEkskul(
+  getDetailEkskul(
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ) {
-    return this.ekskulService.getOneEkskul(Number(ekskul_id))
+    return this.ekskulService.getDetailEKskul(Number(ekskul_id))
   }
 
   // Create Ekskul
@@ -45,9 +45,10 @@ export class EkskulController {
   createEkskul(
     @Request() req,
     @Body('name') name: string ,
+    @Body('bidang') bidang: string,
     @UploadedFile() banner: Express.Multer.File,
   ) {
-    return this.ekskulService.createEkskul(req.user, name, banner)
+    return this.ekskulService.createEkskul(req.user, name, banner, bidang)
   }
 
   // Delete Ekskul
