@@ -240,7 +240,7 @@ onMounted(() => {
 
                 <!-- Content Grid -->
                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <button @click="router.push(`/ekskul/${list.id}`)" v-for="list in filteredEkskul" :key="list.id"
+                    <button @click="router.push(`/admin/ekskul/${list.id}`)" v-for="list in filteredEkskul" :key="list.id"
                         class="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer">
                         <!-- Card Banner with Zoom Effect -->
                         <div class="w-full h-44 overflow-hidden relative bg-slate-100">

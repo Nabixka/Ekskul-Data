@@ -71,4 +71,12 @@ export class EkskulController {
     return this.ekskulService.joinEkskul(req.user, Number(ekskul_id))
   }
 
+  // Get All Member
+  @Get('/:ekskul_id/member')
+  getAllMember(
+    @Request() req,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
+  ){
+    return this.ekskulService.getAllMember(req.user, Number(ekskul_id))
+  }
 }

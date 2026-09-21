@@ -8,6 +8,7 @@ exports.up = function(knex) {
     table.string('name')
     table.text('banner')
     table.enum('bidang', ['Ketuhanan', 'Bela Negara', 'Teknologi', 'PJOK', 'Seni', 'Pendidikan'])
+    table.text('about')
   })
 };
 

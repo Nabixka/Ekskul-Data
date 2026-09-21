@@ -33,7 +33,8 @@ export class EkskulService {
             nis: "users.nis",
             role: "member_ekskul.role"
         })
-        .where({ekskul_id: id})
+        .where({ekskul_id: id, role: "Pembina"})
+        .orWhere({ekskul_id: id, role: "Ketua"})
     
 
         if(!getEkskul) throw new NotFoundException("Ekskul Tidak Ada")
@@ -88,6 +89,22 @@ export class EkskulService {
 
         return {
             message: "Berhasil Join Ekskul"
+        }
+    }
+
+    // Get All Member
+    async getAllMember(req: { nis: number, is_admin: boolean}, ekskul_id: number){
+        const getMember = await this.databaseService.connection("member_ekskul")
+        .innerJoin("users", "users.nis", "member_ekskul.nis_user")
+        .select({
+            nis: "users.nis",
+            member_name: "users.name",
+        })
+        .where({ ekskul_id: ekskul_id})
+
+        return {
+            message: "Berhasil Mendapatkan Seluruh Member",
+            data: getMember
         }
     }
 
