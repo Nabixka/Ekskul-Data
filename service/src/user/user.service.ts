@@ -43,7 +43,6 @@ export class UserService {
 
     // Change Role Member EKskul
     async changeRoleUser(req: { nis: number, is_admin: boolean}, data: { ekskul: number, nis: number, incomingRole: string } ){
-        const isCorrectEkskul = await this.getRole(data.nis, data.ekskul)
 
         const updateRole = await this.databaseService.connection("member_ekskul")
         .update({ role: data.incomingRole })

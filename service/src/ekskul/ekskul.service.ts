@@ -99,6 +99,7 @@ export class EkskulService {
         .select({
             nis: "users.nis",
             member_name: "users.name",
+            role: "member_ekskul.role"
         })
         .where({ ekskul_id: ekskul_id})
 
