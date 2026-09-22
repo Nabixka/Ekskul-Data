@@ -38,6 +38,10 @@ const getEkskul = async () => {
         listEkskul.value = res.data.data
     }
     catch (error) {
+        if(error.response.status === 401){
+            localStorage.removeItem('token')
+            router.push('/')
+        }   
         message.value = error.response?.data?.message || 'Terjadi Kesalahan Pada Server'
     }
     finally {

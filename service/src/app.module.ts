@@ -3,8 +3,9 @@ import { UserModule } from './user/user.module';
 import { EkskulModule } from './ekskul/ekskul.module';
 import { KegiatanModule } from './kegiatan/kegiatan.module';
 import { AuthModule } from './auth/auth.module';
+import { DokumentasiModule } from './dokumentasi/dokumentasi.module';
 
 @Module({
-  imports: [UserModule, EkskulModule, KegiatanModule, AuthModule]
+  imports: [UserModule, EkskulModule, KegiatanModule, AuthModule, DokumentasiModule]
 })
 export class AppModule {}
