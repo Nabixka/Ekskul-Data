@@ -16,7 +16,12 @@ const listNav = ref([
         name: "List Ekskul",
         path: "/list-ekskul",
         icon: "fluent:people-community-24-filled"
-    }
+    },
+    {
+        name: "My Ekskul",
+        path: "/my-ekskul",
+        icon: "akar-icons:folder"
+    },
 ])
 
 const adminList = ref([
@@ -42,7 +47,7 @@ const handleLogout = () => {
     
     <!-- Dekstop -->
     <nav
-        class="hidden md:flex flex-col justify-between fixed left-0 top-0 bottom-0 bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] shadow-xl z-50 w-2/9 p-5 text-white">
+        class="hidden md:flex flex-col justify-between fixed left-0 top-0 bottom-0 bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] shadow-xl z-50 w-1/5 p-5 text-white">
         <div class="flex flex-col gap-10 w-full">
             <!-- Logo -->
             <div class="flex justify-center py-2">

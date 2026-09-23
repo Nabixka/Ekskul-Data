@@ -8,11 +8,11 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(AuthGuard)
-  @Get('profile')
+  @Get('/member/dashboard')
   getProfile(
     @Request() req
   ){
-    return this.userService.getProfil(req.user)
+    return this.userService.getDashboardMember(req.user)
   }
 
   @Put('/change-role')
@@ -22,5 +22,14 @@ export class UserController {
     @Body() data: { ekskul: number, nis: number, incomingRole: string }
   ){
     return this.userService.changeRoleUser(req.user, data)
+  }
+
+  // Dashboard Admin
+  @Get('/admin/dashboard')
+  @UseGuards(AuthGuard)
+  getDashboardAdmin(
+    @Request() req,
+  ){
+    return this.userService.getDashboardAdmin(req.user)
   }
 }

@@ -40,7 +40,7 @@ onMounted(() => {
 
 <template>
     <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="lg:w-7/9 bg-slate-100 p-8 flex flex-col gap-6">
+        <div class="lg:w-4/5 bg-slate-100 p-8 flex flex-col gap-6">
 
             <!-- Header Section -->
             <header

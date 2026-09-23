@@ -47,7 +47,7 @@ onMounted(() => {
 
 <template>
     <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="w-full lg:w-7/9 bg-slate-100 p-8 flex flex-col lg:flex-row gap-6">
+        <div class="w-full lg:w-4/5 bg-slate-100 p-8 flex flex-col lg:flex-row gap-6">
 
             <main class="w-full lg:w-5/6">
 

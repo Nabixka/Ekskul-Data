@@ -8,5 +8,6 @@ import { UserService } from 'src/user/user.service';
   imports: [DatabaseModule],
   controllers: [EkskulController],
   providers: [EkskulService, UserService],
+  exports: [EkskulService]
 })
 export class EkskulModule {}
