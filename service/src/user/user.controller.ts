@@ -7,6 +7,7 @@ import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // Dashboard Member
   @UseGuards(AuthGuard)
   @Get('/member/dashboard')
   getProfile(
@@ -31,5 +32,14 @@ export class UserController {
     @Request() req,
   ){
     return this.userService.getDashboardAdmin(req.user)
+  }
+
+  // Get My Ekskul
+  @Get('/member/ekskul')
+  @UseGuards(AuthGuard)
+  getMyEkskul(
+    @Request() req
+  ){
+    return this.userService.getMyEkskul(req.user)
   }
 }

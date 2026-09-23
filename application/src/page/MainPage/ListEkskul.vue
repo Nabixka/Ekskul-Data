@@ -44,10 +44,15 @@ onMounted(() => {
 
             <!-- Header Section -->
             <header
-                class="bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
-                <span class="text-white/80 text-sm font-medium">Halo,</span>
-                <h1 class="font-bold text-2xl tracking-tight">Selamat Datang di List Ekskul</h1>
-                <p class="text-white/90 text-sm mt-1">
+                class="bg-gradient-to-b from-[#1D4ED8] to-[#60A5FA] p-6 md:p-8 rounded-2xl shadow-md text-white flex flex-col gap-3">
+                <span
+                    class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full w-fit">
+                    Selamat Datang
+                </span>
+                <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
+                    Jelajahi Potensi & Minatmu Bersama Kami
+                </h1>
+                <p class="text-white/90 text-sm max-w-2xl">
                     Cari ekstrakurikuler yang ada dan temukan ekskul yang Anda minati untuk bergabung.
                 </p>
             </header>

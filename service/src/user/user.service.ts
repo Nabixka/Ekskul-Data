@@ -1,5 +1,6 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
+import { getMyEkskulMapping } from 'src/Mapping/EkskulMapping';
 import { ProfilMapping } from 'src/Mapping/ProfilMapping';
 
 @Injectable()
@@ -18,7 +19,7 @@ export class UserService {
         return get
     }
 
-    // Get My Profil
+    // Dashboard Member
     async getDashboardMember(req: { id: number, name: string, nis: number, is_admin: boolean}){
         if(req.is_admin == true) throw new ForbiddenException("Anda Tidak Berhak Akses Dashboard Member")
         const getMyEkskul = await this.databaseService.connection("member_ekskul")
@@ -77,6 +78,28 @@ export class UserService {
                 kegiatan: mappingKegiatan.length,
                 dokumentasi: mappingDokumentasi.length
             }
+        }
+    }
+
+    // Get My Ekskul
+    async getMyEkskul(req: { nis: number, is_admin: boolean}){
+        const getEkskul = await this.databaseService.connection("member_ekskul")
+        .innerJoin("ekskul", "ekskul.id", "member_ekskul.ekskul_id")
+        .select({
+            id: "member_ekskul.id",
+            ekskul_id: "ekskul.id",
+            ekskul_name: "ekskul.name",
+            ekskul_banner: "ekskul.banner",
+            ekskul_bidang: "ekskul.bidang",
+            ekskul_about: "ekskul.about",
+
+            role: "member_ekskul.role"
+        })
+        .where({ nis_user: req.nis})
+
+        return {
+            message: "Berhasil Mendapatkan Ekskul Anda",
+            data: getEkskul.map(getMyEkskulMapping)
         }
     }
 
