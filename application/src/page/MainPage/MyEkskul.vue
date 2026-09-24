@@ -2,8 +2,10 @@
 import { onMounted, ref, computed } from 'vue';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
+import { useRouter } from 'vue-router';
 
 const API_URL = import.meta.env.VITE_API_URL
+const router = useRouter()
 
 const ekskulList = ref([])
 const message = ref('')
@@ -12,7 +14,7 @@ const isLoading = ref(true)
 const getMyEkskul = async () => {
     isLoading.value = true
     try {
-        const res = await api.get('/user/member/ekskul')
+        const res = await api.get('/member/ekskul')
         ekskulList.value = res.data.data || []
     } catch (error) {
         message.value = error.response?.data?.message || 'Terjadi kesalahan saat mengambil data ekskul.'
@@ -76,7 +78,7 @@ onMounted(() => {
 
             <!-- Grid List Ekskul -->
             <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div v-for="item in ekskulList" :key="item.id"
+                <div @click="router.push(`/my-ekskul/${item.id}`)" v-for="item in ekskulList" :key="item.id"
                     class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 flex flex-col hover:shadow-md transition-shadow duration-200">
                     <!-- Banner Head -->
                     <div class="relative h-44 bg-slate-200 overflow-hidden">

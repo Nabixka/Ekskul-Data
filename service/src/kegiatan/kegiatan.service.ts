@@ -1,12 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { UserService } from 'src/user/user.service';
+import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class KegiatanService {
     constructor(
         private readonly databaseService: DatabaseService,
-        private readonly userService: UserService
+        private readonly roleService: RoleService
     ) {}
 
     // Get List Kegiatan
@@ -51,7 +51,7 @@ export class KegiatanService {
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
         
         // Apakah Humas
-        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        const isHumas = await this.roleService.getRole(req.id, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const date = new Date(Number(data.waktu) * 1000)
@@ -78,7 +78,7 @@ export class KegiatanService {
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
 
         // Apakah Humas
-        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        const isHumas = await this.roleService.getRole(req.id, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const date = new Date(Number(data.waktu) * 1000)
@@ -106,7 +106,7 @@ export class KegiatanService {
         ekskul_id: number
     ){
         // Apakah Humas
-        const isHumas = await this.userService.getRole(req.id, ekskul_id)
+        const isHumas = await this.roleService.getRole(req.id, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const deleteKegiatan = await this.databaseService.connection("kegiatan").delete().where("id", id)

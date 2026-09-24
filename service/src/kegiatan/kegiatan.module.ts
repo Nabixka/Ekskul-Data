@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
 import { KegiatanController } from './kegiatan.controller';
 import { DatabaseModule } from 'src/database/database.module';
-import { UserService } from 'src/user/user.service';
+import { RoleModule } from 'src/role/role.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, RoleModule],
   controllers: [KegiatanController],
-  providers: [KegiatanService, UserService],
+  providers: [KegiatanService],
+  exports: [KegiatanService]
 })
 export class KegiatanModule {}

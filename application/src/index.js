@@ -8,6 +8,7 @@ import DashboardAdmin from "./page/Admin/Dashboard.vue";
 import ListEkskulAdmin from "./page/Admin/ListEkskul.vue";
 import EkskulDetailAdmin from "./page/Admin/EkskulDetail.vue";
 import MyEkskul from "./page/MainPage/MyEkskul.vue";
+import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
 
 const routes = [
     {
@@ -52,6 +53,12 @@ const routes = [
         path: '/my-ekskul',
         name: "My Ekskul",
         component: MyEkskul,
+        meta: { showBar: true }
+    },
+    {
+        path: '/my-ekskul/:id',
+        name: "My Ekskul Detail",
+        component: MyEkskulDetail,
         meta: { showBar: true }
     },
     

@@ -1,12 +1,12 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { UserService } from 'src/user/user.service';
+import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class EkskulService {
     constructor(
         private readonly databaseService: DatabaseService,
-        private readonly userService: UserService
+        private readonly roleService: RoleService
     ) {}
 
     // Get All Ekskul
@@ -79,7 +79,7 @@ export class EkskulService {
         if(req.is_admin !== false) throw new ForbiddenException("Sekolah Mana Boleh Join Pake Akun Ini")
             
         // Apakah Sudah Join
-        const isAlreadyJoin = await this.userService.getRole(req.nis, ekskul_id)
+        const isAlreadyJoin = await this.roleService.getRole(req.nis, ekskul_id)
         if(isAlreadyJoin) throw new ConflictException("Anda Sudah Menjadi Anggota")
 
         // Join

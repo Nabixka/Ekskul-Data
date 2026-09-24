@@ -1,9 +1,11 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
 import { formatDate } from '../../helper';
 
+const router = useRouter()
 const API_URL = import.meta.env.VITE_API_URL
 
 const dashboardInformation = ref({
@@ -13,18 +15,38 @@ const dashboardInformation = ref({
 })
 
 const message = ref('')
+const errorCode = ref(null)
 const isLoading = ref(true)
 
 const getDashboard = async () => {
     isLoading.value = true
+    message.value = ''
+    errorCode.value = null
+
     try {
-        const res = await api.get('/user/member/dashboard')
+        const res = await api.get('/member/dashboard')
         dashboardInformation.value = res.data.data
     } catch (error) {
-        message.value = error.response?.data?.message || 'Terjadi kesalahan pada server.'
+        const status = error.response?.status
+        errorCode.value = status
+
+        if (status === 401) {
+            router.push('/login')
+            return
+        }
+
+        if (status === 500) {
+            message.value = 'Terjadi kesalahan pada server internal. Silakan coba beberapa saat lagi.'
+        } else {
+            message.value = error.response?.data?.message || 'Gagal memuat data dashboard. Periksa koneksi internet Anda.'
+        }
     } finally {
         isLoading.value = false
     }
+}
+
+const handleRetry = () => {
+    getDashboard()
 }
 
 const getEkskulById = (ekskulId) => {
@@ -37,26 +59,68 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="w-full min-h-screen bg-slate-100 flex justify-end">
+    <div class="w-full min-h-screen bg-slate-100 flex justify-end relative">
         <main class="w-full lg:w-4/5 p-4 md:p-8 flex flex-col gap-6">
 
-            <!-- State Loading -->
-            <div v-if="isLoading" class="flex items-center justify-center min-h-[400px]">
-                <div class="flex items-center gap-3 text-slate-500 font-medium">
-                    <Icon icon="line-md:loading-loop" width="32" class="text-blue-600" />
-                    <span>Memuat data dashboard...</span>
+            <!-- State Loading: Skeleton Loader -->
+            <template v-if="isLoading">
+                <!-- Skeleton Header -->
+                <div class="animate-pulse bg-slate-200 p-6 md:p-8 rounded-2xl flex flex-col gap-3 h-48 justify-between">
+                    <div class="h-6 bg-slate-300 rounded-full w-48"></div>
+                    <div class="space-y-2">
+                        <div class="h-8 bg-slate-300 rounded-lg w-3/4"></div>
+                        <div class="h-4 bg-slate-300 rounded-lg w-1/2"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- State Error -->
-            <div v-else-if="message"
-                class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3">
-                <Icon icon="lucide:alert-circle" width="24" />
-                <p>{{ message }}</p>
-            </div>
+                <!-- Skeleton Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div v-for="i in 2" :key="i"
+                        class="animate-pulse bg-white rounded-xl p-5 shadow-sm border border-slate-200/60 flex items-center gap-4">
+                        <div class="w-14 h-14 bg-slate-200 rounded-xl"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-3 bg-slate-200 rounded w-24"></div>
+                            <div class="h-6 bg-slate-200 rounded w-12"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skeleton Main Grid Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Skeleton Left Column: Kegiatan Terbaru -->
+                    <div
+                        class="animate-pulse lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 flex flex-col gap-5">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div class="h-6 bg-slate-200 rounded w-40"></div>
+                            <div class="h-4 bg-slate-200 rounded w-20"></div>
+                        </div>
+
+                        <!-- Skeleton Items Kegiatan -->
+                        <div class="flex flex-col gap-4">
+                            <div v-for="i in 3" :key="i" class="flex gap-4 items-center">
+                                <div class="w-16 h-16 bg-slate-200 rounded-xl shrink-0"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-4 bg-slate-200 rounded w-1/3"></div>
+                                    <div class="h-5 bg-slate-200 rounded w-2/3"></div>
+                                    <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Right Column: Ekskul Saya -->
+                    <div
+                        class="animate-pulse bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 flex flex-col gap-5">
+                        <div class="h-6 bg-slate-200 rounded w-32 border-b border-slate-100 pb-4"></div>
+                        <div class="flex flex-col gap-3">
+                            <div v-for="i in 2" :key="i" class="h-28 bg-slate-200 rounded-xl w-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </template>
 
             <!-- Main Content -->
-            <template v-else>
+            <template v-else-if="!message">
                 <!-- Header Section -->
                 <header
                     class="bg-gradient-to-b from-[#1D4ED8] to-[#60A5FA] p-6 md:p-8 rounded-2xl shadow-sm text-white flex flex-col gap-3">
@@ -127,7 +191,6 @@ onMounted(() => {
                             <div v-for="kegiatan in dashboardInformation.kegiatan" :key="kegiatan.id"
                                 class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-4 justify-between sm:items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors">
                                 <div class="flex gap-4 items-start sm:items-center">
-                                    <!-- Thumbnail Gambar dari Ekskul -->
                                     <div
                                         class="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/60 relative">
                                         <img v-if="getEkskulById(kegiatan.ekskul_id)?.banner"
@@ -176,25 +239,20 @@ onMounted(() => {
                             Ekskul Saya
                         </h3>
 
-                        <!-- Empty State Ekskul -->
                         <div v-if="!dashboardInformation.ekskul?.length" class="text-center py-8 text-slate-400">
                             <Icon icon="lucide:folder-open" width="40" class="mx-auto mb-2 opacity-50" />
                             <p class="text-sm">Kamu belum bergabung di ekskul manapun.</p>
                         </div>
 
-                        <!-- List Ekskul Card -->
                         <div v-else class="flex flex-col gap-3">
                             <div v-for="ekskul in dashboardInformation.ekskul" :key="ekskul.id"
                                 class="relative rounded-xl overflow-hidden h-28 group border border-slate-200/60">
-                                <!-- Background Image -->
                                 <img :src="`${API_URL}${ekskul.banner}`" :alt="ekskul.name"
                                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                <!-- Gradient Overlay -->
                                 <div
                                     class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent">
                                 </div>
 
-                                <!-- Content Overlay -->
                                 <div class="relative z-10 p-3.5 h-full flex flex-col justify-between text-white">
                                     <div class="flex justify-between items-start gap-2">
                                         <span
@@ -218,5 +276,38 @@ onMounted(() => {
             </template>
 
         </main>
+
+        <!-- Modal Error Dialog -->
+        <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+            <div v-if="message"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                <div
+                    class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 flex flex-col items-center text-center gap-4">
+                    <div
+                        class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                        <Icon icon="lucide:alert-triangle" width="30" />
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <h3 class="text-lg font-bold text-slate-800">
+                            {{ errorCode === 500 ? 'Kesalahan Server' : 'Gagal Memuat Data' }}
+                        </h3>
+                        <p class="text-sm text-slate-600">
+                            {{ message }}
+                        </p>
+                    </div>
+
+                    <div class="w-full flex gap-3 mt-2">
+                        <button @click="handleRetry"
+                            class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                            <Icon icon="lucide:refresh-cw" width="16" />
+                            Coba Lagi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
     </div>
 </template>
