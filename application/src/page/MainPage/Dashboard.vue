@@ -31,8 +31,8 @@ const getDashboard = async () => {
         errorCode.value = status
 
         if (status === 401) {
+            localStorage.removeItem('token')
             router.push('/login')
-            return
         }
 
         if (status === 500) {
@@ -157,7 +157,7 @@ onMounted(() => {
                         <div>
                             <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Agenda Kegiatan</p>
                             <h2 class="text-2xl font-bold text-slate-800">{{ dashboardInformation.kegiatan?.length || 0
-                                }}</h2>
+                            }}</h2>
                         </div>
                     </div>
                 </section>

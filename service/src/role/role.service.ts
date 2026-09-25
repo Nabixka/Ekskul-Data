@@ -6,13 +6,13 @@ export class RoleService {
     constructor(private databaseService: DatabaseService) {}
 
     // Get Role
-    async getRole(nis_user: number, ekskul_id){
+    async getRole(nis_user: number, ekskul_id: number){
         const get = await this.databaseService.connection("member_ekskul")
         .select("role")
         .where({nis_user: nis_user, ekskul_id: ekskul_id})
         .first()
 
-        return get
+        return get.role
     }
 
     // Change Role Member EKskul

@@ -43,7 +43,7 @@ export class KegiatanService {
 
     // Create Kegiatan
     async createKegiatan(
-        req: { id: number, is_admin: boolean },
+        req: { nis: number, is_admin: boolean },
         ekskul_id: number,
         data: { title: string, description: string, location: string, waktu: string }
     ) {
@@ -51,10 +51,11 @@ export class KegiatanService {
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
         
         // Apakah Humas
-        const isHumas = await this.roleService.getRole(req.id, ekskul_id)
+        const isHumas = await this.roleService.getRole(req.nis, ekskul_id)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
-        const date = new Date(Number(data.waktu) * 1000)
+
+        const date = new Date(data.waktu)
         const isoDate = date.toISOString()
 
         const [insertKegiatan] = await this.databaseService.connection("kegiatan")
@@ -79,6 +80,7 @@ export class KegiatanService {
 
         // Apakah Humas
         const isHumas = await this.roleService.getRole(req.id, ekskul_id)
+        console.log(isHumas)
         if(isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
 
         const date = new Date(Number(data.waktu) * 1000)
