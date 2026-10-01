@@ -37,7 +37,7 @@ const handleLogin = async () => {
 <template>
     <section class="w-full min-h-screen flex flex-col lg:flex-row">
         <aside
-            class="w-full lg:w-4/7 bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] pb-3 lg:min-h-screen flex flex-col lg:flex-row items-center justify-center lg:pr-5">
+            class="w-full lg:w-4/7 bg-linear-to-br from-[#F43F5E] to-[#D9387A] pb-3 lg:min-h-screen flex flex-col lg:flex-row items-center justify-center lg:pr-5">
             <!-- Logo -->
             <img class="w-40" src="/logo.png">
             <span class="flex flex-col gap-2">
@@ -50,8 +50,8 @@ const handleLogin = async () => {
             <div class="w-2/3 flex flex-col gap-5">
                 <!-- Title -->
                 <span class="flex flex-col gap-2">
-                    <h3 class="text-3xl font-bold text-[#1D4ED8]">Buat Akun</h3>
-                    <h5 class="text-[#60A5FA] font-semibold">Daftar untuk mulai menggunakan sistem pelaporan data ekskul
+                    <h3 class="text-3xl font-bold text-[#E0234E]">Buat Akun</h3>
+                    <h5 class="text-[#B4234E] font-semibold">Daftar untuk mulai menggunakan sistem pelaporan data ekskul
                     </h5>
 
                     <div v-if="message"
@@ -65,34 +65,34 @@ const handleLogin = async () => {
 
                     <!-- Nama -->
                     <div class="flex flex-col gap-1">
-                        <label class="text-[#1D4ED8]">Nama Lengkap</label>
+                        <label class="text-[#E0234E]">Nama Lengkap</label>
                         <input required v-model="registerPayload.name" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
                             placeholder="Masukkan Nama Lengkap">
                     </div>
 
                     <!-- Nis -->
                     <div class="flex flex-col gap-1">
-                        <label class="text-[#1D4ED8]">NIS</label>
+                        <label class="text-[#E0234E]">NIS</label>
                         <input required v-model="registerPayload.nis" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
                             placeholder="Masukkan NIS">
                     </div>
 
                     <!-- Password -->
                     <div class="flex flex-col gap-1">
-                        <label class="text-[#1D4ED8]">Password</label>
+                        <label class="text-[#E0234E]">Password</label>
                         <input required v-model="registerPayload.password" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="password"
                             placeholder="Masukkan Password">
                     </div>
 
                     <button :disabled="isLoading"
-                        :class="isLoading ? 'from-[#7fa5f5] to-[#007dc1] hover:cursor-progress' : 'hover:cursor-pointer from-[#1D4ED8] to-[#60A5FA]'"
+                        :class="isLoading ? 'from-[#fda4b8] to-[#9f1239] hover:cursor-progress' : 'hover:cursor-pointer from-[#F43F5E] to-[#D9387A]'"
                         class="text-white font-semibold bg-linear-to-br rounded-lg py-2">Login</button>
                 </form>
 
                 <!-- Register -->
-                <span class="justify-center flex text-[#60A5FA] gap-1 items-center">Sudah punya akun?
+                <span class="justify-center flex text-[#B4234E] gap-1 items-center">Sudah punya akun?
                     <RouterLink 
-                        to="/auth/login" class="text-[#1D4ED8] font-semibold">Login
+                        to="/auth/login" class="text-[#E0234E] font-semibold">Login
                     </RouterLink>
                 </span>
             </div>

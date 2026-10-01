@@ -64,7 +64,7 @@ onMounted(() => {
             </main>
 
             <aside class="w-full lg:w-1/6">
-                <button @click="handleJoinEkskul()" class="bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] text-white w-full rounded-lg py-1 font-semibold">Join Ekskul</button>
+                <button @click="handleJoinEkskul()" class="bg-linear-to-br from-[#F43F5E] to-[#D9387A] text-white w-full rounded-lg py-1 font-semibold">Join Ekskul</button>
             </aside>
 
         </div>

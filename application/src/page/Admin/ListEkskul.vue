@@ -109,7 +109,7 @@ onMounted(() => {
         <div class="flex justify-center items-center min-h-screen">
             <div class="absolute z-51 rounded-lg overflow-hidden w-1/3">
                 <!-- Card Header -->
-                <div class="bg-[#1D4ED8] p-3">
+                <div class="bg-[#E0234E] p-3">
                     <h3 class="text-white font-semibold">Form Tambah Ekskul</h3>
                 </div>
 
@@ -172,7 +172,7 @@ onMounted(() => {
                     <div class="flex justify-end gap-3 p-3">
                         <button @click="modelCreate = false"
                             class="border border-slate-400 px-5 py-1 rounded-lg">Batal</button>
-                        <button class="bg-[#1D4ED8] px-5 py-1 rounded-lg font-semibold text-white">Tambah</button>
+                        <button class="bg-[#E0234E] px-5 py-1 rounded-lg font-semibold text-white">Tambah</button>
                     </div>
                 </form>
             </div>
@@ -185,7 +185,7 @@ onMounted(() => {
 
             <!-- Header Section -->
             <header
-                class="bg-linear-to-br from-[#1D4ED8] to-[#60A5FA] p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
+                class="bg-linear-to-br from-[#F43F5E] to-[#D9387A] p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
                 <span class="text-white/80 text-sm font-medium">Halo,</span>
                 <h1 class="font-bold text-2xl tracking-tight">Selamat Datang di Panel List Ekskul</h1>
                 <p class="text-white/90 text-sm mt-1">

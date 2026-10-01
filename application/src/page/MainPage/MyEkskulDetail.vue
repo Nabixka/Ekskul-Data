@@ -201,34 +201,7 @@ const availableMonths = computed(() => {
 })
 
 const downloadLaporanKegiatan = () => {
-  if (filteredKegiatan.value.length === 0) {
-    alert("Tidak ada data kegiatan yang dapat diunduh.")
-    return
-  }
-
-  let csvContent = "data:text/csv;charset=utf-8,No,Judul Kegiatan,Waktu,Lokasi,Status,Deskripsi\n"
-  
-  filteredKegiatan.value.forEach((item, index) => {
-    const statusText = getKegiatanStatus(item.waktu) === 'upcoming' ? 'Akan Datang' : 'Selesai'
-    const cleanDesc = (item.description || '').replace(/[\n\r]+/g, ' ')
-    const row = [
-      index + 1,
-      `"${item.title || ''}"`,
-      `"${formatDate(item.waktu)}"`,
-      `"${item.location || ''}"`,
-      `"${statusText}"`,
-      `"${cleanDesc}"`
-    ]
-    csvContent += row.join(",") + "\n"
-  })
-
-  const encodedUri = encodeURI(csvContent)
-  const link = document.createElement("a")
-  link.setAttribute("href", encodedUri)
-  link.setAttribute("download", `Laporan_Kegiatan_${ekskulDetail.value.name || 'Ekskul'}.csv`)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  console.log()
 }
 
 const filteredKegiatan = computed(() => {
@@ -267,7 +240,7 @@ onMounted(() => {
 
       <!-- Header Section -->
       <header :style="ekskulDetail.banner ? { backgroundImage: `url(${API_URL}${ekskulDetail.banner})` } : {}"
-        class="bg-cover bg-center rounded-2xl shadow-md text-white relative overflow-hidden h-52 bg-gradient-to-r from-blue-700 to-indigo-800">
+        class="bg-cover bg-center rounded-2xl shadow-md text-white relative overflow-hidden h-52 bg-gradient-to-r from-nest-700 to-nest-950">
 
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
 
@@ -293,7 +266,7 @@ onMounted(() => {
       <!-- Stat Overview Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#1D4ED8] rounded-xl">
+          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:users" width="24" />
           </div>
           <div>
@@ -303,7 +276,7 @@ onMounted(() => {
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#1D4ED8] rounded-xl">
+          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:calendar" width="24" />
           </div>
           <div>
@@ -313,7 +286,7 @@ onMounted(() => {
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#1D4ED8] rounded-xl">
+          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:wallet" width="24" />
           </div>
           <div>
@@ -328,7 +301,7 @@ onMounted(() => {
         class="bg-white rounded-xl p-1.5 shadow-sm border border-slate-200/60 flex items-center gap-1 overflow-x-auto">
         <button v-for="section in listSection" :key="section.name" @click="handleChangeSection(section.name)" :class="[
           'px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap',
-          currentSection === section.name ? 'bg-[#1D4ED8] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          currentSection === section.name ? 'bg-[#E0234E] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
         ]">
           <Icon :icon="section.icon" width="16" />
           {{ section.name }}
@@ -342,7 +315,7 @@ onMounted(() => {
         <!-- Indicator Loading -->
         <div v-if="isLoading"
           class="absolute inset-0 bg-white/70 backdrop-blur-[1px] rounded-2xl flex items-center justify-center z-10">
-          <div class="flex items-center gap-2 text-[#1D4ED8] font-medium text-sm">
+          <div class="flex items-center gap-2 text-[#E0234E] font-medium text-sm">
             <Icon icon="lucide:loader-2" class="animate-spin" width="20" />
             Memuat data...
           </div>
@@ -351,7 +324,7 @@ onMounted(() => {
         <!-- TAB: ABOUT -->
         <div v-if="currentSection === 'About'" class="flex flex-col gap-4">
           <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-            <Icon icon="lucide:info" class="text-[#1D4ED8]" />
+            <Icon icon="lucide:info" class="text-[#E0234E]" />
             Tentang {{ ekskulDetail.name }}
           </h3>
           <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
@@ -362,7 +335,7 @@ onMounted(() => {
         <!-- TAB: ANGGOTA -->
         <div v-else-if="currentSection === 'Anggota'" class="flex flex-col gap-4">
           <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-            <Icon icon="lucide:users" class="text-[#1D4ED8]" />
+            <Icon icon="lucide:users" class="text-[#E0234E]" />
             Daftar Pengurus & Anggota
           </h3>
 
@@ -375,14 +348,14 @@ onMounted(() => {
             <div v-for="member in listAnggota" :key="member.id || member.nis"
               class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
               <div
-                class="w-10 h-10 rounded-full bg-blue-100 text-[#1D4ED8] flex items-center justify-center font-bold text-sm shrink-0">
+                class="w-10 h-10 rounded-full bg-blue-100 text-[#E0234E] flex items-center justify-center font-bold text-sm shrink-0">
                 {{ member.member_name ? member.member_name.charAt(0).toUpperCase() : 'A' }}
               </div>
               <div class="overflow-hidden">
                 <h4 class="font-semibold text-slate-800 text-sm truncate">{{ member.member_name }}</h4>
                 <p class="text-xs text-slate-400">NIS: {{ member.nis }}</p>
                 <span
-                  class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md bg-[#1D4ED8]/10 text-[#1D4ED8] font-semibold">
+                  class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md bg-[#E0234E]/10 text-[#E0234E] font-semibold">
                   {{ member.role }}
                 </span>
               </div>
@@ -396,7 +369,7 @@ onMounted(() => {
           <!-- Header & Tombol Aksi (Tambah & Download) -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Icon icon="lucide:calendar-range" class="text-[#1D4ED8]" />
+              <Icon icon="lucide:calendar-range" class="text-[#E0234E]" />
               Agenda Kegiatan
             </h3>
 
@@ -520,7 +493,7 @@ onMounted(() => {
         <!-- TAB: DOKUMENTASI -->
         <div v-else-if="currentSection === 'Dokumentasi'" class="flex flex-col gap-4">
           <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-            <Icon icon="lucide:image" class="text-[#1D4ED8]" />
+              <Icon icon="lucide:image" class="text-[#E0234E]" />
             Galeri Dokumentasi Kegiatan
           </h3>
 
@@ -550,11 +523,11 @@ onMounted(() => {
         <div v-else-if="currentSection === 'Kas'" class="flex flex-col gap-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Icon icon="lucide:wallet" class="text-[#1D4ED8]" />
+              <Icon icon="lucide:wallet" class="text-[#E0234E]" />
               Laporan Transaksi Kas
             </h3>
             <span class="text-sm font-medium text-slate-600 saldo-kas">
-              Saldo Saat Ini: <strong class="text-[#1D4ED8] font-bold">{{ formatRupiah(ekskulDetail.kas) }}</strong>
+              Saldo Saat Ini: <strong class="text-[#E0234E] font-bold">{{ formatRupiah(ekskulDetail.kas) }}</strong>
             </span>
           </div>
 
@@ -601,7 +574,7 @@ onMounted(() => {
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 flex flex-col gap-5">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Icon icon="lucide:calendar-plus" class="text-[#1D4ED8]" />
+              <Icon icon="lucide:calendar-plus" class="text-[#E0234E]" />
               Tambah Kegiatan Baru
             </h3>
             <button @click="isModalKegiatanOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">

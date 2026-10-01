@@ -2,10 +2,119 @@
 
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+.sidebar-shell {
+    background:
+        radial-gradient(ellipse 110% 70% at 0% 0%, rgb(244 63 94 / 9%), transparent 68%),
+        linear-gradient(155deg, #ffffff 0%, #fffafb 58%, #fff4f6 100%);
+    border-right: 1px solid rgb(190 18 60 / 10%);
+}
+
+.dark .sidebar-shell {
+    background:
+        radial-gradient(ellipse 110% 70% at 0% 0%, rgb(190 18 60 / 22%), transparent 68%),
+        linear-gradient(155deg, #17080c 0%, #0b0809 58%, #18090e 100%);
+    border-right-color: rgb(244 63 94 / 12%);
+}
+
 html{
     overscroll-behavior-y: none;
 }
 
+html.dark {
+    color-scheme: dark;
+    background-color: #0c090a;
+}
+
+html:not(.dark) {
+    color-scheme: light;
+}
+
+html.dark body {
+    background-color: #0c090a;
+    color: #f4f4f5;
+}
+
+html.dark [class~="bg-slate-50"],
+html.dark [class*="bg-slate-50/"] {
+    background-color: #100c0e;
+}
+
+html.dark [class~="bg-slate-100"],
+html.dark [class*="bg-slate-100/"] {
+    background-color: #171114;
+}
+
+html.dark [class~="bg-slate-200"],
+html.dark [class*="bg-slate-200/"] {
+    background-color: #2b2024;
+}
+
+html.dark .bg-white {
+    background-color: #1d1518;
+}
+
+html.dark [class~="text-slate-800"],
+html.dark [class~="text-slate-700"],
+html.dark [class~="text-slate-900"],
+html.dark [class~="text-slate-950"] {
+    color: #f4f4f5;
+}
+
+html.dark [class~="text-slate-600"],
+html.dark [class~="text-slate-500"] {
+    color: #c4c4cc;
+}
+
+html.dark [class~="text-slate-400"] {
+    color: #a1a1aa;
+}
+
+html.dark [class~="text-slate-300"] {
+    color: #d4d4d8;
+}
+
+html.dark [class*="border-slate-100"],
+html.dark [class*="border-slate-200"],
+html.dark [class*="border-slate-300"] {
+    border-color: #3a292f;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+    color-scheme: dark;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #a1a1aa;
+}
+
 @theme{
     --font-inter: "Inter", sans-serif;
+    --color-nest-50: #fff1f4;
+    --color-nest-100: #ffe4ec;
+    --color-nest-200: #fecddc;
+    --color-nest-300: #fda4c4;
+    --color-nest-400: #fb718f;
+    --color-nest-500: #f43f5e;
+    --color-nest-600: #e0234e;
+    --color-nest-700: #be123c;
+    --color-nest-800: #9f1239;
+    --color-nest-900: #881337;
+    --color-nest-950: #4c0519;
+
+    --color-blue-50: var(--color-nest-50);
+    --color-blue-100: var(--color-nest-100);
+    --color-blue-200: var(--color-nest-200);
+    --color-blue-300: var(--color-nest-300);
+    --color-blue-400: var(--color-nest-400);
+    --color-blue-500: var(--color-nest-500);
+    --color-blue-600: var(--color-nest-600);
+    --color-blue-700: var(--color-nest-700);
+    --color-blue-800: var(--color-nest-800);
+    --color-blue-900: var(--color-nest-900);
+    --color-blue-950: var(--color-nest-950);
 }

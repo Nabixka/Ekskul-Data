@@ -123,7 +123,7 @@ onMounted(() => {
             <template v-else-if="!message">
                 <!-- Header Section -->
                 <header
-                    class="bg-gradient-to-b from-[#1D4ED8] to-[#60A5FA] p-6 md:p-8 rounded-2xl shadow-sm text-white flex flex-col gap-3">
+                    class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white flex flex-col gap-3">
                     <span
                         class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full w-fit">
                         <Icon icon="lucide:user" width="14" />

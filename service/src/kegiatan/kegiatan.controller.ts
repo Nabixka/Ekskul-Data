@@ -60,4 +60,14 @@ export class KegiatanController {
     return this.kegiatanService.deleteKegiatan(req.user, Number(kegiatan_id), Number(ekskul_id))
   }
 
+  @Post('/:kegiatan_id/ekskul/:ekskul_id/absen')
+  @UseGuards(AuthGuard)
+  absenKegiatan(
+    @Request() req,
+    @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
+    @Body() data: { listMember: string[]}
+  ){
+    return this.kegiatanService.absenKegiatan(req.user, Number(ekskul_id), Number(kegiatan_id), data.listMember)
+  }
 }

@@ -35,41 +35,41 @@ onMounted(() => {
             <div class="grid grid-cols-1 lg:grid-cols-4 w-full gap-4">
                 <!-- Ekskul -->
                 <div class="bg-white rounded-lg p-4 h-fit">
-                    <h5 class="text-sm text-[#60A5FA]">Total Ekstrakurikuler</h5>
+                    <h5 class="text-sm text-[#BE123C]">Total Ekstrakurikuler</h5>
                     <div class="flex justify-between items-center">
-                        <h3 class="text-4xl font-bold text-[#1D4ED8]">{{ dashboardInformation.ekskul }}</h3>
+                        <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.ekskul }}</h3>
                         <div class="bg-blue-50 rounded-2xl p-3">
-                            <Icon class="text-[#1D4ED8]" width="30" icon="akar-icons:folder" />
+                            <Icon class="text-[#E0234E]" width="30" icon="akar-icons:folder" />
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg p-4 h-fit">
-                    <h5 class="text-sm text-[#60A5FA]">Total Siswa</h5>
+                    <h5 class="text-sm text-[#BE123C]">Total Siswa</h5>
                     <div class="flex justify-between items-center">
-                        <h3 class="text-4xl font-bold text-[#1D4ED8]">{{ dashboardInformation.member }}</h3>
+                        <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.member }}</h3>
                         <div class="bg-blue-50 rounded-2xl p-3">
-                            <Icon class="text-[#1D4ED8]" width="30" icon="clarity:group-solid" />
+                            <Icon class="text-[#E0234E]" width="30" icon="clarity:group-solid" />
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg p-4 h-fit">
-                    <h5 class="text-sm text-[#60A5FA]">Total Kegiatan</h5>
+                    <h5 class="text-sm text-[#BE123C]">Total Kegiatan</h5>
                     <div class="flex justify-between items-center">
-                        <h3 class="text-4xl font-bold text-[#1D4ED8]">{{ dashboardInformation.kegiatan }}</h3>
+                        <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.kegiatan }}</h3>
                         <div class="bg-blue-50 rounded-2xl p-3">
-                            <Icon class="text-[#1D4ED8]" width="30" icon="akar-icons:calendar" />
+                            <Icon class="text-[#E0234E]" width="30" icon="akar-icons:calendar" />
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg p-4 h-fit">
-                    <h5 class="text-sm text-[#60A5FA]">Total Dokumentasi</h5>
+                    <h5 class="text-sm text-[#BE123C]">Total Dokumentasi</h5>
                     <div class="flex justify-between items-center">
-                        <h3 class="text-4xl font-bold text-[#1D4ED8]">{{ dashboardInformation.dokumentasi }}</h3>
+                        <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.dokumentasi }}</h3>
                         <div class="bg-blue-50 rounded-2xl p-3">
-                            <Icon class="text-[#1D4ED8]" width="30" icon="akar-icons:image" />
+                            <Icon class="text-[#E0234E]" width="30" icon="akar-icons:image" />
                         </div>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ onMounted(() => {
 
                 <!-- Left -->
                 <div class="w-5/7 bg-white rounded-lg p-4">
-                    <h3 class="text-[#1D4ED8] font-bold text-xl min-h-90">Pengajuan Tempat Ekskul</h3>
+                    <h3 class="text-[#E0234E] font-bold text-xl min-h-90">Pengajuan Tempat Ekskul</h3>
                     <div>
                         
                     </div>

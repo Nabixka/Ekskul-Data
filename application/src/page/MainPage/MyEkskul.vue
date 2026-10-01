@@ -34,9 +34,9 @@ onMounted(() => {
 
             <!-- Header Section -->
             <header
-                class="bg-gradient-to-b from-[#1D4ED8] to-[#60A5FA] p-6 md:p-8 rounded-2xl shadow-md text-white flex flex-col gap-3">
+                class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 md:p-8 rounded-2xl border border-rose-950/20 shadow-md text-white flex flex-col gap-3">
                 <span
-                    class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full w-fit">
+                    class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 border border-white/10 px-3 py-1.5 rounded-full w-fit">
                     <Icon icon="lucide:award" width="14" />
                     Ekstrakurikuler Saya
                 </span>
@@ -51,7 +51,7 @@ onMounted(() => {
             <!-- State Loading -->
             <div v-if="isLoading" class="flex items-center justify-center min-h-[300px]">
                 <div class="flex items-center gap-3 text-slate-500 font-medium">
-                    <Icon icon="line-md:loading-loop" width="32" class="text-[#1D4ED8]" />
+                    <Icon icon="line-md:loading-loop" width="32" class="text-[#E0234E]" />
                     <span>Memuat ekstrakurikuler kamu...</span>
                 </div>
             </div>
@@ -66,7 +66,7 @@ onMounted(() => {
             <!-- State Kosong (Belum mengikuti ekskul) -->
             <div v-else-if="!ekskulList.length"
                 class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center gap-3">
-                <div class="p-4 bg-blue-50 text-[#1D4ED8] rounded-full">
+                <div class="p-4 bg-blue-50 text-[#E0234E] rounded-full">
                     <Icon icon="lucide:folder-open" width="40" />
                 </div>
                 <h3 class="font-bold text-slate-800 text-lg">Belum Mengikuti Ekskul</h3>
@@ -98,7 +98,7 @@ onMounted(() => {
                     <div class="p-5 flex flex-col justify-between flex-1 gap-4">
                         <div>
                             <p class="text-slate-600 text-sm line-clamp-3 leading-relaxed">
-                                {{ item.about }}
+                                {{ item.about || 'Belum ada deskripsi ekstrakurikuler.' }}
                             </p>
                         </div>
 
@@ -106,13 +106,10 @@ onMounted(() => {
                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                 Peran Kamu:
+                                <strong class="text-[#E0234E]">
+                                    {{ item.role }}
+                                </strong>
                             </span>
-                            <div class="flex flex-wrap gap-1.5 justify-end">
-                                <span v-for="(role, idx) in item.roles" :key="idx"
-                                    class="text-xs font-medium px-2.5 py-1 rounded-full bg-[#1D4ED8]/10 text-[#1D4ED8] border border-[#1D4ED8]/20">
-                                    {{ role }}
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>

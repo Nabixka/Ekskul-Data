@@ -118,4 +118,27 @@ export class KegiatanService {
         }
     }
 
+
+    // Absen
+    async absenKegiatan(
+        req: {nis: number, is_admin: boolean},
+        ekskul_id: number,
+        kegiatan_id: number,
+        listMember: string[]
+    ){
+        if(req.is_admin !== false) throw new ForbiddenException("Osis Tidak Dapat Membuat Kegiatan")
+
+        const isHumas = await this.roleService.getRole(req.nis, ekskul_id) 
+        if(isHumas != "Humas") throw new ForbiddenException("Anda Tidak Berhak")
+
+        return {
+            message: "Berhasil Absensi",
+            data: {
+                kegiatan_id: kegiatan_id,
+                listMember: listMember
+            }
+        }
+
+    }
+
 }

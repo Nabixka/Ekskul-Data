@@ -222,7 +222,7 @@ onMounted(() => {
         <!-- Card Container -->
         <div class="relative z-20 w-11/12 sm:w-1/2 lg:w-1/3 bg-white rounded-xl shadow-xl overflow-hidden">
             <!-- Card Header -->
-            <div class="bg-[#1D4ED8] p-4 flex justify-between items-center">
+            <div class="bg-[#E0234E] p-4 flex justify-between items-center">
                 <h3 class="text-white font-semibold text-lg">Edit Role Anggota</h3>
                 <button @click="modalRole = false" class="text-white/80 hover:text-white cursor-pointer">
                     <Icon width="20" icon="akar-icons:cross" />
@@ -250,7 +250,7 @@ onMounted(() => {
                     <!-- Role Dropdown -->
                     <div class="flex flex-col gap-1.5">
                         <label class="font-semibold text-xs text-slate-500 uppercase tracking-wider">Pilih Role Baru</label>
-                        <select v-model="updateData.role" class="border border-slate-300 focus:border-[#1D4ED8] focus:ring-1 focus:ring-[#1D4ED8] outline-none rounded-lg py-2 px-3 text-sm bg-white cursor-pointer">
+                        <select v-model="updateData.role" class="border border-slate-300 focus:border-[#E0234E] focus:ring-1 focus:ring-[#E0234E] outline-none rounded-lg py-2 px-3 text-sm bg-white cursor-pointer">
                             <option value="" disabled>Pilih Role</option>
                             <option :value="roleItem.name" v-for="roleItem in listRole" :key="roleItem.name">
                                 {{ roleItem.name }}
@@ -266,7 +266,7 @@ onMounted(() => {
                         class="border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" class="bg-[#1D4ED8] hover:bg-blue-700 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer">
+                    <button type="submit" class="bg-[#E0234E] hover:bg-nest-700 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer">
                         Simpan
                     </button>
                 </div>
@@ -330,8 +330,8 @@ onMounted(() => {
                             :class="[
                                 'cursor-pointer text-center py-2 text-sm font-medium transition-all duration-200 rounded-lg',
                                 currentSection === section.name
-                                    ? 'font-bold text-[#1D4ED8] bg-blue-50 shadow-inner'
-                                    : 'text-[#60A5FA] hover:bg-slate-50'
+                                    ? 'font-bold text-[#E0234E] bg-blue-50 shadow-inner'
+                                    : 'text-[#BE123C] hover:bg-slate-50'
                             ]">
                             {{ section.name }}
                         </button>
@@ -340,22 +340,22 @@ onMounted(() => {
                     <!-- Section About -->
                     <section v-if="currentSection == 'About'"
                         class="bg-white rounded-xl shadow-md p-6 flex flex-col gap-3">
-                        <h4 class="text-[#1D4ED8] font-semibold text-lg">Deskripsi</h4>
-                        <p class="text-sm leading-relaxed text-[#60A5FA]">{{ ekskulDetail.ekskul?.about || 'Belum ada deskripsi.' }}</p>
+                        <h4 class="text-[#E0234E] font-semibold text-lg">Deskripsi</h4>
+                        <p class="text-sm leading-relaxed text-[#BE123C]">{{ ekskulDetail.ekskul?.about || 'Belum ada deskripsi.' }}</p>
                     </section>
 
                     <!-- Section Kegiatan -->
                     <section v-if="currentSection == 'Kegiatan'" class="bg-white p-5 rounded-xl shadow-md flex flex-col gap-4">
                         <div class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                            <h4 class="text-[#1D4ED8] font-semibold text-lg">Daftar Kegiatan</h4>
+                            <h4 class="text-[#E0234E] font-semibold text-lg">Daftar Kegiatan</h4>
                             
                             <!-- Filter Bulan & Tahun Kegiatan -->
                             <div class="flex items-center gap-2">
-                                <select v-model="filterMonth" class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#1D4ED8] cursor-pointer">
+                                <select v-model="filterMonth" class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#E0234E] cursor-pointer">
                                     <option value="">Semua Bulan</option>
                                     <option v-for="m in listMonths" :key="m.value" :value="m.value">{{ m.name }}</option>
                                 </select>
-                                <select v-model="filterYear" class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#1D4ED8] cursor-pointer">
+                                <select v-model="filterYear" class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#E0234E] cursor-pointer">
                                     <option value="">Semua Tahun</option>
                                     <option value="2026">2026</option>
                                     <option value="2025">2025</option>
@@ -387,8 +387,8 @@ onMounted(() => {
                     <section v-if="currentSection == 'Anggota'" class="bg-white p-5 rounded-xl shadow-md overflow-hidden flex flex-col gap-4">
                         <div class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                             <div class="flex items-center gap-2">
-                                <h4 class="text-[#1D4ED8] font-semibold text-lg">Daftar Anggota</h4>
-                                <span class="text-xs bg-blue-50 text-[#1D4ED8] px-2.5 py-1 rounded-full font-medium">
+                                <h4 class="text-[#E0234E] font-semibold text-lg">Daftar Anggota</h4>
+                                <span class="text-xs bg-blue-50 text-[#E0234E] px-2.5 py-1 rounded-full font-medium">
                                     Total: {{ filteredMember.length }}
                                 </span>
                             </div>
@@ -399,14 +399,14 @@ onMounted(() => {
                                     <Icon icon="akar-icons:search" width="14" />
                                 </span>
                                 <input v-model="searchMemberQuery" type="text" placeholder="Cari nama atau NIS..." 
-                                    class="w-full pl-9 pr-3 py-1.5 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg outline-none focus:border-[#1D4ED8] focus:bg-white transition-colors" />
+                                    class="w-full pl-9 pr-3 py-1.5 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg outline-none focus:border-[#E0234E] focus:bg-white transition-colors" />
                             </div>
                         </div>
 
                         <div class="overflow-x-auto shadow-md rounded-lg">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="bg-[#60A5FA] text-blue-50 text-xs uppercase tracking-wider">
+                                    <tr class="bg-[#BE123C] text-white text-xs uppercase tracking-wider">
                                         <th class="py-3 px-4 text-center font-semibold w-16">No</th>
                                         <th class="py-3 px-4 font-semibold">NIS</th>
                                         <th class="py-3 px-4 font-semibold">Nama</th>
@@ -428,7 +428,7 @@ onMounted(() => {
                                             </span>
                                         </td>
                                         <td class="py-3.5 px-4 text-center">
-                                            <button @click="handleOpenModal(member.member_name, member.nis, member.role)" class="px-3 py-1 text-xs font-medium text-[#1D4ED8] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
+                                            <button @click="handleOpenModal(member.member_name, member.nis, member.role)" class="px-3 py-1 text-xs font-medium text-[#E0234E] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
                                                 Edit
                                             </button>
                                         </td>
@@ -446,7 +446,7 @@ onMounted(() => {
                     <!-- Section Dokumentasi (Dummy) -->
                     <section v-if="currentSection == 'Dokumentasi'" class="bg-white p-5 rounded-xl shadow-md flex flex-col gap-4">
                         <div class="pb-3 border-b border-slate-100">
-                            <h4 class="text-[#1D4ED8] font-semibold text-lg">Dokumentasi Kegiatan</h4>
+                            <h4 class="text-[#E0234E] font-semibold text-lg">Dokumentasi Kegiatan</h4>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div v-for="dokumentasi in listDokumentasi" :key="dokumentasi.id" class="border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col">
@@ -469,11 +469,11 @@ onMounted(() => {
 
                     <!-- Informasi Ekskul -->
                     <div class="bg-white rounded-xl shadow-md p-4 flex flex-col gap-3">
-                        <h4 class="font-semibold text-[#1D4ED8] pb-2 border-b border-slate-100">Informasi Ekskul</h4>
+                        <h4 class="font-semibold text-[#E0234E] pb-2 border-b border-slate-100">Informasi Ekskul</h4>
 
                         <div class="flex flex-col gap-3.5 pt-1">
                             <div class="flex gap-3 items-start">
-                                <Icon width="22" class="text-[#60A5FA] mt-0.5 shrink-0" icon="akar-icons:tag" />
+                                <Icon width="22" class="text-[#F04C70] mt-0.5 shrink-0" icon="akar-icons:tag" />
                                 <div class="text-sm">
                                     <h5 class="text-slate-500 text-xs">Kategori</h5>
                                     <h5 class="font-semibold text-slate-800">{{ ekskulDetail.ekskul?.bidang || '-' }}
@@ -482,7 +482,7 @@ onMounted(() => {
                             </div>
 
                             <div class="flex gap-3 items-start">
-                                <Icon width="22" class="text-[#60A5FA] mt-0.5 shrink-0" icon="akar-icons:person" />
+                                <Icon width="22" class="text-[#F04C70] mt-0.5 shrink-0" icon="akar-icons:person" />
                                 <div class="text-sm">
                                     <h5 class="text-slate-500 text-xs">Pembina</h5>
                                     <h5 class="font-semibold text-slate-800">{{ pembina }}</h5>
@@ -494,7 +494,7 @@ onMounted(() => {
                     <!-- Informasi Ketua -->
                     <div class="bg-white rounded-xl shadow-md p-4 flex flex-col gap-3">
                         <div class="flex gap-3 items-start">
-                            <Icon width="22" class="text-[#60A5FA] mt-0.5 shrink-0" icon="akar-icons:crown" />
+                            <Icon width="22" class="text-[#F04C70] mt-0.5 shrink-0" icon="akar-icons:crown" />
                             <div class="text-sm">
                                 <h5 class="text-slate-500 text-xs">Ketua Ekskul</h5>
                                 <h5 class="font-semibold text-slate-800">{{ ketua }}</h5>
