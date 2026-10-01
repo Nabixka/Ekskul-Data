@@ -9,6 +9,7 @@ import ListEkskulAdmin from "./page/Admin/ListEkskul.vue";
 import EkskulDetailAdmin from "./page/Admin/EkskulDetail.vue";
 import MyEkskul from "./page/MainPage/MyEkskul.vue";
 import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
+import KegiatanDetail from "./page/MainPage/KegiatanDetail.vue";
 
 const routes = [
     {
@@ -59,6 +60,12 @@ const routes = [
         path: '/my-ekskul/:id',
         name: "My Ekskul Detail",
         component: MyEkskulDetail,
+        meta: { showBar: true }
+    },
+    {
+        path: '/my-ekskul/:id/kegiatan/:kegiatanId',
+        name: "My Ekskul Kegiatan Detail",
+        component: KegiatanDetail,
         meta: { showBar: true }
     },
     

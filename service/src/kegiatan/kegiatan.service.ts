@@ -27,6 +27,7 @@ export class KegiatanService {
         const getDetail = await this.databaseService.connection("kegiatan")
             .select("id", "title", "description", "location", "waktu")
             .where({ id: kegiatan_id })
+            .first()
 
         const finalPayload = {
             id: getDetail.id,

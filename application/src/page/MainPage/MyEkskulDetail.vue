@@ -244,6 +244,10 @@ const filteredKegiatan = computed(() => {
   })
 })
 
+const handleNavigate = (kegiatanId) => {
+  router.push(`/my-ekskul/${id}/kegiatan/${kegiatanId}`)
+}
+
 onMounted(() => {
   getDetail()
 })
@@ -458,7 +462,7 @@ onMounted(() => {
 
           <!-- List Kegiatan -->
           <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 list-kegiatan">
-            <div v-for="item in filteredKegiatan" :key="item.id"
+            <div @click="handleNavigate(item.id)" v-for="item in filteredKegiatan" :key="item.id"
               class="group bg-white rounded-xl p-4 border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 relative overflow-hidden">
 
               <div :class="[
@@ -498,6 +502,11 @@ onMounted(() => {
                   </div>
                   <span class="truncate">{{ item.location || 'Lokasi belum ditentukan' }}</span>
                 </div>
+                <button @click="router.push(`/my-ekskul/${id}/kegiatan/${item.id}`)"
+                  class="self-start mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#BE123C] hover:text-[#9F1239]">
+                  Lihat detail
+                  <Icon icon="lucide:arrow-up-right" width="14" />
+                </button>
               </div>
 
             </div>
