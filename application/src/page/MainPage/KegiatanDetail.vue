@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { api } from '../../api';
@@ -13,11 +13,27 @@ const kegiatanId = route.params.kegiatanId
 
 const kegiatan = ref(null)
 const dokumentasi = ref([])
+const userRole = ref('')
 const currentSection = ref('Absen')
 const isLoading = ref(false)
 const isLoadingDokumentasi = ref(false)
+const isUploadingDokumentasi = ref(false)
 const hasLoadedDokumentasi = ref(false)
 const errorMessage = ref('')
+const uploadMessage = ref('')
+const selectedImages = ref([])
+const deletingDocumentId = ref(null)
+
+const isHumas = computed(() => userRole.value === 'Humas')
+
+const getUserRole = async () => {
+	try {
+		const response = await api.get(`/member/ekskul/${ekskulId}`)
+		userRole.value = response.data.data?.role || ''
+	} catch {
+		userRole.value = ''
+	}
+}
 
 const getDetailKegiatan = async () => {
 	isLoading.value = true
@@ -37,13 +53,58 @@ const getDokumentasi = async () => {
 	isLoadingDokumentasi.value = true
 	errorMessage.value = ''
 	try {
-		const response = await api.get(`/dokumentasi/ekskul/${ekskulId}`)
-        dokumentasi.value = response.data.data
+		const response = await api.get(`/dokumentasi/kegiatan/${kegiatanId}`)
+		dokumentasi.value = response.data.data || []
 		hasLoadedDokumentasi.value = true
 	} catch (error) {
 		errorMessage.value = error.response?.data?.message || 'Gagal memuat dokumentasi kegiatan.'
 	} finally {
 		isLoadingDokumentasi.value = false
+	}
+}
+
+const handleSelectImages = (event) => {
+	selectedImages.value = Array.from(event.target.files || [])
+	uploadMessage.value = ''
+}
+
+const handleUploadDokumentasi = async () => {
+	if (!selectedImages.value.length) {
+		uploadMessage.value = 'Pilih minimal satu gambar.'
+		return
+	}
+
+	const formData = new FormData()
+	formData.append('kegiatan_id', String(kegiatanId))
+	selectedImages.value.forEach((image) => formData.append('image', image))
+
+	isUploadingDokumentasi.value = true
+	uploadMessage.value = ''
+	try {
+		await api.post(`/dokumentasi/ekskul/${ekskulId}`, formData)
+		selectedImages.value = []
+		hasLoadedDokumentasi.value = false
+		await getDokumentasi()
+		uploadMessage.value = 'Dokumentasi berhasil ditambahkan.'
+	} catch (error) {
+		uploadMessage.value = error.response?.data?.message || 'Gagal mengunggah dokumentasi.'
+	} finally {
+		isUploadingDokumentasi.value = false
+	}
+}
+
+const handleDeleteDokumentasi = async (documentId) => {
+	if (!window.confirm('Hapus dokumentasi ini?')) return
+
+	deletingDocumentId.value = documentId
+	errorMessage.value = ''
+	try {
+		await api.delete(`/dokumentasi/ekskul/${ekskulId}/dokumentasi/${documentId}`)
+		dokumentasi.value = dokumentasi.value.filter((image) => image.id !== documentId)
+	} catch (error) {
+		errorMessage.value = error.response?.data?.message || 'Gagal menghapus dokumentasi.'
+	} finally {
+		deletingDocumentId.value = null
 	}
 }
 
@@ -55,9 +116,9 @@ const handleChangeSection = (section) => {
 }
 
 onMounted(() => {
-    getDetailKegiatan()
-}
-)
+	getDetailKegiatan()
+	getUserRole()
+})
 </script>
 
 <template>
@@ -123,10 +184,22 @@ onMounted(() => {
 					</div>
 
 					<div v-else>
-						<div class="flex items-center gap-2 border-b border-slate-100 pb-4">
-							<Icon icon="lucide:image" class="text-[#BE123C]" width="20" />
-							<h2 class="text-lg font-bold text-slate-900">Dokumentasi Kegiatan</h2>
+						<div class="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+							<div class="flex items-center gap-2">
+								<Icon icon="lucide:image" class="text-[#BE123C]" width="20" />
+								<h2 class="text-lg font-bold text-slate-900">Dokumentasi Kegiatan</h2>
+							</div>
+							<div v-if="isHumas" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+								<input type="file" accept="image/*" multiple @change="handleSelectImages"
+									class="max-w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-semibold file:text-[#9F1239] hover:file:bg-rose-100" />
+								<button @click="handleUploadDokumentasi" :disabled="isUploadingDokumentasi || selectedImages.length === 0"
+									class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50">
+									<Icon :icon="isUploadingDokumentasi ? 'lucide:loader-2' : 'lucide:upload'" :class="isUploadingDokumentasi ? 'animate-spin' : ''" width="16" />
+									{{ isUploadingDokumentasi ? 'Mengunggah...' : 'Tambah' }}
+								</button>
+							</div>
 						</div>
+						<p v-if="uploadMessage" class="mt-3 text-sm text-slate-600">{{ uploadMessage }}</p>
 
 						<div v-if="isLoadingDokumentasi" class="py-10 flex justify-center items-center gap-2 text-[#9F1239] text-sm">
 							<Icon icon="lucide:loader-2" class="animate-spin" width="18" />
@@ -137,8 +210,13 @@ onMounted(() => {
 							Belum ada dokumentasi untuk kegiatan ini.
 						</p>
 						<div v-else class="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-							<figure v-for="image in dokumentasi" :key="image.id" class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+							<figure v-for="image in dokumentasi" :key="image.id" class="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
 								<img :src="`${API_URL}${image.path}`" :alt="image.title || kegiatan.title" class="w-full aspect-[4/3] object-cover" />
+								<button v-if="isHumas" @click="handleDeleteDokumentasi(image.id)" :disabled="deletingDocumentId === image.id"
+									:aria-label="`Hapus dokumentasi ${image.id}`" title="Hapus dokumentasi"
+									class="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/95 text-rose-700 shadow transition hover:bg-rose-600 hover:text-white disabled:opacity-50">
+									<Icon :icon="deletingDocumentId === image.id ? 'lucide:loader-2' : 'lucide:trash-2'" :class="deletingDocumentId === image.id ? 'animate-spin' : ''" width="17" />
+								</button>
 							</figure>
 						</div>
 					</div>
