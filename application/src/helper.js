@@ -7,3 +7,8 @@ export function formatDate(data){
     })
     return formattedDate
 }
+
+export function formatRupiah(number){
+  if (number === undefined || number === null) return 'Rp 0'
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number)
+}

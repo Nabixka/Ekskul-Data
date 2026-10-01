@@ -3,7 +3,7 @@ import { onMounted, ref, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { api } from '../../api';
 import { useRoute, useRouter } from 'vue-router';
-import { formatDate } from '../../helper';
+import { formatDate, formatRupiah } from '../../helper';
 
 const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
@@ -41,11 +41,6 @@ const listSection = ref([
   { name: 'Dokumentasi', icon: 'lucide:image' },
   { name: 'Kas', icon: 'lucide:wallet' }
 ])
-
-const formatRupiah = (number) => {
-  if (number === undefined || number === null) return 'Rp 0'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number)
-}
 
 const clearError = () => {
   message.value = ''
@@ -184,13 +179,12 @@ const getKegiatanStatus = (waktu) => {
   return waktuKegiatan >= sekarang ? 'upcoming' : 'past'
 }
 
-// Opsi bulan yang tersedia secara dinamis berdasarkan data kegiatan yang ada
 const availableMonths = computed(() => {
   const monthsMap = new Map()
   kegiatanDetail.value.forEach(item => {
     if (item.waktu) {
       const date = new Date(item.waktu)
-      const yearMonth = item.waktu.substring(0, 7) // Format "YYYY-MM"
+      const yearMonth = item.waktu.substring(0, 7)
       if (!monthsMap.has(yearMonth)) {
         const label = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
         monthsMap.set(yearMonth, label)
@@ -200,8 +194,29 @@ const availableMonths = computed(() => {
   return Array.from(monthsMap, ([value, label]) => ({ value, label }))
 })
 
-const downloadLaporanKegiatan = () => {
-  console.log()
+const downloadLaporanKegiatan = async () => {
+  const kegiatanMapping = filteredKegiatan.value.map((item) => ({
+    id: item.id,
+    title: item.title,
+    waktu: item.waktu,
+    location: item.location
+  }))
+
+  try{
+    const res = await api.post(`/kegiatan/export`, kegiatanMapping, { responseType: 'blob'})
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.setAttribute('download', `laporan_kegiatan.docx`);
+    document.body.appendChild(link);
+    link.click();
+    
+    link.parentNode.removeChild(link);
+  }
+  catch(err){
+    console.log(err)
+  }
 }
 
 const filteredKegiatan = computed(() => {
