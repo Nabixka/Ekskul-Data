@@ -37,12 +37,12 @@ const handleLogin = async () => {
 <template>
     <section class="w-full min-h-screen flex flex-col lg:flex-row">
         <aside
-            class="w-full lg:w-4/7 bg-linear-to-br from-[#F43F5E] to-[#D9387A] pb-3 lg:min-h-screen flex flex-col lg:flex-row items-center justify-center lg:pr-5">
+            class="auth-panel w-full lg:w-4/7 pb-3 lg:min-h-screen flex flex-col lg:flex-row items-center justify-center lg:pr-5">
             <!-- Logo -->
             <img class="w-40" src="/logo.png">
             <span class="flex flex-col gap-2">
-                <h1 class="text-white text-3xl font-bold">Pelaporan Data Ekstrakurikuler</h1>
-                <h5 class="text-white/90">Kelola data ekskul dengan lebih mudah, cepat, dan terorganisir</h5>
+                <h1 class="text-[#9F1239] dark:text-[#FB7185] text-3xl font-bold">Pelaporan Data Ekstrakurikuler</h1>
+                <h5 class="text-[#BE123C] dark:text-rose-200">Kelola data ekskul dengan lebih mudah, cepat, dan terorganisir</h5>
             </span>
         </aside>
 

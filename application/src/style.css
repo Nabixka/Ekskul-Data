@@ -18,6 +18,20 @@
     border-right-color: rgb(244 63 94 / 12%);
 }
 
+.auth-panel {
+    background:
+        radial-gradient(ellipse 110% 70% at 0% 0%, rgb(244 63 94 / 9%), transparent 68%),
+        linear-gradient(155deg, #ffffff 0%, #fffafb 58%, #fff4f6 100%);
+    border-right: 1px solid rgb(190 18 60 / 10%);
+}
+
+.dark .auth-panel {
+    background:
+        radial-gradient(ellipse 110% 70% at 0% 0%, rgb(190 18 60 / 22%), transparent 68%),
+        linear-gradient(155deg, #17080c 0%, #0b0809 58%, #18090e 100%);
+    border-right-color: rgb(244 63 94 / 12%);
+}
+
 html{
     overscroll-behavior-y: none;
 }
