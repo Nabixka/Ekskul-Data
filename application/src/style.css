@@ -119,16 +119,4 @@ html.dark textarea::placeholder {
     --color-nest-800: #9f1239;
     --color-nest-900: #881337;
     --color-nest-950: #4c0519;
-
-    --color-blue-50: var(--color-nest-50);
-    --color-blue-100: var(--color-nest-100);
-    --color-blue-200: var(--color-nest-200);
-    --color-blue-300: var(--color-nest-300);
-    --color-blue-400: var(--color-nest-400);
-    --color-blue-500: var(--color-nest-500);
-    --color-blue-600: var(--color-nest-600);
-    --color-blue-700: var(--color-nest-700);
-    --color-blue-800: var(--color-nest-800);
-    --color-blue-900: var(--color-nest-900);
-    --color-blue-950: var(--color-nest-950);
 }

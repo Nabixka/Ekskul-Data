@@ -12,7 +12,8 @@ export class RoleService {
         .where({nis_user: nis_user, ekskul_id: ekskul_id})
         .first()
 
-        return get.role
+        if(!get) return null
+        return get.role 
     }
 
     // Change Role Member EKskul

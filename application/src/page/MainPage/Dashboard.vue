@@ -49,6 +49,11 @@ const handleRetry = () => {
     getDashboard()
 }
 
+const handleNavigate = (event,ekskulId, kegiatanId) => {
+    if(event === "ekskul") router.push(`/my-ekskul/${ekskulId}`)
+    if(event === "kegiatan") router.push(`/my-ekskul/${ekskulId}/kegiatan/${kegiatanId}`)
+}
+
 const getEkskulById = (ekskulId) => {
     return dashboardInformation.value.ekskul?.find(e => e.id === ekskulId)
 }
@@ -124,11 +129,6 @@ onMounted(() => {
                 <!-- Header Section -->
                 <header
                     class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white flex flex-col gap-3">
-                    <span
-                        class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full w-fit">
-                        <Icon icon="lucide:user" width="14" />
-                        Selamat Datang, <strong>{{ dashboardInformation.name }}</strong>
-                    </span>
                     <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
                         Jelajahi Potensi & Minatmu Bersama Kami
                     </h1>
@@ -140,7 +140,7 @@ onMounted(() => {
                 <!-- Stats Grid -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/60 flex items-center gap-4">
-                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <div class="p-3 bg-nest-50 text-nest-600 rounded-xl">
                             <Icon icon="lucide:award" width="28" />
                         </div>
                         <div>
@@ -157,7 +157,7 @@ onMounted(() => {
                         <div>
                             <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Agenda Kegiatan</p>
                             <h2 class="text-2xl font-bold text-slate-800">{{ dashboardInformation.kegiatan?.length || 0
-                            }}</h2>
+                                }}</h2>
                         </div>
                     </div>
                 </section>
@@ -170,14 +170,9 @@ onMounted(() => {
                         class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 flex flex-col gap-5">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                             <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                <Icon icon="lucide:sparkles" class="text-blue-600" />
+                                <Icon icon="lucide:sparkles" class="text-nest-600" />
                                 Kegiatan Terbaru
                             </h3>
-                            <button
-                                class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors">
-                                Lihat Semua
-                                <Icon icon="lucide:arrow-right" width="14" />
-                            </button>
                         </div>
 
                         <!-- Empty State Kegiatan -->
@@ -187,9 +182,10 @@ onMounted(() => {
                         </div>
 
                         <!-- List Kegiatan -->
-                        <div v-else class="flex flex-col divide-y divide-slate-100">
-                            <div v-for="kegiatan in dashboardInformation.kegiatan" :key="kegiatan.id"
-                                class="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-4 justify-between sm:items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors">
+                        <div v-else class="flex flex-col gap-4">
+                            <div @click="handleNavigate('kegiatan', kegiatan.ekskul_id, kegiatan.id)"
+                                v-for="kegiatan in dashboardInformation.kegiatan" :key="kegiatan.id"
+                                class="flex bg-slate-50 rounded-lg p-3 justify-between">
                                 <div class="flex gap-4 items-start sm:items-center">
                                     <div
                                         class="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200/60 relative">
@@ -204,7 +200,7 @@ onMounted(() => {
 
                                     <div class="flex flex-col gap-1">
                                         <span
-                                            class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md w-fit">
+                                            class="text-xs font-medium text-nest-600 bg-nest-50 px-2 py-0.5 rounded-md w-fit">
                                             {{ formatDate(kegiatan.waktu) }}
                                         </span>
                                         <h4 class="font-semibold text-slate-800 text-base leading-snug">
@@ -222,7 +218,7 @@ onMounted(() => {
 
                                 <div class="shrink-0 self-start sm:self-center">
                                     <span
-                                        class="text-xs text-blue-600 bg-blue-100 font-medium px-3 py-1 rounded-full border border-slate-200">
+                                        class="text-xs text-nest-600 bg-nest-100 font-medium px-3 py-1 rounded-full border border-slate-200">
                                         {{ getEkskulById(kegiatan.ekskul_id)?.name || 'Kegiatan' }}
                                     </span>
                                 </div>
@@ -235,7 +231,7 @@ onMounted(() => {
                         class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 flex flex-col gap-5 h-fit">
                         <h3
                             class="font-bold text-lg text-slate-800 border-b border-slate-100 pb-4 flex items-center gap-2">
-                            <Icon icon="lucide:users" class="text-blue-600" />
+                            <Icon icon="lucide:users" class="text-nest-600" />
                             Ekskul Saya
                         </h3>
 
@@ -245,7 +241,7 @@ onMounted(() => {
                         </div>
 
                         <div v-else class="flex flex-col gap-3">
-                            <div v-for="ekskul in dashboardInformation.ekskul" :key="ekskul.id"
+                            <div @click="handleNavigate('ekskul', ekskul.id)" v-for="ekskul in dashboardInformation.ekskul" :key="ekskul.id"
                                 class="relative rounded-xl overflow-hidden h-28 group border border-slate-200/60">
                                 <img :src="`${API_URL}${ekskul.banner}`" :alt="ekskul.name"
                                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -260,7 +256,7 @@ onMounted(() => {
                                             {{ ekskul.bidang }}
                                         </span>
                                         <span
-                                            class="text-xs bg-blue-600/90 font-medium px-2 py-0.5 rounded-md shadow-sm">
+                                            class="text-xs bg-nest-600/90 font-medium px-2 py-0.5 rounded-md shadow-sm">
                                             {{ ekskul.role }}
                                         </span>
                                     </div>
@@ -301,7 +297,7 @@ onMounted(() => {
 
                     <div class="w-full flex gap-3 mt-2">
                         <button @click="handleRetry"
-                            class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                            class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
                             <Icon icon="lucide:refresh-cw" width="16" />
                             Coba Lagi
                         </button>

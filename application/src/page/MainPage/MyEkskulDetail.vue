@@ -15,17 +15,25 @@ const listAnggota = ref([])
 const kegiatanDetail = ref([])
 const dokumentasiDetail = ref([])
 const kasDetail = ref([])
+const hasLoadedKegiatan = ref(false)
+const hasLoadedDokumentasi = ref(false)
 
 const currentSection = ref('About')
 const message = ref('')
 const errorCode = ref(null)
 const isLoading = ref(false)
+const isUploadingDokumentasi = ref(false)
+const deletingDocumentId = ref(null)
+const selectedKegiatanId = ref('')
+const selectedImages = ref([])
+const uploadMessage = ref('')
 
 const searchQueryKegiatan = ref('')
 const filterStatusKegiatan = ref('semua')
 const filterBulanKegiatan = ref('semua')
 
 const isModalKegiatanOpen = ref(false)
+const isModalDokumentasiOpen = ref(false)
 const isSubmittingKegiatan = ref(false)
 const formKegiatan = ref({
   title: '',
@@ -77,12 +85,13 @@ const getAnggota = async () => {
 }
 
 const getKegiatan = async () => {
-  if (kegiatanDetail.value.length > 0) return
+  if (hasLoadedKegiatan.value) return
   isLoading.value = true
   clearError()
   try {
     const res = await api.get(`/kegiatan/ekskul/${id}`)
     kegiatanDetail.value = res.data.data || []
+    hasLoadedKegiatan.value = true
   } catch (error) {
     errorCode.value = error.response?.status || 500
     message.value = error.response?.data?.message || "Gagal memuat agenda kegiatan."
@@ -92,17 +101,77 @@ const getKegiatan = async () => {
 }
 
 const getDokumentasi = async () => {
-  if (dokumentasiDetail.value.length > 0) return
+  if (hasLoadedDokumentasi.value) return true
   isLoading.value = true
   clearError()
   try {
     const res = await api.get(`/dokumentasi/ekskul/${id}`)
     dokumentasiDetail.value = res.data.data || []
+    hasLoadedDokumentasi.value = true
+    return true
   } catch (error) {
     errorCode.value = error.response?.status || 500
     message.value = error.response?.data?.message || "Gagal memuat dokumentasi."
+    return false
   } finally {
     isLoading.value = false
+  }
+}
+
+const handleSelectImages = (event) => {
+  selectedImages.value = Array.from(event.target.files || [])
+  event.target.value = ''
+  uploadMessage.value = ''
+}
+
+const handleUploadDokumentasi = async () => {
+  if (!selectedKegiatanId.value) {
+    uploadMessage.value = 'Pilih kegiatan terlebih dahulu.'
+    return
+  }
+  if (!selectedImages.value.length) {
+    uploadMessage.value = 'Pilih minimal satu gambar.'
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('kegiatan_id', String(selectedKegiatanId.value))
+  selectedImages.value.forEach((image) => formData.append('image', image))
+
+  isUploadingDokumentasi.value = true
+  uploadMessage.value = ''
+  try {
+    await api.post(`/dokumentasi/ekskul/${id}`, formData)
+    selectedImages.value = []
+    hasLoadedDokumentasi.value = false
+    const refreshed = await getDokumentasi()
+    if (refreshed) {
+      isModalDokumentasiOpen.value = false
+      selectedKegiatanId.value = ''
+      uploadMessage.value = ''
+    } else {
+      uploadMessage.value = 'Dokumentasi berhasil diunggah, tetapi galeri gagal diperbarui.'
+    }
+  } catch (error) {
+    uploadMessage.value = error.response?.data?.message || 'Gagal mengunggah dokumentasi.'
+  } finally {
+    isUploadingDokumentasi.value = false
+  }
+}
+
+const handleDeleteDokumentasi = async (documentId) => {
+  if (!window.confirm('Hapus dokumentasi ini?')) return
+
+  deletingDocumentId.value = documentId
+  clearError()
+  try {
+    await api.delete(`/dokumentasi/ekskul/${id}/dokumentasi/${documentId}`)
+    dokumentasiDetail.value = dokumentasiDetail.value.filter((doc) => doc.id !== documentId)
+  } catch (error) {
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal menghapus dokumentasi.'
+  } finally {
+    deletingDocumentId.value = null
   }
 }
 
@@ -125,7 +194,7 @@ const handleChangeSection = (sectionName) => {
   currentSection.value = sectionName
   if (sectionName === "Anggota") getAnggota()
   if (sectionName === "Kegiatan") getKegiatan()
-  if (sectionName === "Dokumentasi") getDokumentasi()
+  if (sectionName === "Dokumentasi") getKegiatan().then(getDokumentasi)
   if (sectionName === "Kas") getKas()
 }
 
@@ -133,7 +202,7 @@ const handleRetry = () => {
   if (currentSection.value === "About") getDetail()
   else if (currentSection.value === "Anggota") getAnggota()
   else if (currentSection.value === "Kegiatan") getKegiatan()
-  else if (currentSection.value === "Dokumentasi") getDokumentasi()
+  else if (currentSection.value === "Dokumentasi") getKegiatan().then(getDokumentasi)
   else if (currentSection.value === "Kas") getKas()
 }
 
@@ -148,7 +217,8 @@ const resetFormKegiatan = () => {
 
 const handleSubmitKegiatan = async () => {
   if (!formKegiatan.value.title || !formKegiatan.value.waktu) {
-    alert("Judul dan waktu kegiatan wajib diisi.")
+    errorCode.value = 400
+    message.value = "Judul dan waktu kegiatan wajib diisi."
     return
   }
 
@@ -160,13 +230,15 @@ const handleSubmitKegiatan = async () => {
       kegiatanDetail.value.unshift(res.data.data)
     } else {
       kegiatanDetail.value = []
+      hasLoadedKegiatan.value = false
       await getKegiatan()
     }
 
     isModalKegiatanOpen.value = false
     resetFormKegiatan()
   } catch (error) {
-    alert(error.response?.data?.message || "Gagal menambahkan kegiatan.")
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || "Gagal menambahkan kegiatan."
   } finally {
     isSubmittingKegiatan.value = false
   }
@@ -195,6 +267,11 @@ const availableMonths = computed(() => {
 })
 
 const downloadLaporanKegiatan = async () => {
+  if(filterBulanKegiatan.value === 'semua') {
+    errorCode.value = 400
+    message.value = 'Silakan pilih bulan untuk mengunduh laporan kegiatan.'
+    return
+  }
   const kegiatanMapping = filteredKegiatan.value.map((item) => ({
     id: item.id,
     title: item.title,
@@ -202,8 +279,8 @@ const downloadLaporanKegiatan = async () => {
     location: item.location
   }))
 
-  try{
-    const res = await api.post(`/kegiatan/export`, kegiatanMapping, { responseType: 'blob'})
+  try {
+    const res = await api.post(`/kegiatan/export`, kegiatanMapping, { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([res.data]));
     const link = document.createElement('a');
 
@@ -211,11 +288,12 @@ const downloadLaporanKegiatan = async () => {
     link.setAttribute('download', `laporan_kegiatan.docx`);
     document.body.appendChild(link);
     link.click();
-    
+
     link.parentNode.removeChild(link);
   }
-  catch(err){
-    console.log(err)
+  catch (err) {
+    errorCode.value = err.response?.status || 500
+    message.value = err.response?.data?.message || 'Gagal mengunduh laporan kegiatan.'
   }
 }
 
@@ -277,7 +355,8 @@ onMounted(() => {
               {{ ekskulDetail.bidang || 'Umum' }}
             </span>
             <span>•</span>
-            <span>Peran Kamu: <strong class="text-white font-semibold">{{ ekskulDetail.role || 'Anggota' }}</strong></span>
+            <span>Peran Kamu: <strong class="text-white font-semibold">{{ ekskulDetail.role || 'Anggota'
+                }}</strong></span>
           </div>
         </div>
       </header>
@@ -285,7 +364,7 @@ onMounted(() => {
       <!-- Stat Overview Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
+          <div class="p-3 bg-nest-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:users" width="24" />
           </div>
           <div>
@@ -295,7 +374,7 @@ onMounted(() => {
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
+          <div class="p-3 bg-nest-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:calendar" width="24" />
           </div>
           <div>
@@ -305,7 +384,7 @@ onMounted(() => {
         </div>
 
         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/60 flex items-center gap-4">
-          <div class="p-3 bg-blue-50 text-[#E0234E] rounded-xl">
+          <div class="p-3 bg-nest-50 text-[#E0234E] rounded-xl">
             <Icon icon="lucide:wallet" width="24" />
           </div>
           <div>
@@ -320,7 +399,7 @@ onMounted(() => {
         class="bg-white rounded-xl p-1.5 shadow-sm border border-slate-200/60 flex items-center gap-1 overflow-x-auto">
         <button v-for="section in listSection" :key="section.name" @click="handleChangeSection(section.name)" :class="[
           'px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap',
-          currentSection === section.name ? 'bg-[#E0234E] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          currentSection === section.name ? 'bg-[#E0234E] text-white shadow-sm' : 'text-slate-600 hover:bg-nest-800 hover:text-white'
         ]">
           <Icon :icon="section.icon" width="16" />
           {{ section.name }}
@@ -365,9 +444,9 @@ onMounted(() => {
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 grid-anggota">
             <div v-for="member in listAnggota" :key="member.id || member.nis"
-              class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+              class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-100 dark:hover:bg-black/20 transition-colors">
               <div
-                class="w-10 h-10 rounded-full bg-blue-100 text-[#E0234E] flex items-center justify-center font-bold text-sm shrink-0">
+                class="w-10 h-10 rounded-full bg-nest-100 text-[#E0234E] flex items-center justify-center font-bold text-sm shrink-0">
                 {{ member.member_name ? member.member_name.charAt(0).toUpperCase() : 'A' }}
               </div>
               <div class="overflow-hidden">
@@ -393,14 +472,14 @@ onMounted(() => {
             </h3>
 
             <div class="flex items-center gap-2">
-              <button @click="downloadLaporanKegiatan"
+              <button v-if="ekskulDetail.role === 'Humas'" @click="downloadLaporanKegiatan"
                 class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
                 <Icon icon="lucide:download" width="16" />
                 Download Laporan
               </button>
 
               <button v-if="ekskulDetail.role === 'Humas'" @click="isModalKegiatanOpen = true"
-                class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                class="px-3.5 py-2 bg-nest-600 hover:bg-nest-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
                 <Icon icon="lucide:plus" width="16" />
                 Tambah Kegiatan
               </button>
@@ -410,18 +489,18 @@ onMounted(() => {
           <!-- Bar Pencarian & Filter (Dropdown Bulan & Status) -->
           <div
             class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
-            
+
             <!-- Search Input -->
             <div class="relative flex-1">
               <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" />
               <input v-model="searchQueryKegiatan" type="text" placeholder="Cari kegiatan, lokasi, atau deskripsi..."
-                class="w-full pl-9 pr-3.5 py-2 bg-white rounded-lg border border-slate-200 text-xs md:text-sm focus:outline-none focus:border-blue-600 transition-all" />
+                class="w-full pl-9 pr-3.5 py-2 bg-white rounded-lg border border-slate-200 text-xs md:text-sm focus:outline-none focus:border-nest-600 transition-all" />
             </div>
 
             <!-- Dropdown Filter Bulan -->
             <div class="w-full lg:w-48">
               <select v-model="filterBulanKegiatan"
-                class="w-full px-3 py-2 bg-white rounded-lg border border-slate-200 text-xs md:text-sm text-slate-700 focus:outline-none focus:border-blue-600 transition-all">
+                class="w-full px-3 py-2 bg-white rounded-lg border border-slate-200 text-xs md:text-sm text-slate-700 focus:outline-none focus:border-nest-600 transition-all">
                 <option value="semua">Semua Bulan</option>
                 <option v-for="bulan in availableMonths" :key="bulan.value" :value="bulan.value">
                   {{ bulan.label }}
@@ -436,7 +515,7 @@ onMounted(() => {
                 Semua Status
               </button>
               <button @click="filterStatusKegiatan = 'upcoming'"
-                :class="['px-3 py-2 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap', filterStatusKegiatan === 'upcoming' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100']">
+                :class="['px-3 py-2 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap', filterStatusKegiatan === 'upcoming' ? 'bg-nest-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100']">
                 Akan Datang
               </button>
               <button @click="filterStatusKegiatan = 'past'"
@@ -463,22 +542,22 @@ onMounted(() => {
           <!-- List Kegiatan -->
           <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 list-kegiatan">
             <div @click="handleNavigate(item.id)" v-for="item in filteredKegiatan" :key="item.id"
-              class="group bg-white rounded-xl p-4 border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 relative overflow-hidden">
+              class="group bg-white rounded-xl p-4 border border-slate-200/80 hover:border-nest-300 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4 relative overflow-hidden">
 
               <div :class="[
                 'absolute left-0 top-0 bottom-0 w-1.5',
-                getKegiatanStatus(item.waktu) === 'upcoming' ? 'bg-blue-600' : 'bg-slate-300'
+                getKegiatanStatus(item.waktu) === 'upcoming' ? 'bg-nest-600' : 'bg-slate-300'
               ]"></div>
 
               <div class="flex flex-col gap-2 pl-2">
                 <div class="flex items-start justify-between gap-2">
                   <h4
-                    class="font-bold text-slate-800 text-sm md:text-base group-hover:text-blue-600 transition-colors leading-snug">
+                    class="font-bold text-slate-800 text-sm md:text-base group-hover:text-nest-600 transition-colors leading-snug">
                     {{ item.title }}
                   </h4>
                   <span :class="[
                     'text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0',
-                    getKegiatanStatus(item.waktu) === 'upcoming' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-slate-100 text-slate-600'
+                    getKegiatanStatus(item.waktu) === 'upcoming' ? 'bg-nest-50 text-nest-700 border border-nest-200/60' : 'bg-slate-100 text-slate-600'
                   ]">
                     {{ getKegiatanStatus(item.waktu) === 'upcoming' ? 'Akan Datang' : 'Selesai' }}
                   </span>
@@ -516,10 +595,18 @@ onMounted(() => {
 
         <!-- TAB: DOKUMENTASI -->
         <div v-else-if="currentSection === 'Dokumentasi'" class="flex flex-col gap-4">
-          <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <div
+            class="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
               <Icon icon="lucide:image" class="text-[#E0234E]" />
-            Galeri Dokumentasi Kegiatan
-          </h3>
+              Galeri Dokumentasi Kegiatan
+            </h3>
+            <button v-if="ekskulDetail.role === 'Humas'" @click="isModalDokumentasiOpen = true"
+              class="inline-flex items-center justify-center gap-2 self-start rounded-lg bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] sm:self-auto">
+              <Icon icon="lucide:upload" width="16" />
+              Tambah dokumentasi
+            </button>
+          </div>
 
           <div v-if="dokumentasiDetail.length === 0 && !isLoading"
             class="text-center py-8 text-slate-400 text-sm dokumentasi-kosong">
@@ -531,6 +618,13 @@ onMounted(() => {
               class="group relative rounded-xl overflow-hidden border border-slate-200/60 bg-slate-900 h-48 shadow-sm">
               <img :src="`${API_URL}${doc.path}`" :alt="doc.title"
                 class="w-full h-full object-cover group-hover:scale-105 opacity-90 group-hover:opacity-100 transition-all duration-300" />
+              <button v-if="ekskulDetail.role === 'Humas'" @click="handleDeleteDokumentasi(doc.id)"
+                :disabled="deletingDocumentId === doc.id" :aria-label="`Hapus dokumentasi ${doc.id}`"
+                title="Hapus dokumentasi"
+                class="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/95 text-rose-700 shadow transition hover:bg-rose-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+                <Icon :icon="deletingDocumentId === doc.id ? 'lucide:loader-2' : 'lucide:trash-2'"
+                  :class="deletingDocumentId === doc.id ? 'animate-spin' : ''" width="17" />
+              </button>
               <div
                 class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3.5 text-white">
                 <h4 class="font-semibold text-sm leading-snug line-clamp-2">{{ doc.title }}</h4>
@@ -611,27 +705,27 @@ onMounted(() => {
               <label class="text-xs font-semibold text-slate-700">Judul Kegiatan <span
                   class="text-red-500">*</span></label>
               <input v-model="formKegiatan.title" type="text" required placeholder="Contoh: Latihan Rutin Mingguan"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all" />
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-nest-600 focus:ring-1 focus:ring-nest-600 transition-all" />
             </div>
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold text-slate-700">Waktu Pelaksanaan <span
                   class="text-red-500">*</span></label>
               <input v-model="formKegiatan.waktu" type="datetime-local" required
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all" />
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-nest-600 focus:ring-1 focus:ring-nest-600 transition-all" />
             </div>
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold text-slate-700">Lokasi Kegiatan</label>
               <input v-model="formKegiatan.location" type="text" placeholder="Contoh: Lapangan Utama / Ruang Lab RPL"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all" />
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-nest-600 focus:ring-1 focus:ring-nest-600 transition-all" />
             </div>
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-semibold text-slate-700">Deskripsi Kegiatan</label>
               <textarea v-model="formKegiatan.description" rows="3"
                 placeholder="Jelaskan detail brief atau agenda kegiatan..."
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all resize-none"></textarea>
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-nest-600 focus:ring-1 focus:ring-nest-600 transition-all resize-none"></textarea>
             </div>
 
             <div class="flex justify-end gap-2.5 mt-2">
@@ -640,7 +734,7 @@ onMounted(() => {
                 Batal
               </button>
               <button type="submit" :disabled="isSubmittingKegiatan"
-                class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-sm transition-colors flex items-center gap-2 shadow-sm">
+                class="px-5 py-2.5 rounded-xl bg-nest-600 hover:bg-nest-700 disabled:bg-nest-400 text-white font-semibold text-sm transition-colors flex items-center gap-2 shadow-sm">
                 <Icon v-if="isSubmittingKegiatan" icon="lucide:loader-2" class="animate-spin" width="16" />
                 <span>{{ isSubmittingKegiatan ? 'Memproses...' : 'Simpan Kegiatan' }}</span>
               </button>
@@ -650,7 +744,70 @@ onMounted(() => {
       </div>
     </Transition>
 
-    <!-- Modal Error Dialog -->
+    <!-- Modal Upload Dokumentasi -->
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+      <div v-if="isModalDokumentasiOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+        <form @submit.prevent="handleUploadDokumentasi"
+          class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 flex flex-col gap-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Tambah Dokumentasi</h3>
+              <p class="mt-1 text-sm text-slate-500">Pilih kegiatan dan gambar yang akan diunggah.</p>
+            </div>
+            <button type="button" @click="isModalDokumentasiOpen = false" :disabled="isUploadingDokumentasi"
+              class="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+              aria-label="Tutup modal">
+              <Icon icon="lucide:x" width="20" />
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label for="dokumentasi-kegiatan" class="text-sm font-semibold text-slate-700">Kegiatan</label>
+            <select id="dokumentasi-kegiatan" v-model="selectedKegiatanId" required
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-rose-400 focus:outline-none">
+              <option value="" disabled>Pilih tanggal kegiatan</option>
+              <option v-for="item in kegiatanDetail" :key="item.id" :value="item.id">
+                {{ formatDate(item.waktu) }} — {{ item.title }}
+              </option>
+            </select>
+            <p v-if="!hasLoadedKegiatan" class="text-sm text-slate-500">Memuat daftar kegiatan...</p>
+            <p v-if="hasLoadedKegiatan && kegiatanDetail.length === 0" class="text-sm text-slate-500">
+              Belum ada kegiatan untuk dipilih.
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label for="dokumentasi-images" class="text-sm font-semibold text-slate-700">Gambar</label>
+            <input id="dokumentasi-images" type="file" accept="image/*" multiple @change="handleSelectImages"
+              class="max-w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-semibold file:text-[#9F1239] hover:file:bg-rose-100" />
+            <p v-if="selectedImages.length" class="text-xs text-slate-500">
+              {{ selectedImages.length }} gambar dipilih.
+            </p>
+          </div>
+
+          <p v-if="uploadMessage" class="text-sm text-slate-600">{{ uploadMessage }}</p>
+
+          <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <button type="button" @click="isModalDokumentasiOpen = false" :disabled="isUploadingDokumentasi"
+              class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50">
+              Batal
+            </button>
+            <button type="submit"
+              :disabled="isUploadingDokumentasi || !selectedKegiatanId || selectedImages.length === 0"
+              class="inline-flex items-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50">
+              <Icon :icon="isUploadingDokumentasi ? 'lucide:loader-2' : 'lucide:upload'"
+                :class="isUploadingDokumentasi ? 'animate-spin' : ''" width="16" />
+              {{ isUploadingDokumentasi ? 'Mengunggah...' : 'Unggah' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Transition>
+
+    <!-- Modal Message / Error Dialog (Disesuaikan dengan pesan) -->
     <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
       enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in"
       leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
@@ -665,7 +822,7 @@ onMounted(() => {
 
           <div class="flex flex-col gap-1 text-box-error">
             <h3 class="text-lg font-bold text-slate-800 judul-error">
-              {{ errorCode === 500 ? 'Kesalahan Server' : 'Gagal Memuat Data' }}
+              {{ errorCode === 400 ? 'Perhatian' : (errorCode === 500 ? 'Kesalahan Server' : 'Gagal Memuat Data') }}
             </h3>
             <p class="text-sm text-slate-600 pesan-error">
               {{ message }}
@@ -673,13 +830,17 @@ onMounted(() => {
           </div>
 
           <div class="w-full flex gap-3 mt-2 action-box-error">
-            <button v-if="errorCode !== 404" @click="handleRetry"
-              class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
+            <button v-if="errorCode !== 404 && errorCode !== 400" @click="handleRetry"
+              class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
               <Icon icon="lucide:refresh-cw" width="16" />
               Coba Lagi
             </button>
+            <button v-if="errorCode === 400" @click="clearError"
+              class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
+              Mengerti
+            </button>
             <button v-if="errorCode === 404" @click="router.push('/list-ekskul')"
-              class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
+              class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
               Kembali Ke Halaman Ekskul
             </button>
           </div>

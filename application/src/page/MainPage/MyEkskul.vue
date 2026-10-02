@@ -35,11 +35,6 @@ onMounted(() => {
             <!-- Header Section -->
             <header
                 class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 md:p-8 rounded-2xl border border-rose-950/20 shadow-md text-white flex flex-col gap-3">
-                <span
-                    class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 border border-white/10 px-3 py-1.5 rounded-full w-fit">
-                    <Icon icon="lucide:award" width="14" />
-                    Ekstrakurikuler Saya
-                </span>
                 <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
                     Ekskul Yang Kamu Ikuti
                 </h1>

@@ -72,7 +72,7 @@ onMounted(() => {
                             <Icon icon="lucide:search" class="w-4 h-4" />
                         </span>
                         <input v-model="searchEkskul"
-                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
+                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-nest-500 focus:border-transparent transition shadow-sm"
                             type="text" placeholder="Cari nama ekskul...">
                     </div>
                 </div>
@@ -110,18 +110,18 @@ onMounted(() => {
                             <!-- Left -->
                             <div class="flex flex-col gap-1.5">
                                 <h4
-                                    class="font-semibold text-slate-800 text-base group-hover:text-blue-600 transition-colors">
+                                    class="font-semibold text-slate-800 text-base group-hover:text-nest-600 transition-colors">
                                     {{ list.name }}
                                 </h4>
                                 <span
-                                    class="bg-blue-50 text-blue-600 border border-blue-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full">
+                                    class="bg-nest-50 text-nest-600 border border-nest-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full">
                                     {{ list.bidang }}
                                 </span>
                             </div>
 
                             <!-- Right -->
                             <div
-                                class="bg-blue-500 group-hover:bg-blue-600 rounded-full p-2 text-white shadow-sm transition-transform group-hover:translate-x-1 duration-200 flex items-center justify-center">
+                                class="bg-nest-500 group-hover:bg-nest-600 rounded-full p-2 text-white shadow-sm transition-transform group-hover:translate-x-1 duration-200 flex items-center justify-center">
                                 <Icon class="w-4 h-4" icon="grommet-icons:form-next" />
                             </div>
                         </div>
