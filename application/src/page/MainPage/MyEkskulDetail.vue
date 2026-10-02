@@ -272,24 +272,26 @@ const downloadLaporanKegiatan = async () => {
     message.value = 'Silakan pilih bulan untuk mengunduh laporan kegiatan.'
     return
   }
+  if(filteredKegiatan.value.length === 0) {
+    errorCode.value = 400
+    message.value = 'Tidak ada kegiatan pada bulan yang dipilih.'
+    return
+  }
+
   const kegiatanMapping = filteredKegiatan.value.map((item) => ({
     id: item.id,
-    title: item.title,
-    waktu: item.waktu,
-    location: item.location
   }))
 
   try {
-    const res = await api.post(`/kegiatan/export`, kegiatanMapping, { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([res.data]));
-    const link = document.createElement('a');
-
-    link.href = url;
-    link.setAttribute('download', `laporan_kegiatan.docx`);
-    document.body.appendChild(link);
-    link.click();
-
-    link.parentNode.removeChild(link);
+    const res = await api.post('/kegiatan/export', kegiatanMapping, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(res.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `laporan_kegiatan_${filterBulanKegiatan.value}.docx`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 1000)
   }
   catch (err) {
     errorCode.value = err.response?.status || 500

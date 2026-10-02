@@ -77,27 +77,20 @@ export class KegiatanController {
   async exportKegiatan(
     @Request() req,
     @Res() res: Response,
-    @Body() data: string[]
+    @Body() data: { id: number }[]
   ) {
-    try {
-      const buffer = await this.kegiatanService.exportKegiatan(req.user, data)
+    const buffer = await this.kegiatanService.exportKegiatan(req.user, data)
 
-      res.setHeader(
-        'Content-Type',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      )
-      res.setHeader(
-        'Content-Disposition',
-        'attachment; filename=laporan-kegiatan.docx',
-      )
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=laporan-kegiatan.docx',
+    )
 
-      res.send(buffer)
-    }
-    catch(error){
-      res.status(500).json({
-        message: "Gagal Download"
-      })
-    }
+    res.send(buffer)
 
   }
 }

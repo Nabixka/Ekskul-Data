@@ -1,7 +1,27 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { RoleService } from 'src/role/role.service';
-import { AlignmentType, Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from 'docx';
+import { AlignmentType, Document, HeightRule, ImageRun, Packer, Paragraph, Table, TableCell, TableRow, TextRun, VerticalAlign } from 'docx';
+import { readFile } from 'fs/promises';
+import { isAbsolute, relative, resolve, sep } from 'path';
+
+type ExportKegiatanInput = {
+    id: number;
+}
+
+type ExportKegiatanRecord = {
+    id: number;
+    title: string;
+    location: string;
+    waktu: Date | string | null;
+    ekskul_id: number;
+}
+
+type DokumentasiImage = {
+    kegiatan_id: number;
+    data: Buffer;
+    type: 'jpg' | 'png' | 'gif' | 'bmp';
+}
 
 @Injectable()
 export class KegiatanService {
@@ -142,116 +162,227 @@ export class KegiatanService {
 
     }
 
-    async exportKegiatan(req: { nis: number, is_admin: boolean }, data: string[]) {
+    async exportKegiatan(req: { nis: number, is_admin: boolean }, data: ExportKegiatanInput[]) {
+        if (req.is_admin !== false) throw new ForbiddenException("Anda Tidak Berhak")
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new BadRequestException("Pilih minimal satu kegiatan untuk diekspor")
+        }
 
-        const headerParagraph = new Paragraph({
-            alignment: AlignmentType.CENTER,
+        const kegiatanIds = data.map((item) => {
+            if (!item || !Number.isInteger(Number(item.id)) || Number(item.id) <= 0) {
+                throw new BadRequestException("Data kegiatan tidak valid")
+            }
+            return Number(item.id)
+        })
+        const uniqueKegiatanIds = [...new Set(kegiatanIds)]
+
+        const kegiatan = await this.databaseService.connection("kegiatan")
+            .select("id", "title", "location", "waktu", "ekskul_id")
+            .whereIn("id", uniqueKegiatanIds)
+
+        if (kegiatan.length !== uniqueKegiatanIds.length) {
+            throw new NotFoundException("Satu atau lebih kegiatan tidak ditemukan")
+        }
+
+        const ekskulIds = [...new Set<number>(kegiatan.map((item) => Number(item.ekskul_id)))]
+        const roles = await Promise.all(
+            ekskulIds.map((ekskulId) => this.roleService.getRole(req.nis, ekskulId))
+        )
+        if (roles.some((role) => role !== 'Humas')) {
+            throw new ForbiddenException("Anda Tidak Berhak")
+        }
+
+        const kegiatanById = new Map<number, ExportKegiatanRecord>(
+            kegiatan.map((item): [number, ExportKegiatanRecord] => [Number(item.id), item])
+        )
+        const orderedKegiatan = uniqueKegiatanIds.map((id) => {
+            const item = kegiatanById.get(id)
+            if (!item) throw new NotFoundException("Satu atau lebih kegiatan tidak ditemukan")
+            return item
+        })
+        const dokumentasi = await this.databaseService.connection("list_dokumentasi")
+            .select("kegiatan_id", "path")
+            .whereIn("kegiatan_id", uniqueKegiatanIds)
+            .orderBy("id")
+
+        const uploadsDirectory = resolve(__dirname, '..', '..', 'uploads')
+        const images: DokumentasiImage[] = await Promise.all(dokumentasi.map(async (item) => {
+            if (!item.path) {
+                throw new InternalServerErrorException("Path dokumentasi tidak tersedia")
+            }
+
+            const path = String(item.path).replace(/\\/g, '/')
+            const relativePath = path.replace(/^\/?uploads\//, '')
+            if (relativePath === path || !relativePath) {
+                throw new InternalServerErrorException("Path dokumentasi tidak valid")
+            }
+
+            const imagePath = resolve(uploadsDirectory, relativePath)
+            const pathFromUploads = relative(uploadsDirectory, imagePath)
+            if (
+                pathFromUploads === '..' ||
+                pathFromUploads.startsWith(`..${sep}`) ||
+                isAbsolute(pathFromUploads)
+            ) {
+                throw new InternalServerErrorException("Path dokumentasi tidak valid")
+            }
+
+            let imageData: Buffer
+            try {
+                imageData = await readFile(imagePath)
+            } catch {
+                throw new InternalServerErrorException(`File dokumentasi tidak dapat dibaca: ${item.path}`)
+            }
+
+            let type: DokumentasiImage['type']
+            if (imageData.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+                type = 'png'
+            } else if (imageData[0] === 0xff && imageData[1] === 0xd8 && imageData[2] === 0xff) {
+                type = 'jpg'
+            } else if (imageData.toString('ascii', 0, 3) === 'GIF') {
+                type = 'gif'
+            } else if (imageData.toString('ascii', 0, 2) === 'BM') {
+                type = 'bmp'
+            } else {
+                throw new InternalServerErrorException(`Format gambar dokumentasi tidak didukung: ${item.path}`)
+            }
+
+            return {
+                kegiatan_id: item.kegiatan_id,
+                data: imageData,
+                type
+            }
+        }))
+
+        const imagesByKegiatan = new Map<number, DokumentasiImage[]>()
+        for (const image of images) {
+            const kegiatanImages = imagesByKegiatan.get(image.kegiatan_id) ?? []
+            kegiatanImages.push(image)
+            imagesByKegiatan.set(image.kegiatan_id, kegiatanImages)
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat('id-ID', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Jakarta'
+        })
+        const monthFormatter = new Intl.DateTimeFormat('id-ID', {
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Jakarta'
+        })
+        const validActivityDates = orderedKegiatan
+            .map((item) => item.waktu)
+            .filter((waktu): waktu is Date | string => {
+                if (!waktu) return false
+                return !Number.isNaN(new Date(waktu).getTime())
+            })
+        const months = new Set(
+            validActivityDates.map((waktu) => monthFormatter.format(new Date(waktu)))
+        )
+        const period = months.size === 1 ? `BULAN ${[...months][0].toUpperCase()}` : 'Periode Kegiatan'
+
+        const makeTextCell = (text: string) => new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
             children: [
-                new TextRun({
-                    text: `Laporan Kegiatan Ekstrakulikuler`,
-                    bold: true,
-                    allCaps: true,
-                    font: "Times New Roman",
-                    size: 24
-                }),
-                new TextRun({
-                    text: `Bulan Desember 2026`,
-                    bold: true,
-                    break: 2,
-                    allCaps: true,
-                    font: "Times New Roman",
-                    size: 24
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text, font: 'Times New Roman', size: 20 })]
                 })
             ]
         })
-
-        const table = new Table({
-            rows: [
-                new TableRow({
+        const headerCell = (text: string) => new TableCell({
+            verticalAlign: VerticalAlign.CENTER,
+            children: [
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
                     children: [
-                        new TableCell({
-                            children: [
-                                new Paragraph({
-                                    alignment: AlignmentType.CENTER,
-                                    children: [
-                                        new TextRun({
-                                            text: "Dokumentasi",
-                                            bold: true,
-                                            font: "Times New Roman",
-                                            size: 24,
-                                            allCaps: true
-                                        })
-                                    ]
-                                })
-                            ]
-                        }),
-                        new TableCell({
-                            children: [
-                                new Paragraph({
-                                    alignment: AlignmentType.CENTER,
-                                    children: [
-                                        new TextRun({
-                                            text: "Hari/Tanggal",
-                                            bold: true,
-                                            font: "Times New Roman",
-                                            size: 24,
-                                            allCaps: true
-                                        })
-                                    ]
-                                })
-                            ]
-                        }),
-                        new TableCell({
-                            children: [
-                                new Paragraph({                                   
-                                    alignment: AlignmentType.CENTER,
-                                    children: [
-                                        new TextRun({
-                                            text: "Kegiatan",
-                                            bold: true,
-                                            font: "Times New Roman",
-                                            size: 24,
-                                            allCaps: true
-                                        })
-                                    ]
-                                })
-                            ]
-                        }),
-                        new TableCell({
-                            children: [
-                                new Paragraph({
-                                    alignment: AlignmentType.CENTER,
-                                    children: [
-                                        new TextRun({
-                                            text: "Tempat",
-                                            bold: true,
-                                            font: "Times New Roman",
-                                            size: 24,
-                                            allCaps: true
-                                        })
-                                    ]
-                                })
-                            ]
+                        new TextRun({
+                            text,
+                            bold: true,
+                            allCaps: true,
+                            font: 'Times New Roman',
+                            size: 24
                         })
                     ]
                 })
             ]
         })
+        const rows = [
+            new TableRow({
+                tableHeader: true,
+                children: [
+                    headerCell('Dokumentasi'),
+                    headerCell('Hari/Tanggal'),
+                    headerCell('Kegiatan'),
+                    headerCell('Tempat')
+                ]
+            }),
+            ...orderedKegiatan.map((item) => {
+                const eventDate = item.waktu && !Number.isNaN(new Date(item.waktu).getTime())
+                    ? dateFormatter.format(new Date(item.waktu))
+                    : '-'
+                const imageParagraphs = (imagesByKegiatan.get(item.id) ?? []).map((image) =>
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new ImageRun({
+                                data: image.data,
+                                type: image.type,
+                                transformation: { width: 120, height: 90 }
+                            })
+                        ]
+                    })
+                )
 
-        const doc = new Document({
-            sections: [
-                {
+                return new TableRow({
+                    height: { value: 2400, rule: HeightRule.ATLEAST },
+                    cantSplit: true,
                     children: [
-                        headerParagraph,
-                        table
+                        new TableCell({
+                            verticalAlign: VerticalAlign.CENTER,
+                            children: imageParagraphs.length > 0
+                                ? imageParagraphs
+                                : [new Paragraph({
+                                    alignment: AlignmentType.CENTER,
+                                    children: [new TextRun({ text: 'Tidak ada dokumentasi', font: 'Times New Roman', size: 20,  })]
+                                })]
+                        }),
+                        makeTextCell(eventDate),
+                        makeTextCell(item.title),
+                        makeTextCell(item.location)
                     ]
-                }
+                })
+            })
+        ]
+        const table = new Table({ rows })
+        const headerParagraph = new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+                new TextRun({
+                    text: 'LAPORAN KEGIATAN EKSTRAKURIKULER',
+                    bold: true,
+                    font: 'Times New Roman',
+                    size: 24
+                }),
+                new TextRun({
+                    text: period,
+                    bold: true,
+                    break: 1,
+                    font: 'Times New Roman',
+                    size: 24
+                })
             ]
         })
+        const doc = new Document({
+            sections: [{
+                children: [headerParagraph, new Paragraph({ text: '' }), table]
+            }]
+        })
 
-        const buffer = await Packer.toBuffer(doc)
-
-        return buffer
+        return Packer.toBuffer(doc)
     }
 
 }
