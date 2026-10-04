@@ -16,6 +16,19 @@ const kegiatanDetail = ref([])
 const absensiRows = ref([])
 const dokumentasiDetail = ref([])
 const kasDetail = ref([])
+const kasSummary = ref({ openingBalance: 0, totalIncome: 0, totalExpense: 0, closingBalance: 0, currentBalance: 0 })
+const kasMembers = ref([])
+const selectedKasMonth = ref(new Date().getMonth() + 1)
+const selectedKasYear = ref(new Date().getFullYear())
+const kasYears = computed(() => {
+  const currentYear = new Date().getFullYear()
+  return Array.from({ length: 3 }, (_, index) => currentYear - 2 + index).reverse()
+})
+
+const isKasModalOpen = ref(false)
+const isSubmittingKas = ref(false)
+const editingKasId = ref(null)
+const formKas = ref(createKasForm())
 const hasLoadedKegiatan = ref(false)
 const hasLoadedDokumentasi = ref(false)
 const hasLoadedAnggota = ref(false)
@@ -65,6 +78,9 @@ const canAccessAbsensi = computed(() =>
 const canManageKegiatanAndDokumentasi = computed(() =>
   ['Ketua', 'Wakil Ketua', 'Humas'].includes(ekskulDetail.value.role)
 )
+const canManageKas = computed(() =>
+  ['Bendahara', 'Ketua', 'Wakil Ketua'].includes(ekskulDetail.value.role)
+)
 const visibleSections = computed(() =>
   listSection.value.filter((section) => section.name !== 'Absensi' || canAccessAbsensi.value)
 )
@@ -72,6 +88,21 @@ const visibleSections = computed(() =>
 const clearError = () => {
   message.value = ''
   errorCode.value = null
+}
+
+function createKasForm(transaction = null) {
+  const now = new Date()
+  const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  const waktu = transaction?.waktu
+    ? new Date(new Date(transaction.waktu).getTime() - new Date(transaction.waktu).getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+    : localNow
+  return {
+    amount: transaction?.amount ?? '',
+    jenis: transaction?.jenis ?? 'masuk',
+    keterangan: transaction?.keterangan ?? '',
+    waktu,
+    member_ekskul_id: transaction?.member_ekskul_id ?? ''
+  }
 }
 
 const openPreview = (image) => {
@@ -205,17 +236,98 @@ const handleDeleteDokumentasi = async (documentId) => {
 }
 
 const getKas = async () => {
-  if (kasDetail.value.length > 0) return
   isLoading.value = true
   clearError()
   try {
-    const res = await api.get(`/kas/ekskul/${id}`)
-    kasDetail.value = res.data.data || []
+    const res = await api.get(`/kas/ekskul/${id}`, {
+      params: { bulan: selectedKasMonth.value, tahun: selectedKasYear.value }
+    })
+    kasDetail.value = res.data.data?.transactions || []
+    kasMembers.value = res.data.data?.members || []
+    kasSummary.value = res.data.data?.summary || {
+      openingBalance: 0, totalIncome: 0, totalExpense: 0, closingBalance: 0, currentBalance: 0
+    }
+    ekskulDetail.value.kas = kasSummary.value.currentBalance
+    return true
   } catch (error) {
     errorCode.value = error.response?.status || 500
     message.value = error.response?.data?.message || "Gagal memuat data kas."
+    return false
   } finally {
     isLoading.value = false
+  }
+}
+
+const openKasModal = (transaction = null) => {
+  editingKasId.value = transaction?.id ?? null
+  formKas.value = createKasForm(transaction)
+  isKasModalOpen.value = true
+}
+
+const saveKasTransaction = async () => {
+  const payload = {
+    ...formKas.value,
+    amount: Number(formKas.value.amount),
+    member_ekskul_id: formKas.value.jenis === 'masuk' && formKas.value.member_ekskul_id
+      ? Number(formKas.value.member_ekskul_id)
+      : null
+  }
+  isSubmittingKas.value = true
+  clearError()
+  try {
+    if (editingKasId.value) {
+      await api.put(`/kas/ekskul/${id}/${editingKasId.value}`, payload)
+    } else {
+      await api.post(`/kas/ekskul/${id}`, payload)
+    }
+    isKasModalOpen.value = false
+    const refreshed = await getKas()
+    if (refreshed) {
+      errorCode.value = 200
+      message.value = editingKasId.value ? 'Transaksi kas berhasil diperbarui.' : 'Transaksi kas berhasil ditambahkan.'
+    }
+  } catch (error) {
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal menyimpan transaksi kas.'
+  } finally {
+    isSubmittingKas.value = false
+  }
+}
+
+const deleteKasTransaction = async (transaction) => {
+  if (!window.confirm(`Hapus transaksi "${transaction.keterangan}"?`)) return
+  clearError()
+  try {
+    await api.delete(`/kas/ekskul/${id}/${transaction.id}`)
+    const refreshed = await getKas()
+    if (refreshed) {
+      errorCode.value = 200
+      message.value = 'Transaksi kas berhasil dihapus.'
+    }
+  } catch (error) {
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal menghapus transaksi kas.'
+  }
+}
+
+const downloadKasReport = async (reportType) => {
+  clearError()
+  try {
+    const response = await api.get(`/kas/ekskul/${id}/export/${reportType}`, {
+      params: { bulan: selectedKasMonth.value, tahun: selectedKasYear.value },
+      responseType: 'blob'
+    })
+    const fileUrl = window.URL.createObjectURL(response.data)
+    const link = document.createElement('a')
+    link.href = fileUrl
+    link.download = `laporan-kas-${reportType}-${selectedKasYear.value}-${String(selectedKasMonth.value).padStart(2, '0')}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => window.URL.revokeObjectURL(fileUrl), 1000)
+  } catch (error) {
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal mengunduh laporan kas.'
   }
 }
 
@@ -841,49 +953,208 @@ onMounted(() => {
 
         <!-- TAB: KAS -->
         <div v-else-if="currentSection === 'Kas'" class="flex flex-col gap-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Icon icon="lucide:wallet" class="text-[#E0234E]" />
-              Laporan Transaksi Kas
-            </h3>
-            <span class="text-sm font-medium text-slate-600 saldo-kas">
-              Saldo Saat Ini: <strong class="text-[#E0234E] font-bold">{{ formatRupiah(ekskulDetail.kas) }}</strong>
-            </span>
-          </div>
-
-          <div v-if="kasDetail.length === 0 && !isLoading" class="text-center py-8 text-slate-400 text-sm kas-kosong">
-            Belum ada riwayat transaksi kas.
-          </div>
-
-          <div v-else class="flex flex-col divide-y divide-slate-100 list-kas">
-            <div v-for="transaksi in kasDetail" :key="transaksi.id"
-              class="py-3 flex items-center justify-between item-kas">
-              <div class="flex items-center gap-3">
-                <div :class="[
-                  'p-2 rounded-lg',
-                  transaksi.type === 'masuk' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-                ]">
-                  <Icon :icon="transaksi.type === 'masuk' ? 'lucide:arrow-down-left' : 'lucide:arrow-up-right'"
-                    width="18" />
-                </div>
-                <div>
-                  <h4 class="font-semibold text-slate-800 text-sm">{{ transaksi.title }}</h4>
-                  <p class="text-xs text-slate-400">{{ formatDate(transaksi.waktu) }}</p>
-                </div>
-              </div>
-              <span :class="[
-                'font-bold text-sm jumlah-transaksi',
-                transaksi.type === 'masuk' ? 'text-emerald-600' : 'text-red-600'
-              ]">
-                {{ transaksi.type === 'masuk' ? '+' : '-' }} {{ formatRupiah(transaksi.amount) }}
-              </span>
+          <div class="flex flex-col gap-4 border-b border-slate-100 pb-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <h3 class="flex items-center gap-2 text-lg font-bold text-slate-800">
+                <Icon icon="lucide:wallet" class="text-nest-600 dark:text-nest-300" />
+                Kas {{ ekskulDetail.name }}
+              </h3>
+              <p class="mt-1 text-xs text-slate-500">Catat pemasukan dan pengeluaran, lalu unduh laporan sesuai periode.</p>
             </div>
+            <div class="flex flex-wrap gap-2">
+              <button v-if="canManageKas" @click="downloadKasReport('anggota')"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                <Icon icon="lucide:users-round" width="16" />
+                Ekspor Iuran
+              </button>
+              <button v-if="canManageKas" @click="downloadKasReport('rincian')"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
+                <Icon icon="lucide:file-spreadsheet" width="16" />
+                Ekspor Rincian
+              </button>
+              <button v-if="canManageKas" @click="openKasModal()"
+                class="inline-flex items-center gap-2 rounded-xl bg-nest-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-nest-700">
+                <Icon icon="lucide:plus" width="16" />
+                Catat Transaksi
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
+              Periode
+              <select v-model.number="selectedKasMonth" @change="getKas"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-nest-600 focus:outline-none dark:bg-slate-900 dark:text-slate-200">
+                <option v-for="(month, index) in ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']"
+                  :key="month" :value="index + 1">{{ month }}</option>
+              </select>
+              <select v-model.number="selectedKasYear" @change="getKas"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-nest-600 focus:outline-none dark:bg-slate-900 dark:text-slate-200">
+                <option v-for="year in kasYears" :key="year" :value="year">{{ year }}</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <article class="rounded-xl border border-slate-200/70 bg-slate-50 p-4 dark:bg-slate-900/60">
+              <p class="text-xs font-medium text-slate-500">Saldo saat ini</p>
+              <p class="mt-1 text-lg font-bold text-slate-900">{{ formatRupiah(kasSummary.currentBalance) }}</p>
+            </article>
+            <article class="rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4 dark:border-emerald-900/70 dark:bg-emerald-950/30">
+              <p class="text-xs font-medium text-emerald-700 dark:text-emerald-300">Pemasukan periode ini</p>
+              <p class="mt-1 text-lg font-bold text-emerald-800 dark:text-emerald-200">{{ formatRupiah(kasSummary.totalIncome) }}</p>
+            </article>
+            <article class="rounded-xl border border-rose-200/70 bg-rose-50/70 p-4 dark:border-rose-900/70 dark:bg-rose-950/30">
+              <p class="text-xs font-medium text-rose-700 dark:text-rose-300">Pengeluaran periode ini</p>
+              <p class="mt-1 text-lg font-bold text-rose-800 dark:text-rose-200">{{ formatRupiah(kasSummary.totalExpense) }}</p>
+            </article>
+          </div>
+
+          <div v-if="kasDetail.length === 0 && !isLoading" class="rounded-xl border border-dashed border-slate-200 py-10 text-center text-sm text-slate-500">
+            Belum ada transaksi kas pada periode ini.
+          </div>
+
+          <div v-else-if="kasDetail.length" class="overflow-x-auto rounded-xl border border-slate-200/70">
+            <table class="w-full min-w-[700px] text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900">
+                <tr>
+                  <th class="px-4 py-3 font-semibold">Tanggal</th>
+                  <th class="px-4 py-3 font-semibold">Keterangan</th>
+                  <th class="px-4 py-3 font-semibold">Jenis</th>
+                  <th class="px-4 py-3 text-right font-semibold">Jumlah</th>
+                  <th v-if="canManageKas" class="px-4 py-3 text-right font-semibold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr v-for="transaksi in kasDetail" :key="transaksi.id">
+                  <td class="whitespace-nowrap px-4 py-3 text-slate-500">{{ formatDate(transaksi.waktu) }}</td>
+                  <td class="px-4 py-3">
+                    <p class="font-semibold text-slate-800">{{ transaksi.keterangan }}</p>
+                    <p v-if="transaksi.member_name" class="mt-0.5 text-xs text-slate-500">
+                      Iuran anggota: {{ transaksi.member_name }}
+                    </p>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span :class="[
+                      'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                      transaksi.jenis === 'masuk'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                    ]">{{ transaksi.jenis === 'masuk' ? 'Pemasukan' : 'Pengeluaran' }}</span>
+                  </td>
+                  <td :class="[
+                    'whitespace-nowrap px-4 py-3 text-right font-bold',
+                    transaksi.jenis === 'masuk' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
+                  ]">
+                    {{ transaksi.jenis === 'masuk' ? '+' : '-' }} {{ formatRupiah(transaksi.amount) }}
+                  </td>
+                  <td v-if="canManageKas" class="whitespace-nowrap px-4 py-3 text-right">
+                    <button @click="openKasModal(transaksi)" title="Edit transaksi"
+                      class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-nest-600 dark:hover:bg-slate-800">
+                      <Icon icon="lucide:pencil" width="16" />
+                    </button>
+                    <button @click="deleteKasTransaction(transaksi)" title="Hapus transaksi"
+                      class="rounded-lg p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50">
+                      <Icon icon="lucide:trash-2" width="16" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-end border-t border-slate-100 pt-3">
+            <p class="text-sm font-semibold text-slate-600">
+              Saldo akhir periode:
+              <strong class="text-nest-700 dark:text-nest-300">{{ formatRupiah(kasSummary.closingBalance) }}</strong>
+            </p>
           </div>
         </div>
 
       </main>
 
     </div>
+
+    <!-- Modal Form Transaksi Kas -->
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+      <div v-if="isKasModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <form @submit.prevent="saveKasTransaction"
+          class="flex max-h-[90vh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+          <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 dark:border-slate-700">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                {{ editingKasId ? 'Edit Transaksi Kas' : 'Catat Transaksi Kas' }}
+              </h3>
+              <p class="mt-1 text-sm text-slate-500">Isi rincian transaksi agar saldo dan laporan selalu akurat.</p>
+            </div>
+            <button type="button" @click="isKasModalOpen = false" :disabled="isSubmittingKas"
+              class="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              aria-label="Tutup modal">
+              <Icon icon="lucide:x" width="20" />
+            </button>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Jenis transaksi
+              <select v-model="formKas.jenis" required
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-nest-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800">
+                <option value="masuk">Pemasukan</option>
+                <option value="keluar">Pengeluaran</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Jumlah (Rp)
+              <input v-model="formKas.amount" type="number" min="1" step="1" required placeholder="Contoh: 25000"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-nest-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800" />
+            </label>
+          </div>
+
+          <label class="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Tanggal transaksi
+            <input v-model="formKas.waktu" type="datetime-local" required
+              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-nest-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800" />
+          </label>
+
+          <label v-if="formKas.jenis === 'masuk'"
+            class="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Anggota pembayar (opsional)
+            <select v-model="formKas.member_ekskul_id"
+              class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-nest-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800">
+              <option value="">Pemasukan umum / bukan iuran anggota</option>
+              <option v-for="member in kasMembers" :key="member.id" :value="String(member.id)">
+                {{ member.name }} — {{ member.nis }}
+              </option>
+            </select>
+            <span class="text-xs font-normal text-slate-500">
+              Pilih anggota untuk menandai iurannya sebagai sudah dibayar pada laporan bulanan.
+            </span>
+          </label>
+
+          <label class="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Keterangan / digunakan untuk
+            <textarea v-model="formKas.keterangan" rows="3" maxlength="500" required
+              placeholder="Contoh: Pembelian alat kebersihan untuk kegiatan..."
+              class="resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-nest-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800"></textarea>
+          </label>
+
+          <div class="flex justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+            <button type="button" @click="isKasModalOpen = false" :disabled="isSubmittingKas"
+              class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+              Batal
+            </button>
+            <button type="submit" :disabled="isSubmittingKas"
+              class="inline-flex items-center gap-2 rounded-xl bg-nest-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-nest-700 disabled:cursor-not-allowed disabled:opacity-50">
+              <Icon :icon="isSubmittingKas ? 'lucide:loader-2' : 'lucide:save'"
+                :class="isSubmittingKas ? 'animate-spin' : ''" width="16" />
+              {{ isSubmittingKas ? 'Menyimpan...' : 'Simpan Transaksi' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Transition>
 
     <!-- Modal Form Tambah Kegiatan -->
     <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"

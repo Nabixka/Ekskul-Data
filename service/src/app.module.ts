@@ -6,8 +6,9 @@ import { DokumentasiModule } from './dokumentasi/dokumentasi.module';
 import { AdminModule } from './admin/admin.module';
 import { MemberModule } from './member/member.module';
 import { RoleModule } from './role/role.module';
+import { KasModule } from './kas/kas.module';
 
 @Module({
-  imports: [EkskulModule, KegiatanModule, AuthModule, DokumentasiModule, AdminModule, MemberModule, RoleModule]
+  imports: [EkskulModule, KegiatanModule, AuthModule, DokumentasiModule, AdminModule, MemberModule, RoleModule, KasModule]
 })
 export class AppModule {}

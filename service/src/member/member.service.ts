@@ -90,13 +90,20 @@ export class MemberService {
         const getkegiatan = await this.kegiatanService.getListKegiatanEkskul(ekskul_id)
         const getMember = await this.ekskulService.getAllMember(req, ekskul_id)
         const mappingMember = getMember.data.map((e) => e.name)
-        // const getKas = await this.databaseService.connection("kas")
+        const kasTotals = await this.databaseService.connection("kas_transcation")
+            .where({ ekskul_id })
+            .sum({
+                masuk: this.databaseService.connection.raw("case when jenis = 'masuk' then amount else 0 end"),
+                keluar: this.databaseService.connection.raw("case when jenis = 'keluar' then amount else 0 end")
+            })
+            .first()
+        const saldoKas = Number(kasTotals?.masuk || 0) - Number(kasTotals?.keluar || 0)
 
         const payload = {
             ...getEkskul[0],
             kegiatan: getkegiatan.data.length,
             member: mappingMember.length,
-            kas: 0
+            kas: saldoKas
         }
 
         if (getEkskul.length === 0) throw new NotFoundException("Anda Belum Join Dengan Ekskul Ini")
