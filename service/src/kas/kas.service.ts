@@ -162,6 +162,8 @@ export class KasService {
 
     return {
       ekskulName: ekskul.name as string,
+      pembina: members.find((member) => member.role === 'Pembina')?.name || '-',
+      ketua: members.find((member) => member.role === 'Ketua')?.name || '-',
       period,
       transactions: transactions.map((transaction) => ({
         ...transaction,
@@ -233,118 +235,129 @@ export class KasService {
     return { message: 'Transaksi kas berhasil dihapus' }
   }
 
-  async exportMemberPayments(req: KasRequestUser, ekskulId: number, month?: string, year?: string) {
+  async exportKasReport(req: KasRequestUser, ekskulId: number, month?: string, year?: string) {
     await this.assertManager(req, ekskulId)
     const report = await this.getReportData(ekskulId, month, year)
     const workbook = new ExcelJS.Workbook()
     workbook.creator = 'Sistem Data Ekstrakurikuler'
     workbook.created = new Date()
-    const worksheet = workbook.addWorksheet('Laporan Kas')
     const monthName = MONTH_NAMES[report.period.month - 1]
-    worksheet.columns = [{ width: 8 }, { width: 36 }, { width: 20 }]
-    worksheet.mergeCells('A1:C1')
-    worksheet.getCell('A1').value = `LAPORAN KAS EKSTRAKURIKULER [${report.ekskulName}]`
-    worksheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }
-    worksheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBE123C' } }
-    worksheet.getCell('A1').alignment = { horizontal: 'center' }
-    worksheet.mergeCells('A2:C2')
-    worksheet.getCell('A2').value = `Periode: ${monthName} ${report.period.year}`
-    worksheet.getCell('A2').font = { bold: true, size: 12 }
-    worksheet.getCell('A2').alignment = { horizontal: 'center' }
-    worksheet.addRow([])
-    const header = worksheet.addRow(['NO', 'NAMA', monthName.toLocaleUpperCase('id-ID')])
-    header.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-    header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } }
-    header.alignment = { horizontal: 'center' }
-    report.members.forEach((member, index) => {
-      worksheet.addRow([index + 1, member.name, member.paidAmount > 0 ? 'P' : '-'])
-    })
-    worksheet.addRow([])
-    worksheet.addRow(['', 'Total pemasukan tercatat', report.summary.totalIncome])
-    worksheet.getColumn(3).alignment = { horizontal: 'center' }
-    worksheet.getCell(`C${worksheet.rowCount}`).numFmt = '"Rp" #,##0'
-    worksheet.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
-        }
-      })
-    })
-    const buffer = Buffer.from(await workbook.xlsx.writeBuffer())
-    return { buffer, filename: `laporan-kas-${monthName.toLowerCase()}-${report.period.year}.xlsx` }
-  }
+    const schoolYearStart = report.period.month >= 7 ? report.period.year : report.period.year - 1
+    const schoolYear = `${schoolYearStart}/${schoolYearStart + 1}`
+    const blackBorder = {
+      top: { style: 'thin' as const, color: { argb: 'FF000000' } },
+      bottom: { style: 'thin' as const, color: { argb: 'FF000000' } },
+      left: { style: 'thin' as const, color: { argb: 'FF000000' } },
+      right: { style: 'thin' as const, color: { argb: 'FF000000' } }
+    }
 
-  async exportLedger(req: KasRequestUser, ekskulId: number, month?: string, year?: string) {
-    await this.assertManager(req, ekskulId)
-    const report = await this.getReportData(ekskulId, month, year)
-    const workbook = new ExcelJS.Workbook()
-    workbook.creator = 'Sistem Data Ekstrakurikuler'
-    workbook.created = new Date()
-    const worksheet = workbook.addWorksheet('Rincian Kas', { views: [{ state: 'frozen', ySplit: 5 }] })
-    const monthName = MONTH_NAMES[report.period.month - 1]
-    worksheet.columns = [
-      { width: 8 }, { width: 20 }, { width: 48 },
-      { width: 20 }, { width: 20 }, { width: 22 }
+    const roster = workbook.addWorksheet('Laporan Kas')
+    roster.columns = [{ width: 8 }, { width: 36 }, { width: 18 }]
+    roster.mergeCells('A1:C1')
+    roster.mergeCells('A2:C2')
+    roster.mergeCells('A3:C3')
+    roster.getCell('A1').value = `LAPORAN KAS EKSTRAKURIKULER [${report.ekskulName}]`
+    roster.getCell('A2').value = 'SMK NEGERI 10 JAKARTA'
+    roster.getCell('A3').value = `TAHUN AJARAN ${schoolYear}`
+    for (const rowNumber of [1, 2, 3]) {
+      const cell = roster.getCell(`A${rowNumber}`)
+      cell.font = { name: 'Times New Roman', bold: true, size: rowNumber === 1 ? 12 : 11 }
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+    }
+    roster.getRow(1).height = 22
+    roster.getRow(2).height = 18
+    roster.getRow(3).height = 18
+    roster.getCell('A5').value = 'Pembina'
+    roster.getCell('B5').value = `: ${report.pembina}`
+    roster.mergeCells('B5:C5')
+    roster.getCell('A6').value = 'Ketua Ekstrakurikuler'
+    roster.getCell('B6').value = `: ${report.ketua}`
+    roster.mergeCells('B6:C6')
+    for (const rowNumber of [5, 6]) {
+      roster.getCell(`A${rowNumber}`).font = { name: 'Times New Roman', bold: true, size: 11 }
+      roster.getCell(`B${rowNumber}`).font = { name: 'Times New Roman', bold: true, size: 11 }
+    }
+    const rosterHeader = roster.addRow([])
+    rosterHeader.getCell(1).value = 'NO'
+    rosterHeader.getCell(2).value = 'NAMA'
+    rosterHeader.getCell(3).value = monthName.toLocaleUpperCase('id-ID')
+    rosterHeader.height = 24
+    rosterHeader.eachCell((cell) => {
+      cell.font = { name: 'Times New Roman', bold: true, size: 11 }
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.border = blackBorder
+    })
+    report.members.filter((member) => member.role !== 'Pembina').forEach((member, index) => {
+      const row = roster.addRow([index + 1, member.name, member.paidAmount > 0 ? 'P' : '-'])
+      row.font = { name: 'Times New Roman', size: 11 }
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
+      row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' }
+      row.eachCell((cell) => { cell.border = blackBorder })
+    })
+
+    const ledger = workbook.addWorksheet('Rincian Kas', { views: [{ state: 'frozen', ySplit: 3 }] })
+    ledger.columns = [
+      { width: 8 }, { width: 18 }, { width: 42 },
+      { width: 20 }, { width: 20 }, { width: 20 }
     ]
-    worksheet.mergeCells('A1:F1')
-    worksheet.getCell('A1').value = `RINCIAN KAS ${report.ekskulName.toLocaleUpperCase('id-ID')} - ${monthName.toLocaleUpperCase('id-ID')} ${report.period.year}`
-    worksheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }
-    worksheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBE123C' } }
-    worksheet.getCell('A1').alignment = { horizontal: 'center' }
-    worksheet.mergeCells('A2:F2')
-    worksheet.getCell('A2').value = `Saldo Awal: Rp ${report.summary.openingBalance.toLocaleString('id-ID')}`
-    worksheet.getCell('A2').font = { bold: true }
-    worksheet.addRow([])
-    const header = worksheet.addRow(['NO', 'TANGGAL', 'KETERANGAN', 'PEMASUKAN', 'PENGELUARAN', 'SALDO'])
-    header.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-    header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF334155' } }
-    header.alignment = { horizontal: 'center' }
+    ledger.mergeCells('A1:F1')
+    ledger.getCell('A1').value =
+      `RINCIAN KAS ${monthName.toLocaleUpperCase('id-ID')} ${report.period.year}`
+    ledger.getCell('A1').font = { name: 'Times New Roman', bold: true, size: 12 }
+    ledger.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' }
+    ledger.getRow(1).height = 24
+    const ledgerHeader = ledger.addRow(['No', 'Tanggal', 'Keterangan', 'Pemasukan', 'Pengeluaran', 'Saldo'])
+    ledgerHeader.font = { name: 'Times New Roman', bold: true, size: 11 }
+    ledgerHeader.alignment = { horizontal: 'center', vertical: 'middle' }
+    ledgerHeader.eachCell((cell) => { cell.border = blackBorder })
 
     let balance = report.summary.openingBalance
-    const chronologicalTransactions = [...report.transactions].reverse()
-    chronologicalTransactions.forEach((transaction, index) => {
+    const openingRow = ledger.addRow([1, null, 'Saldo Awal', null, null, balance])
+    openingRow.font = { name: 'Times New Roman', size: 11 }
+    openingRow.getCell(1).alignment = { horizontal: 'center' }
+    openingRow.getCell(6).alignment = { horizontal: 'right' }
+    openingRow.eachCell((cell) => { cell.border = blackBorder })
+    ;[...report.transactions].reverse().forEach((transaction, index) => {
       const income = transaction.jenis === 'masuk' ? transaction.amount : 0
       const expense = transaction.jenis === 'keluar' ? transaction.amount : 0
       balance += income - expense
       const description = transaction.member_name
         ? `${transaction.member_name} - ${transaction.keterangan}`
         : transaction.keterangan
-      worksheet.addRow([
-        index + 1,
+      const row = ledger.addRow([
+        index + 2,
         new Date(transaction.waktu),
         description,
         income || null,
         expense || null,
         balance
       ])
+      row.font = { name: 'Times New Roman', size: 11 }
+      row.getCell(1).alignment = { horizontal: 'center' }
+      row.getCell(2).numFmt = 'd/m/yyyy'
+      for (const column of [4, 5, 6]) {
+        row.getCell(column).numFmt = '"Rp" #,##0;[Red]-"Rp" #,##0'
+        row.getCell(column).alignment = { horizontal: 'right' }
+      }
+      row.eachCell((cell) => { cell.border = blackBorder })
     })
+
     const summaryRows = [
-      ['TOTAL PEMASUKAN', null, null, report.summary.totalIncome, null, null],
-      ['TOTAL PENGELUARAN', null, null, null, report.summary.totalExpense, null],
-      ['SALDO AKHIR PERIODE', null, null, null, null, report.summary.closingBalance]
+      ['TOTAL PEMASUKAN', report.summary.totalIncome],
+      ['TOTAL PENGELUARAN', report.summary.totalExpense],
+      ['SALDO AKHIR', report.summary.closingBalance]
     ]
-    worksheet.addRow([])
-    summaryRows.forEach((summary) => {
-      const row = worksheet.addRow(summary)
-      row.font = { bold: true }
-      row.getCell(1).font = { bold: true, color: { argb: 'FF881337' } }
-    })
-    worksheet.getColumn(2).numFmt = 'dd mmmm yyyy'
-    for (const column of [4, 5, 6]) worksheet.getColumn(column).numFmt = '"Rp" #,##0;[Red]-"Rp" #,##0'
-    worksheet.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-          right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
-        }
-      })
-    })
+    for (const [label, amount] of summaryRows) {
+      const row = ledger.addRow([label, null, null, null, null, amount])
+      ledger.mergeCells(`A${row.number}:E${row.number}`)
+      row.font = { name: 'Times New Roman', bold: true, size: 11 }
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
+      row.getCell(6).numFmt = '"Rp" #,##0;[Red]-"Rp" #,##0'
+      row.getCell(6).alignment = { horizontal: 'right' }
+      row.eachCell((cell) => { cell.border = blackBorder })
+    }
+
     const buffer = Buffer.from(await workbook.xlsx.writeBuffer())
-    return { buffer, filename: `rincian-kas-${monthName.toLowerCase()}-${report.period.year}.xlsx` }
+    return { buffer, filename: `laporan-kas-${monthName.toLowerCase()}-${report.period.year}.xlsx` }
   }
 }

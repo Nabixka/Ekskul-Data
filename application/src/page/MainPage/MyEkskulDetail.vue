@@ -310,17 +310,17 @@ const deleteKasTransaction = async (transaction) => {
   }
 }
 
-const downloadKasReport = async (reportType) => {
+const downloadKasReport = async () => {
   clearError()
   try {
-    const response = await api.get(`/kas/ekskul/${id}/export/${reportType}`, {
+    const response = await api.get(`/kas/ekskul/${id}/export`, {
       params: { bulan: selectedKasMonth.value, tahun: selectedKasYear.value },
       responseType: 'blob'
     })
     const fileUrl = window.URL.createObjectURL(response.data)
     const link = document.createElement('a')
     link.href = fileUrl
-    link.download = `laporan-kas-${reportType}-${selectedKasYear.value}-${String(selectedKasMonth.value).padStart(2, '0')}.xlsx`
+    link.download = `laporan-kas-${selectedKasYear.value}-${String(selectedKasMonth.value).padStart(2, '0')}.xlsx`
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -962,15 +962,10 @@ onMounted(() => {
               <p class="mt-1 text-xs text-slate-500">Catat pemasukan dan pengeluaran, lalu unduh laporan sesuai periode.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button v-if="canManageKas" @click="downloadKasReport('anggota')"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
-                <Icon icon="lucide:users-round" width="16" />
-                Ekspor Iuran
-              </button>
-              <button v-if="canManageKas" @click="downloadKasReport('rincian')"
+              <button v-if="canManageKas" @click="downloadKasReport"
                 class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
                 <Icon icon="lucide:file-spreadsheet" width="16" />
-                Ekspor Rincian
+                Ekspor Laporan Kas
               </button>
               <button v-if="canManageKas" @click="openKasModal()"
                 class="inline-flex items-center gap-2 rounded-xl bg-nest-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-nest-700">

@@ -59,29 +59,15 @@ export class KasController {
     return this.kasService.deleteTransaction(req.user, Number(ekskulId), Number(transactionId))
   }
 
-  @Get('/ekskul/:ekskul_id/export/anggota')
-  async exportMemberPayments(
+  @Get('/ekskul/:ekskul_id/export')
+  async exportKasReport(
     @Request() req,
     @Res() res: Response,
     @Param('ekskul_id', ValidateEkskulExist) ekskulId: string,
     @Query('bulan') month: string,
     @Query('tahun') year: string
   ) {
-    const { buffer, filename } = await this.kasService.exportMemberPayments(
-      req.user, Number(ekskulId), month, year
-    )
-    this.sendWorkbook(res, buffer, filename)
-  }
-
-  @Get('/ekskul/:ekskul_id/export/rincian')
-  async exportLedger(
-    @Request() req,
-    @Res() res: Response,
-    @Param('ekskul_id', ValidateEkskulExist) ekskulId: string,
-    @Query('bulan') month: string,
-    @Query('tahun') year: string
-  ) {
-    const { buffer, filename } = await this.kasService.exportLedger(
+    const { buffer, filename } = await this.kasService.exportKasReport(
       req.user, Number(ekskulId), month, year
     )
     this.sendWorkbook(res, buffer, filename)
