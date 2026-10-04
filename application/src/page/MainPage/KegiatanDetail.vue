@@ -12,14 +12,17 @@ const ekskulId = route.params.id
 const kegiatanId = route.params.kegiatanId
 
 const kegiatan = ref(null)
+const absensi = ref([])
 const dokumentasi = ref([])
 const userRole = ref('')
 const currentSection = ref('Absen')
 const isLoading = ref(false)
+const isLoadingAbsensi = ref(false)
 const isLoadingDokumentasi = ref(false)
 const hasLoadedDokumentasi = ref(false)
 const errorMessage = ref('')
 const deletingDocumentId = ref(null)
+const hasLoadedAbsensi = ref(false)
 
 const selectedImage = ref(null)
 
@@ -55,6 +58,21 @@ const getDetailKegiatan = async () => {
 	}
 }
 
+const getAbsensi = async () => {
+	if (hasLoadedAbsensi.value) return
+	isLoadingAbsensi.value = true
+	errorMessage.value = ''
+	try {
+		const response = await api.get(`/kegiatan/${kegiatanId}/ekskul/${ekskulId}/absen`)
+		absensi.value = response.data.data || []
+		hasLoadedAbsensi.value = true
+	} catch (error) {
+		errorMessage.value = error.response?.data?.message || 'Gagal memuat data absensi.'
+	} finally {
+		isLoadingAbsensi.value = false
+	}
+}
+
 const getDokumentasi = async () => {
 	if (hasLoadedDokumentasi.value) return
 	isLoadingDokumentasi.value = true
@@ -87,6 +105,9 @@ const handleDeleteDokumentasi = async (documentId) => {
 
 const handleChangeSection = (section) => {
 	currentSection.value = section
+	if (section === 'Absen') {
+		getAbsensi()
+	}
 	if (section === 'Dokumentasi') {
 		getDokumentasi()
 	}
@@ -95,6 +116,7 @@ const handleChangeSection = (section) => {
 onMounted(() => {
 	getDetailKegiatan()
 	getUserRole()
+	getAbsensi()
 })
 </script>
 
@@ -158,10 +180,47 @@ onMounted(() => {
 
 				<section class="bg-white rounded-2xl p-5 md:p-7 border border-slate-200/70 shadow-sm min-h-64">
 					<div v-if="currentSection === 'Absen'">
-						<h2 class="text-lg font-bold text-slate-900">Absen Kegiatan</h2>
-						<div class="mt-6 py-8 text-center border border-dashed border-slate-200 rounded-xl">
+						<h2 class="text-lg font-bold text-slate-900">Daftar Kehadiran</h2>
+						<div v-if="isLoadingAbsensi"
+							class="mt-6 py-10 flex justify-center items-center gap-2 text-[#9F1239] text-sm">
+							<Icon icon="lucide:loader-2" class="animate-spin" width="18" />
+							Memuat data absensi...
+						</div>
+						<div v-else-if="errorMessage" class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+							<p>{{ errorMessage }}</p>
+							<button @click="hasLoadedAbsensi = false; getAbsensi()"
+								class="mt-2 font-semibold text-[#9F1239] hover:underline">Coba lagi</button>
+						</div>
+						<div v-else-if="absensi.length === 0"
+							class="mt-6 py-8 text-center border border-dashed border-slate-200 rounded-xl">
 							<Icon icon="lucide:clipboard-check" class="mx-auto text-slate-300" width="32" />
 							<p class="mt-3 text-sm text-slate-500">Data absensi untuk kegiatan ini belum tersedia.</p>
+						</div>
+						<div v-else class="mt-5 overflow-x-auto rounded-xl border border-slate-200">
+							<table class="w-full min-w-[440px] text-left text-sm">
+								<thead class="bg-slate-50 text-xs uppercase text-slate-500">
+									<tr>
+										<th class="px-4 py-3 font-semibold">Nama Anggota</th>
+										<th class="px-4 py-3 font-semibold">NIS</th>
+										<th class="px-4 py-3 font-semibold">Kehadiran</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-slate-200 dark:divide-slate-200/10">
+									<tr v-for="member in absensi" :key="member.nis">
+										<td class="px-4 py-3 font-medium text-slate-800">{{ member.member_name }}</td>
+										<td class="px-4 py-3 text-slate-500">{{ member.nis }}</td>
+										<td class="px-4 py-3">
+											<span :class="[
+												'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize',
+												member.keterangan === 'hadir' ? 'bg-emerald-50 text-emerald-700' :
+												member.keterangan === 'alpha' ? 'bg-rose-50 text-rose-700' :
+												member.keterangan === 'sakit' ? 'bg-amber-50 text-amber-700' :
+												'bg-sky-50 text-sky-700'
+											]">{{ member.keterangan }}</span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</div>
 					</div>
 

@@ -67,9 +67,18 @@ export class KegiatanController {
     @Request() req,
     @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
-    @Body() data: { listMember: string[] }
+    @Body() data: { listMember: { nis: number | string, keterangan: string }[] }
   ) {
-    return this.kegiatanService.absenKegiatan(req.user, Number(ekskul_id), Number(kegiatan_id), data.listMember)
+    return this.kegiatanService.absenKegiatan(req.user, Number(ekskul_id), Number(kegiatan_id), data?.listMember)
+  }
+
+  @Get('/:kegiatan_id/ekskul/:ekskul_id/absen')
+  @UseGuards(AuthGuard)
+  getAbsenKegiatan(
+    @Param('kegiatan_id', ValidateKegiatanExist) kegiatan_id: string,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
+  ) {
+    return this.kegiatanService.getAbsenKegiatan(Number(ekskul_id), Number(kegiatan_id))
   }
 
   @Post('/export')

@@ -17,7 +17,6 @@ exports.seed = async function(knex) {
     { nis_user: nis['Budi Santoso'], ekskul_id: ekskulId['IT Club'], role: 'Humas' },
     { nis_user: nis['Citra Lestari'], ekskul_id: ekskulId['IT Club'], role: 'Bendahara' },
     { nis_user: nis['Dimas Pratama'], ekskul_id: ekskulId['IT Club'], role: 'Member' },
-    { nis_user: nis['Eka Putri'], ekskul_id: ekskulId['IT Club'], role: 'Member' },
     { nis_user: nis['Ahmad Fauzan'], ekskul_id: ekskulId['Futsal'], role: 'Ketua' },
     { nis_user: nis['Siti Aisyah'], ekskul_id: ekskulId['Futsal'], role: 'Sekretaris' },
     { nis_user: nis['Budi Santoso'], ekskul_id: ekskulId['Futsal'], role: 'Member' },

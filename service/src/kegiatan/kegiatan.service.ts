@@ -23,6 +23,9 @@ type DokumentasiImage = {
     type: 'jpg' | 'png' | 'gif' | 'bmp';
 }
 
+const KEGIATAN_MANAGEMENT_ROLES = ['Ketua', 'Wakil Ketua', 'Humas']
+const ABSENSI_ROLES = ['Sekretaris', 'Ketua', 'Wakil Ketua']
+
 @Injectable()
 export class KegiatanService {
     constructor(
@@ -35,6 +38,7 @@ export class KegiatanService {
         const getKegiatan = await this.databaseService.connection("kegiatan")
             .select("id", "title", "description", "location", "waktu")
             .where("ekskul_id", ekskul_id)
+            .orderBy("waktu", "desc")
 
         return {
             message: "Berhasil Mendapatkan List Kegiatan Ekskul",
@@ -72,9 +76,8 @@ export class KegiatanService {
         if (req.is_admin !== false) throw new ForbiddenException("Osis Tidak Dapat Membuat Kegiatan")
         if (!data.title || !data.description || !data.location || !data.waktu) throw new BadRequestException("Isi Form Kegiatan Yang Sesuai")
 
-        // Apakah Humas
-        const isHumas = await this.roleService.getRole(req.nis, ekskul_id)
-        if (isHumas != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
+        const role = await this.roleService.getRole(req.nis, ekskul_id)
+        if (!KEGIATAN_MANAGEMENT_ROLES.includes(role)) throw new ForbiddenException("Anda Tidak Berhak")
 
 
         const date = new Date(data.waktu)
@@ -145,23 +148,106 @@ export class KegiatanService {
         req: { nis: number, is_admin: boolean },
         ekskul_id: number,
         kegiatan_id: number,
-        listMember: string[]
+        listMember: { nis: number | string, keterangan: string }[]
     ) {
         if (req.is_admin !== false) throw new ForbiddenException("Osis Tidak Dapat Membuat Kegiatan")
 
-        const isHumas = await this.roleService.getRole(req.nis, ekskul_id)
-        if (isHumas != "Humas") throw new ForbiddenException("Anda Tidak Berhak")
+        const role = await this.roleService.getRole(req.nis, ekskul_id)
+        if (!ABSENSI_ROLES.includes(role)) throw new ForbiddenException("Anda Tidak Berhak")
+
+        if (!Array.isArray(listMember) || listMember.length === 0) {
+            throw new BadRequestException("Pilih minimal satu status kehadiran untuk disimpan")
+        }
+
+        const kegiatan = await this.databaseService.connection("kegiatan")
+            .select("id")
+            .where({ id: kegiatan_id, ekskul_id })
+            .first()
+        if (!kegiatan) throw new NotFoundException("Kegiatan tidak ditemukan di ekstrakurikuler ini")
+
+        const allowedKeterangan = ["hadir", "alpha", "sakit", "izin"]
+        const normalizedMembers = listMember.map((member) => {
+            const nis = Number(member?.nis)
+            if (!Number.isInteger(nis) || nis <= 0 || !allowedKeterangan.includes(member?.keterangan)) {
+                throw new BadRequestException("Data kehadiran tidak valid")
+            }
+            return { nis, keterangan: member.keterangan }
+        })
+        const memberNis = normalizedMembers.map((member) => member.nis)
+        if (new Set(memberNis).size !== memberNis.length) {
+            throw new BadRequestException("Anggota tidak boleh dikirim lebih dari satu kali")
+        }
+
+        const members = await this.databaseService.connection("member_ekskul")
+            .select("id", "nis_user")
+            .where({ ekskul_id })
+            .whereIn("nis_user", memberNis)
+        if (members.length !== normalizedMembers.length) {
+            throw new BadRequestException("Satu atau lebih anggota bukan bagian dari ekstrakurikuler ini")
+        }
+
+        const memberIdByNis = new Map(members.map((member) => [Number(member.nis_user), Number(member.id)]))
+        await this.databaseService.connection.transaction(async (transaction) => {
+            for (const member of normalizedMembers) {
+                const member_ekskul_id = memberIdByNis.get(member.nis)
+                if (!member_ekskul_id) throw new BadRequestException("Anggota tidak ditemukan")
+
+                const existing = await transaction("absen")
+                    .select("id")
+                    .where({ kegiatan_id, member_ekskul_id })
+                    .first()
+
+                if (existing) {
+                    await transaction("absen")
+                        .where({ id: existing.id })
+                        .update({ keterangan: member.keterangan })
+                } else {
+                    await transaction("absen").insert({
+                        kegiatan_id,
+                        member_ekskul_id,
+                        keterangan: member.keterangan
+                    })
+                }
+            }
+        })
 
         return {
             message: "Berhasil Absensi",
             data: {
                 kegiatan_id: kegiatan_id,
-                listMember: listMember
+                listMember: normalizedMembers
             }
         }
 
     }
 
+    async getAbsenKegiatan(ekskul_id: number, kegiatan_id: number) {
+        const kegiatan = await this.databaseService.connection("kegiatan")
+            .select("id")
+            .where({ id: kegiatan_id, ekskul_id })
+            .first()
+        if (!kegiatan) throw new NotFoundException("Kegiatan tidak ditemukan di ekstrakurikuler ini")
+
+        const attendance = await this.databaseService.connection("absen")
+            .innerJoin("member_ekskul", "member_ekskul.id", "absen.member_ekskul_id")
+            .innerJoin("users", "users.nis", "member_ekskul.nis_user")
+            .select({
+                nis: "users.nis",
+                member_name: "users.name",
+                keterangan: "absen.keterangan"
+            })
+            .where({
+                "absen.kegiatan_id": kegiatan_id,
+                "member_ekskul.ekskul_id": ekskul_id
+            })
+
+        return {
+            message: "Berhasil Mendapatkan Data Absensi",
+            data: attendance
+        }
+    }
+
+    // Export Kegiatan
     async exportKegiatan(req: { nis: number, is_admin: boolean }, data: ExportKegiatanInput[]) {
         if (req.is_admin !== false) throw new ForbiddenException("Anda Tidak Berhak")
         if (!Array.isArray(data) || data.length === 0) {
@@ -188,7 +274,7 @@ export class KegiatanService {
         const roles = await Promise.all(
             ekskulIds.map((ekskulId) => this.roleService.getRole(req.nis, ekskulId))
         )
-        if (roles.some((role) => role !== 'Humas')) {
+        if (roles.some((role) => !KEGIATAN_MANAGEMENT_ROLES.includes(role))) {
             throw new ForbiddenException("Anda Tidak Berhak")
         }
 

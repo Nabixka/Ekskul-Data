@@ -13,10 +13,12 @@ const id = route.params.id
 const ekskulDetail = ref({})
 const listAnggota = ref([])
 const kegiatanDetail = ref([])
+const absensiRows = ref([])
 const dokumentasiDetail = ref([])
 const kasDetail = ref([])
 const hasLoadedKegiatan = ref(false)
 const hasLoadedDokumentasi = ref(false)
+const hasLoadedAnggota = ref(false)
 
 const currentSection = ref('About')
 const message = ref('')
@@ -25,8 +27,14 @@ const isLoading = ref(false)
 const isUploadingDokumentasi = ref(false)
 const deletingDocumentId = ref(null)
 const selectedKegiatanId = ref('')
+const selectedAbsensiKegiatanId = ref('')
 const selectedImages = ref([])
+const selectedImage = ref(null)
 const uploadMessage = ref('')
+const searchNamaAbsensi = ref('')
+const isLoadingAbsensi = ref(false)
+const isSubmittingAbsensi = ref(false)
+let absensiRequestVersion = 0
 
 const searchQueryKegiatan = ref('')
 const filterStatusKegiatan = ref('semua')
@@ -46,13 +54,32 @@ const listSection = ref([
   { name: 'About', icon: 'lucide:info' },
   { name: 'Anggota', icon: 'lucide:users' },
   { name: 'Kegiatan', icon: 'lucide:calendar-range' },
+  { name: 'Absensi', icon: 'reicon:checklist' },
   { name: 'Dokumentasi', icon: 'lucide:image' },
   { name: 'Kas', icon: 'lucide:wallet' }
 ])
 
+const canAccessAbsensi = computed(() =>
+  ['Sekretaris', 'Ketua', 'Wakil Ketua'].includes(ekskulDetail.value.role)
+)
+const canManageKegiatanAndDokumentasi = computed(() =>
+  ['Ketua', 'Wakil Ketua', 'Humas'].includes(ekskulDetail.value.role)
+)
+const visibleSections = computed(() =>
+  listSection.value.filter((section) => section.name !== 'Absensi' || canAccessAbsensi.value)
+)
+
 const clearError = () => {
   message.value = ''
   errorCode.value = null
+}
+
+const openPreview = (image) => {
+  selectedImage.value = image
+}
+
+const closePreview = () => {
+  selectedImage.value = null
 }
 
 const getDetail = async () => {
@@ -70,12 +97,13 @@ const getDetail = async () => {
 }
 
 const getAnggota = async () => {
-  if (listAnggota.value.length > 0) return
+  if (hasLoadedAnggota.value) return
   isLoading.value = true
   clearError()
   try {
     const res = await api.get(`/ekskul/${id}/member`)
     listAnggota.value = res.data.data || []
+    hasLoadedAnggota.value = true
   } catch (error) {
     errorCode.value = error.response?.status || 500
     message.value = error.response?.data?.message || "Gagal memuat daftar anggota."
@@ -167,6 +195,7 @@ const handleDeleteDokumentasi = async (documentId) => {
   try {
     await api.delete(`/dokumentasi/ekskul/${id}/dokumentasi/${documentId}`)
     dokumentasiDetail.value = dokumentasiDetail.value.filter((doc) => doc.id !== documentId)
+    if (selectedImage.value?.id === documentId) closePreview()
   } catch (error) {
     errorCode.value = error.response?.status || 500
     message.value = error.response?.data?.message || 'Gagal menghapus dokumentasi.'
@@ -191,9 +220,11 @@ const getKas = async () => {
 }
 
 const handleChangeSection = (sectionName) => {
+  if (sectionName === 'Absensi' && !canAccessAbsensi.value) return
   currentSection.value = sectionName
   if (sectionName === "Anggota") getAnggota()
   if (sectionName === "Kegiatan") getKegiatan()
+  if (sectionName === "Absensi") loadAbsensi()
   if (sectionName === "Dokumentasi") getKegiatan().then(getDokumentasi)
   if (sectionName === "Kas") getKas()
 }
@@ -202,8 +233,100 @@ const handleRetry = () => {
   if (currentSection.value === "About") getDetail()
   else if (currentSection.value === "Anggota") getAnggota()
   else if (currentSection.value === "Kegiatan") getKegiatan()
+  else if (currentSection.value === "Absensi") loadAbsensi()
   else if (currentSection.value === "Dokumentasi") getKegiatan().then(getDokumentasi)
   else if (currentSection.value === "Kas") getKas()
+}
+
+const loadAbsensi = async () => {
+  isLoadingAbsensi.value = true
+  try {
+    await Promise.all([getKegiatan(), getAnggota()])
+    if (!hasLoadedKegiatan.value || !hasLoadedAnggota.value) {
+      if (!message.value) {
+        errorCode.value = 500
+        message.value = 'Gagal memuat data anggota atau kegiatan.'
+      }
+      return
+    }
+
+    if (kegiatanDetail.value.length === 0) {
+      selectedAbsensiKegiatanId.value = ''
+      absensiRows.value = []
+      return
+    }
+
+    if (!kegiatanDetail.value.some((item) => String(item.id) === String(selectedAbsensiKegiatanId.value))) {
+      selectedAbsensiKegiatanId.value = String(kegiatanDetail.value[0].id)
+    }
+    await getAbsensiKegiatan()
+  } finally {
+    isLoadingAbsensi.value = false
+  }
+}
+
+const getAbsensiKegiatan = async () => {
+  const requestVersion = ++absensiRequestVersion
+  if (!selectedAbsensiKegiatanId.value) {
+    absensiRows.value = []
+    isLoadingAbsensi.value = false
+    return
+  }
+
+  const requestedKegiatanId = selectedAbsensiKegiatanId.value
+  absensiRows.value = []
+  isLoadingAbsensi.value = true
+  clearError()
+  try {
+    const response = await api.get(`/kegiatan/${requestedKegiatanId}/ekskul/${id}/absen`)
+    if (requestVersion !== absensiRequestVersion) return
+    const savedAttendance = new Map(
+      (response.data.data || []).map((record) => [String(record.nis), record.keterangan])
+    )
+    absensiRows.value = listAnggota.value.map((member) => ({
+      ...member,
+      keterangan: savedAttendance.get(String(member.nis)) || ''
+    }))
+  } catch (error) {
+    if (requestVersion !== absensiRequestVersion) return
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal memuat data absensi.'
+  } finally {
+    if (requestVersion === absensiRequestVersion) isLoadingAbsensi.value = false
+  }
+}
+
+const filteredAbsensiRows = computed(() => {
+  const query = searchNamaAbsensi.value.trim().toLowerCase()
+  if (!query) return absensiRows.value
+  return absensiRows.value.filter((member) =>
+    member.member_name?.toLowerCase().includes(query) || String(member.nis).includes(query)
+  )
+})
+
+const saveAbsensi = async () => {
+  const listMember = absensiRows.value
+    .filter((member) => member.keterangan)
+    .map((member) => ({ nis: member.nis, keterangan: member.keterangan }))
+
+  if (listMember.length === 0) {
+    errorCode.value = 400
+    message.value = 'Pilih status kehadiran minimal satu anggota sebelum menyimpan.'
+    return
+  }
+
+  isSubmittingAbsensi.value = true
+  clearError()
+  try {
+    await api.post(`/kegiatan/${selectedAbsensiKegiatanId.value}/ekskul/${id}/absen`, { listMember })
+    errorCode.value = 200
+    message.value = 'Absensi berhasil disimpan.'
+  } catch (error) {
+    errorCode.value = error.response?.status || 500
+    message.value = error.response?.data?.message || 'Gagal menyimpan absensi.'
+  } finally {
+    isSubmittingAbsensi.value = false
+  }
 }
 
 const resetFormKegiatan = () => {
@@ -399,7 +522,7 @@ onMounted(() => {
       <!-- Navigation Tabs -->
       <div
         class="bg-white rounded-xl p-1.5 shadow-sm border border-slate-200/60 flex items-center gap-1 overflow-x-auto">
-        <button v-for="section in listSection" :key="section.name" @click="handleChangeSection(section.name)" :class="[
+        <button v-for="section in visibleSections" :key="section.name" @click="handleChangeSection(section.name)" :class="[
           'px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap',
           currentSection === section.name ? 'bg-[#E0234E] text-white shadow-sm' : 'text-slate-600 hover:bg-nest-800 hover:text-white'
         ]">
@@ -474,13 +597,13 @@ onMounted(() => {
             </h3>
 
             <div class="flex items-center gap-2">
-              <button v-if="ekskulDetail.role === 'Humas'" @click="downloadLaporanKegiatan"
+              <button v-if="canManageKegiatanAndDokumentasi" @click="downloadLaporanKegiatan"
                 class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
                 <Icon icon="lucide:download" width="16" />
                 Download Laporan
               </button>
 
-              <button v-if="ekskulDetail.role === 'Humas'" @click="isModalKegiatanOpen = true"
+              <button v-if="canManageKegiatanAndDokumentasi" @click="isModalKegiatanOpen = true"
                 class="px-3.5 py-2 bg-nest-600 hover:bg-nest-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
                 <Icon icon="lucide:plus" width="16" />
                 Tambah Kegiatan
@@ -595,6 +718,82 @@ onMounted(() => {
 
         </div>
 
+        <!-- TAB: ABSENSI -->
+        <div v-else-if="currentSection === 'Absensi'" class="flex flex-col gap-5">
+          <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Icon icon="lucide:clipboard-check" class="text-[#E0234E]" />
+                Absensi Anggota
+              </h3>
+              <p class="mt-1 text-xs text-slate-500">Pilih kegiatan dan catat status kehadiran anggotanya.</p>
+            </div>
+            <button v-if="canAccessAbsensi" @click="saveAbsensi"
+              :disabled="isSubmittingAbsensi || isLoadingAbsensi || !selectedAbsensiKegiatanId"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50">
+              <Icon :icon="isSubmittingAbsensi ? 'lucide:loader-2' : 'lucide:save'"
+                :class="isSubmittingAbsensi ? 'animate-spin' : ''" width="16" />
+              {{ isSubmittingAbsensi ? 'Menyimpan...' : 'Simpan Absensi' }}
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="relative flex-1">
+              <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" />
+              <input v-model="searchNamaAbsensi" type="search" placeholder="Cari nama atau NIS anggota..."
+                class="w-100 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-nest-600 focus:outline-none" />
+            </div>
+            <select v-model="selectedAbsensiKegiatanId" @change="getAbsensiKegiatan"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-nest-600 focus:outline-none sm:w-72">
+              <option v-for="item in kegiatanDetail" :key="item.id" :value="String(item.id)">
+                {{ formatDate(item.waktu) }}
+              </option>
+            </select>
+          </div>
+
+          <p v-if="!isLoadingAbsensi && kegiatanDetail.length === 0"
+            class="rounded-xl border border-dashed border-slate-200 py-8 text-center text-sm text-slate-500">
+            Belum ada kegiatan untuk dibuat absensinya.
+          </p>
+          <p v-else-if="!isLoadingAbsensi && absensiRows.length === 0"
+            class="rounded-xl border border-dashed border-slate-200 py-8 text-center text-sm text-slate-500">
+            Belum ada anggota di ekstrakurikuler ini.
+          </p>
+          <div v-else-if="!isLoadingAbsensi" class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full min-w-[520px] text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th class="px-4 py-3 font-semibold">Nama Anggota</th>
+                  <th class="px-4 py-3 font-semibold">NIS</th>
+                  <th class="px-4 py-3 font-semibold">Kehadiran</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-200/10">
+                <tr v-for="member in filteredAbsensiRows" :key="member.nis">
+                  <td class="px-4 py-3 font-medium text-slate-800">{{ member.member_name }}</td>
+                  <td class="px-4 py-3 text-slate-500">{{ member.nis }}</td>
+                  <td class="px-4 py-3">
+                    <select v-model="member.keterangan" :disabled="!canAccessAbsensi"
+                      class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 sm:w-40">
+                      <option value="">Belum diisi</option>
+                      <option value="hadir">Hadir</option>
+                      <option value="alpha">Alpha</option>
+                      <option value="sakit">Sakit</option>
+                      <option value="izin">Izin</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr v-if="filteredAbsensiRows.length === 0">
+                  <td colspan="3" class="px-4 py-8 text-center text-slate-500">Nama anggota tidak ditemukan.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="canAccessAbsensi && kegiatanDetail.length > 0" class="text-xs text-slate-500">
+            Belum ada absensi? Daftar anggota sudah dimuat. Pilih status yang akan dicatat, lalu tekan Simpan Absensi.
+          </p>
+        </div>
+
         <!-- TAB: DOKUMENTASI -->
         <div v-else-if="currentSection === 'Dokumentasi'" class="flex flex-col gap-4">
           <div
@@ -603,7 +802,7 @@ onMounted(() => {
               <Icon icon="lucide:image" class="text-[#E0234E]" />
               Galeri Dokumentasi Kegiatan
             </h3>
-            <button v-if="ekskulDetail.role === 'Humas'" @click="isModalDokumentasiOpen = true"
+            <button v-if="canManageKegiatanAndDokumentasi" @click="isModalDokumentasiOpen = true"
               class="inline-flex items-center justify-center gap-2 self-start rounded-lg bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] sm:self-auto">
               <Icon icon="lucide:upload" width="16" />
               Tambah dokumentasi
@@ -616,11 +815,12 @@ onMounted(() => {
           </div>
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 grid-dokumentasi">
-            <div v-for="doc in dokumentasiDetail" :key="doc.id"
-              class="group relative rounded-xl overflow-hidden border border-slate-200/60 bg-slate-900 h-48 shadow-sm">
+            <div v-for="doc in dokumentasiDetail" :key="doc.id" @click="openPreview(doc)"
+              class="group relative rounded-xl overflow-hidden border border-slate-200/60 bg-slate-900 h-48 shadow-sm cursor-pointer">
               <img :src="`${API_URL}${doc.path}`" :alt="doc.title"
-                class="w-full h-full object-cover group-hover:scale-105 opacity-90 group-hover:opacity-100 transition-all duration-300" />
-              <button v-if="ekskulDetail.role === 'Humas'" @click="handleDeleteDokumentasi(doc.id)"
+                class="w-full h-full object-cover group-hover:scale-105 opacity-90 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
+                />
+              <button v-if="canManageKegiatanAndDokumentasi" @click.stop="handleDeleteDokumentasi(doc.id)"
                 :disabled="deletingDocumentId === doc.id" :aria-label="`Hapus dokumentasi ${doc.id}`"
                 title="Hapus dokumentasi"
                 class="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/95 text-rose-700 shadow transition hover:bg-rose-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
@@ -809,6 +1009,24 @@ onMounted(() => {
       </div>
     </Transition>
 
+    <!-- Modal Preview Image -->
+    <div v-if="selectedImage"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      @click="closePreview">
+      <div class="relative flex max-h-[90vh] w-full max-w-4xl flex-col items-center" @click.stop>
+        <button @click="closePreview"
+          class="absolute -top-12 right-0 p-2 text-white transition-colors hover:text-rose-400"
+          aria-label="Tutup preview">
+          <Icon icon="lucide:x" width="28" />
+        </button>
+        <img :src="`${API_URL}${selectedImage.path}`" :alt="selectedImage.title"
+          class="max-h-[80vh] max-w-full rounded-xl bg-black/50 object-contain shadow-2xl" />
+        <p v-if="selectedImage.title" class="mt-3 text-center text-sm font-medium text-white">
+          {{ selectedImage.title }}
+        </p>
+      </div>
+    </div>
+
     <!-- Modal Message / Error Dialog (Disesuaikan dengan pesan) -->
     <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
       enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in"
@@ -817,14 +1035,16 @@ onMounted(() => {
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm modal-error-overlay">
         <div
           class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 flex flex-col items-center text-center gap-4 modal-error-content">
-          <div
-            class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0 icon-box-error">
-            <Icon icon="lucide:alert-triangle" width="30" />
+          <div :class="[
+            'w-14 h-14 rounded-full flex items-center justify-center shrink-0 icon-box-error',
+            errorCode === 200 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+          ]">
+            <Icon :icon="errorCode === 200 ? 'lucide:check' : 'lucide:alert-triangle'" width="30" />
           </div>
 
           <div class="flex flex-col gap-1 text-box-error">
             <h3 class="text-lg font-bold text-slate-800 judul-error">
-              {{ errorCode === 400 ? 'Perhatian' : (errorCode === 500 ? 'Kesalahan Server' : 'Gagal Memuat Data') }}
+              {{ errorCode === 200 ? 'Berhasil' : (errorCode === 400 ? 'Perhatian' : (errorCode === 500 ? 'Kesalahan Server' : 'Gagal Memuat Data')) }}
             </h3>
             <p class="text-sm text-slate-600 pesan-error">
               {{ message }}
@@ -832,14 +1052,14 @@ onMounted(() => {
           </div>
 
           <div class="w-full flex gap-3 mt-2 action-box-error">
-            <button v-if="errorCode !== 404 && errorCode !== 400" @click="handleRetry"
+            <button v-if="errorCode !== 404 && errorCode !== 400 && errorCode !== 200" @click="handleRetry"
               class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
               <Icon icon="lucide:refresh-cw" width="16" />
               Coba Lagi
             </button>
-            <button v-if="errorCode === 400" @click="clearError"
+            <button v-if="errorCode === 400 || errorCode === 200" @click="clearError"
               class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">
-              Mengerti
+              {{ errorCode === 200 ? 'Tutup' : 'Mengerti' }}
             </button>
             <button v-if="errorCode === 404" @click="router.push('/list-ekskul')"
               class="w-full py-2.5 px-4 bg-nest-600 hover:bg-nest-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm tombol-coba-lagi">

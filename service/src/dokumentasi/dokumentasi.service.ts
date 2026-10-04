@@ -2,6 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { DatabaseService } from 'src/database/database.service';
 import { RoleService } from 'src/role/role.service';
 
+const DOKUMENTASI_MANAGEMENT_ROLES = ['Ketua', 'Wakil Ketua', 'Humas']
+
 @Injectable()
 export class DokumentasiService {
     constructor( 
@@ -68,7 +70,7 @@ export class DokumentasiService {
         if (!kegiatan) throw new NotFoundException("Tidak Menemukan Kegiatan")
 
         const role = await this.roleService.getRole(req.nis, ekskul_id)
-        if(role != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
+        if(!DOKUMENTASI_MANAGEMENT_ROLES.includes(role)) throw new ForbiddenException("Anda Tidak Berhak")
 
         const dokumentasi = await this.databaseService.connection("list_dokumentasi")
         .insert(images.map((image) => ({
@@ -100,7 +102,7 @@ export class DokumentasiService {
         if (!dokumentasi) throw new NotFoundException("Tidak Menemukan Dokumentasi")
         
         const role = await this.roleService.getRole(req.nis, ekskul_id)
-        if(role != 'Humas') throw new ForbiddenException("Anda Tidak Berhak")
+        if(!DOKUMENTASI_MANAGEMENT_ROLES.includes(role)) throw new ForbiddenException("Anda Tidak Berhak")
 
         const del = await this.databaseService.connection("list_dokumentasi")
         .delete()

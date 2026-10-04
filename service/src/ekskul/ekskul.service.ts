@@ -97,6 +97,7 @@ export class EkskulService {
         const getMember = await this.databaseService.connection("member_ekskul")
         .innerJoin("users", "users.nis", "member_ekskul.nis_user")
         .select({
+            member_ekskul_id: "member_ekskul.id",
             nis: "users.nis",
             member_name: "users.name",
             role: "member_ekskul.role"
