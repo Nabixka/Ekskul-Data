@@ -10,6 +10,7 @@ import EkskulDetailAdmin from "./page/Admin/EkskulDetail.vue";
 import MyEkskul from "./page/MainPage/MyEkskul.vue";
 import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
 import KegiatanDetail from "./page/MainPage/KegiatanDetail.vue";
+import PeminjamanRuang from "./page/MainPage/PeminjamanRuang.vue";
 
 const routes = [
     {
@@ -66,6 +67,12 @@ const routes = [
         path: '/my-ekskul/:id/kegiatan/:kegiatanId',
         name: "My Ekskul Kegiatan Detail",
         component: KegiatanDetail,
+        meta: { showBar: true }
+    },
+    {
+        path: '/peminjaman-ruang',
+        name: "Peminjaman Ruang",
+        component: PeminjamanRuang,
         meta: { showBar: true }
     },
     
