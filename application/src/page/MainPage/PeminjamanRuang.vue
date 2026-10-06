@@ -11,13 +11,15 @@ const getLocalDate = () => {
 
 const selectedDate = ref(getLocalDate())
 const selectedRoomId = ref(null)
+const selectedPeminjam = ref('Pribadi') 
 const purpose = ref('')
 const confirmationMessage = ref('')
-const isLoading = ref(false)
 const fetchError = ref('')
-
+const isLoading = ref(false)
+const isSubmitting = ref(false)
 
 const roomBookings = ref([])
+const userEkskulList = ref([]) 
 
 const fetchRoomList = async () => {
     isLoading.value = true
@@ -36,8 +38,20 @@ const fetchRoomList = async () => {
     }
 }
 
+const fetchUserEkskul = async () => {
+    try {
+        const res = await api.get('/member/ekskul')
+        if (Array.isArray(res.data?.data)) {
+            userEkskulList.value = res.data.data
+        }
+    } catch (error) {
+        console.error("Gagal memuat data ekskul", error)
+    }
+}
+
 onMounted(() => {
     fetchRoomList()
+    fetchUserEkskul()
 })
 
 const availableRoomCount = computed(() =>
@@ -45,18 +59,52 @@ const availableRoomCount = computed(() =>
 )
 
 const selectedRoom = computed(() =>
-    roomBookings.value.find((room) => room.ruang_id === selectedRoomId.value && room.status === 'Kosong')
+    roomBookings.value.find((room) => room.id === selectedRoomId.value && room.status === 'Kosong')
 )
 
-const submitRequest = () => {
+const submitRequest = async () => {
     if (!selectedRoom.value || !purpose.value.trim()) return
 
-    const formattedDate = new Date(`${selectedDate.value}T00:00:00`).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    })
-    confirmationMessage.value = `Permintaan peminjaman untuk Ruang ${selectedRoom.value.ruang_id} pada ${formattedDate}, pukul ${selectedTime.value} berhasil diajukan.`
+    isSubmitting.value = true
+    confirmationMessage.value = ''
+    fetchError.value = ''
+
+    try {
+        let peminjamValue = 'Pribadi'
+        if (selectedPeminjam.value !== 'Pribadi') {
+            const foundEkskul = userEkskulList.value.find(e => e.id.toString() === selectedPeminjam.value)
+            if (foundEkskul) {
+                peminjamValue = foundEkskul.name
+            }
+        }
+
+        const payload = {
+            peminjaman_ruang_id: selectedRoom.value.id,
+            description: purpose.value,
+            peminjam: peminjamValue
+        }
+
+        await api.patch('/ruang', payload)
+
+        const formattedDate = new Date(`${selectedDate.value}T00:00:00`).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        })
+
+        confirmationMessage.value = `Permintaan peminjaman untuk Ruang ${selectedRoom.value.ruang_id} atas nama ${peminjamValue} pada ${formattedDate} berhasil diajukan!`
+        
+        purpose.value = ''
+        selectedRoomId.value = null
+        selectedPeminjam.value = 'Pribadi'
+        await fetchRoomList()
+
+    } catch (error) {
+        console.error("Gagal mengajukan peminjaman", error)
+        fetchError.value = error.response?.data?.message || error.message || 'Gagal mengajukan peminjaman ruang.'
+    } finally {
+        isSubmitting.value = false
+    }
 }
 </script>
 
@@ -117,7 +165,7 @@ const submitRequest = () => {
                         Memuat data ruang...
                     </div>
                     <div v-else-if="fetchError" role="alert"
-                        class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                        class="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
                         {{ fetchError }}
                     </div>
                     <div v-else-if="roomBookings.length === 0"
@@ -127,12 +175,12 @@ const submitRequest = () => {
                     <div v-else class="grid gap-3 sm:grid-cols-2">
                         <button v-for="room in roomBookings" :key="room.id" type="button"
                             :disabled="room.status !== 'Kosong'"
-                            @click="selectedRoomId = room.ruang_id; confirmationMessage = ''"
-                            :aria-pressed="selectedRoomId === room.ruang_id" :class="[
+                            @click="selectedRoomId = room.id, confirmationMessage = '', fetchError = ''"
+                            :aria-pressed="selectedRoomId === room.id" :class="[
                                 'rounded-xl border p-4 text-left transition-all',
                                 room.status !== 'Kosong'
                                     ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-70'
-                                    : selectedRoomId === room.ruang_id
+                                    : selectedRoomId === room.id
                                         ? 'border-rose-400 bg-rose-50/70 shadow-sm ring-2 ring-rose-100'
                                         : 'border-slate-200 bg-white hover:border-rose-200 hover:bg-rose-50/30'
                             ]">
@@ -143,7 +191,7 @@ const submitRequest = () => {
                                 </span>
                                 <span :class="{
                                     'bg-emerald-50 text-emerald-700': room.status === 'Kosong',
-                                    'bg-amber-50 text-amber-700': room.status === 'Diajukan',
+                                    'bg-amber-50 text-amber-700': room.status === 'Diajukan' || room.status === 'Pengajuan',
                                     'bg-rose-50 text-rose-700': room.status === 'Penuh'
                                 }" class="rounded-full px-2.5 py-1 text-xs font-semibold">
                                     {{ room.status }}
@@ -158,7 +206,6 @@ const submitRequest = () => {
                     </div>
                 </div>
 
-                <!-- Tambahkan lg:top-6 agar elemen sticky tahu batas posisi atasnya -->
                 <aside
                     class="w-full lg:w-1/3 h-fit lg:sticky lg:top-6 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm md:p-6">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -174,12 +221,26 @@ const submitRequest = () => {
                     <div class="mt-4 space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
                         <div class="flex items-start justify-between gap-3">
                             <span class="text-slate-500">Tempat</span>
-                            <span class="text-right font-semibold text-slate-800">{{ selectedRoom ? `Ruang
-                                ${selectedRoom.ruang_id}` : 'Belum dipilih' }}</span>
+                            <span class="text-right font-semibold text-slate-800">{{ selectedRoom ? `Ruang ${selectedRoom.ruang_id}` : 'Belum dipilih' }}</span>
                         </div>
                     </div>
 
                     <form class="mt-5 flex flex-col gap-4" @submit.prevent="submitRequest">
+                        <label class="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+                            Atas Nama
+                            <span class="relative">
+                                <Icon icon="lucide:user" width="18"
+                                    class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <select v-model="selectedPeminjam"
+                                    class="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-9 text-sm font-normal focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                                    <option value="Pribadi">Atas nama sendiri</option>
+                                    <option v-for="ekskul in userEkskulList" :key="ekskul.id" :value="ekskul.id">
+                                        Ekskul {{ ekskul.name }}
+                                    </option>
+                                </select>
+                            </span>
+                        </label>
+
                         <label class="flex flex-col gap-2 text-sm font-semibold text-slate-700">
                             Tanggal peminjaman
                             <span class="relative">
@@ -195,19 +256,18 @@ const submitRequest = () => {
                                 placeholder="Contoh: Rapat persiapan lomba"
                                 class="resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"></textarea>
                         </label>
+                        
                         <p v-if="confirmationMessage" role="status"
                             class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-relaxed text-emerald-800">
                             {{ confirmationMessage }}
                         </p>
 
-                        <button type="submit" :disabled="!selectedRoom || !purpose.trim()"
+                        <button type="submit" :disabled="!selectedRoom || !purpose.trim() || isSubmitting"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
-                            <Icon icon="lucide:send" width="17" />
-                            Ajukan peminjaman
+                            <Icon v-if="isSubmitting" icon="lucide:loader-circle" width="17" class="animate-spin" />
+                            <Icon v-else icon="lucide:send" width="17" />
+                            {{ isSubmitting ? 'Mengirim...' : 'Ajukan peminjaman' }}
                         </button>
-                        <p class="text-center text-xs leading-relaxed text-slate-400">
-                            Ini hanya simulasi tampilan. Permintaan belum dikirim ke sistem.
-                        </p>
                     </form>
                 </aside>
             </section>

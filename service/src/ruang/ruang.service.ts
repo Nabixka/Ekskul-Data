@@ -38,7 +38,7 @@ export class RuangService {
     }
 
     async updatePermintaan(
-        req: { nis: number, is_admin: boolean}, 
+        req: { name: string, nis: number, is_admin: boolean}, 
         data: { peminjaman_ruang_id: number, description?: string, peminjam?: string }
     ){
         const getPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
@@ -53,15 +53,19 @@ export class RuangService {
             status = "Penuh"
         }
         else{ 
-            status = "Pengajuan"
+            status = "Diajukan"
         }
 
+        let dataPeminjam = data.peminjam
+        if(data.peminjam == "Pribadi") dataPeminjam = req.name
+
         if(!getPeminjamanRuang) throw new NotFoundException("Maaf Tidak Menemukan Ruangan Yang Anda Cari")
+
         const updatePeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
         .update({
             status: status,
             description: data.description || getPeminjamanRuang.description,
-            peminjam: data.peminjam || getPeminjamanRuang.peminjam
+            peminjam: dataPeminjam || getPeminjamanRuang.peminjam
         })
         .where({ id: data.peminjaman_ruang_id})
 
