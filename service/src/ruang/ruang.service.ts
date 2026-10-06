@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DatabaseService } from 'src/database/database.service';
 
@@ -25,33 +25,43 @@ export class RuangService {
     }
 
     async getAllPmeminjamanRuangHariIni() {
-        const waktuHariIni = new Date().toISOString().split('T')[0];
+        const waktuHariIni = new Date().toISOString().split('T')[0] 
 
         const getAllRuang = await this.databaseService.connection("peminjaman_ruang")
             .select("*")
-            .whereRaw('DATE(waktu_peminjaman) = ?', [waktuHariIni]);
+            .whereRaw('DATE(waktu_peminjaman) = ?', [waktuHariIni])
 
         return {
             message: "Berhasil Mendapat List Peminjaman Ruang",
             data: getAllRuang
-        };
+        }
     }
 
-    async pengajuanPeminjamanRuangHariIni(
+    async updatePermintaan(
         req: { nis: number, is_admin: boolean}, 
-        data: { peminjaman_ruang_id: number, description: string, peminjam: string }
+        data: { peminjaman_ruang_id: number, description?: string, peminjam?: string }
     ){
         const getPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
-        .select("id")
+        .select("*")
         .where({id: data.peminjaman_ruang_id})
         .first()
+
+        if(getPeminjamanRuang.status != "Kosong") throw new ConflictException("Ruang Sedang diajukan atau sudah di Pinjam")
+
+        let status = ""
+        if(req.is_admin === true){ 
+            status = "Penuh"
+        }
+        else{ 
+            status = "Pengajuan"
+        }
 
         if(!getPeminjamanRuang) throw new NotFoundException("Maaf Tidak Menemukan Ruangan Yang Anda Cari")
         const updatePeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
         .update({
-            status: 'Pengajuan',
-            description: data.description,
-            peminjam: data.peminjam
+            status: status,
+            description: data.description || getPeminjamanRuang.description,
+            peminjam: data.peminjam || getPeminjamanRuang.peminjam
         })
         .where({ id: data.peminjaman_ruang_id})
 
@@ -61,7 +71,7 @@ export class RuangService {
         .first()
 
         return {
-            message: "Berhasil Mengajukan Ruang",
+            message: "Berhasil",
             data: getNewPeminjamanRuang
         }
     }
