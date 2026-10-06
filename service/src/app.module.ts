@@ -7,8 +7,21 @@ import { AdminModule } from './admin/admin.module';
 import { MemberModule } from './member/member.module';
 import { RoleModule } from './role/role.module';
 import { KasModule } from './kas/kas.module';
+import { RuangModule } from './ruang/ruang.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [EkskulModule, KegiatanModule, AuthModule, DokumentasiModule, AdminModule, MemberModule, RoleModule, KasModule]
+  imports: [
+    EkskulModule, 
+    KegiatanModule, 
+    AuthModule, 
+    DokumentasiModule, 
+    AdminModule, 
+    MemberModule, 
+    RoleModule, 
+    KasModule, 
+    RuangModule,
+    ScheduleModule.forRoot()  
+  ]
 })
 export class AppModule {}
