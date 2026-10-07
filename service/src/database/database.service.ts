@@ -6,8 +6,10 @@ import * as config from '../../knexfile'
 export class DatabaseService{
     private db;
 
+    
     constructor(){
-        this.db = knex(config.development)
+        const environtment = process.env.NODE_ENV || 'development'
+        this.db = knex(config[environtment])
     }
 
     get connection(){
