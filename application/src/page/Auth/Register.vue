@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { api } from '../../api';
 import { useRouter } from 'vue-router';
+import MessageModal from '../../components/MessageModal.vue';
 
 const registerPayload = ref({
     name: '',
@@ -54,10 +55,6 @@ const handleLogin = async () => {
                     <h5 class="text-[#B4234E] font-semibold">Daftar untuk mulai menggunakan sistem pelaporan data ekskul
                     </h5>
 
-                    <div v-if="message"
-                        class="pl-2 py-2 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-                        {{ message }}
-                    </div>
                 </span>
 
                 <!-- Form -->
@@ -99,4 +96,5 @@ const handleLogin = async () => {
         </main>
 
     </section>
+    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

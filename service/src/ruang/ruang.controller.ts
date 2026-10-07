@@ -18,7 +18,7 @@ export class RuangController {
   @UseGuards(AuthGuard)
   pengajuanPeminjamanRuangHariIni(
     @Request() req,
-    @Body() data: { peminjaman_ruang_id: number, description: string, peminjam: string}
+    @Body() data: { peminjaman_ruang_id: number, status: string, description: string, peminjam: string}
   ){
     return this.ruangService.updatePermintaan(req.user, data)
   }

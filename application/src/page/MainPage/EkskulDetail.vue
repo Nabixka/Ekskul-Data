@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { api } from '../../api';
 import { formatDate } from '../../helper';
+import MessageModal from '../../components/MessageModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
@@ -84,22 +85,6 @@ onMounted(getDetail)
                         <div class="h-4 w-1/2 rounded-lg bg-slate-100"></div>
                     </div>
                 </div>
-
-                <!-- Error State -->
-                <section v-else-if="errorMessage"
-                    class="rounded-2xl border border-rose-100 bg-white p-10 text-center shadow-sm dark:border-rose-900/60">
-                    <div
-                        class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-nest-50 text-nest-600 dark:bg-nest-950/50 dark:text-nest-300">
-                        <Icon icon="lucide:circle-alert" width="28" />
-                    </div>
-                    <h3 class="text-base font-bold text-slate-900">Terjadi Kesalahan</h3>
-                    <p class="mt-1 text-sm text-slate-500 max-w-md mx-auto">{{ errorMessage }}</p>
-                    <button @click="getDetail"
-                        class="mt-5 inline-flex items-center gap-2 rounded-full bg-nest-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-nest-700">
-                        <Icon icon="lucide:rotate-cw" width="16" />
-                        Coba lagi
-                    </button>
-                </section>
 
                 <!-- Konten Utama -->
                 <template v-else-if="ekskul">
@@ -312,4 +297,6 @@ onMounted(getDetail)
             </div>
         </div>
     </Transition>
+    <MessageModal :open="Boolean(errorMessage)" :message="errorMessage" action-label="Coba lagi"
+        @close="errorMessage = ''" @action="errorMessage = ''; getDetail()" />
 </template>

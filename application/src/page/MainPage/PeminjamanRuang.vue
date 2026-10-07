@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue';
 import { Icon } from '@iconify/vue';
 import { api } from '../../api';
+import MessageModal from '../../components/MessageModal.vue';
 
 const getLocalDate = () => {
     const date = new Date()
@@ -80,6 +81,7 @@ const submitRequest = async () => {
 
         const payload = {
             peminjaman_ruang_id: selectedRoom.value.id,
+            status: 'Diajukan',
             description: purpose.value,
             peminjam: peminjamValue
         }
@@ -164,10 +166,6 @@ const submitRequest = async () => {
                         <Icon icon="lucide:loader-circle" width="18" class="animate-spin" />
                         Memuat data ruang...
                     </div>
-                    <div v-else-if="fetchError" role="alert"
-                        class="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                        {{ fetchError }}
-                    </div>
                     <div v-else-if="roomBookings.length === 0"
                         class="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
                         Belum ada data ruang.
@@ -246,7 +244,7 @@ const submitRequest = async () => {
                             <span class="relative">
                                 <Icon icon="lucide:calendar-days" width="18"
                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input v-model="selectedDate" :min="getLocalDate()" type="date" required
+                                <input disabled v-model="selectedDate" :min="getLocalDate()" type="date" required
                                     class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm font-normal focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100">
                             </span>
                         </label>
@@ -257,11 +255,6 @@ const submitRequest = async () => {
                                 class="resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"></textarea>
                         </label>
                         
-                        <p v-if="confirmationMessage" role="status"
-                            class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm leading-relaxed text-emerald-800">
-                            {{ confirmationMessage }}
-                        </p>
-
                         <button type="submit" :disabled="!selectedRoom || !purpose.trim() || isSubmitting"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
                             <Icon v-if="isSubmitting" icon="lucide:loader-circle" width="17" class="animate-spin" />
@@ -273,4 +266,7 @@ const submitRequest = async () => {
             </section>
         </main>
     </div>
+    <MessageModal :open="Boolean(fetchError)" :message="fetchError" @close="fetchError = ''" />
+    <MessageModal :open="Boolean(confirmationMessage)" :message="confirmationMessage" variant="success"
+        @close="confirmationMessage = ''" />
 </template>

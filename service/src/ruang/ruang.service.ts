@@ -4,28 +4,52 @@ import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class RuangService {
-    constructor(private databaseService: DatabaseService) {}
+    constructor(private databaseService: DatabaseService) { }
 
-    @Cron('0 0 * * *', {
+    @Cron('0 0 ? * MON *', {
         timeZone: 'Asia/Jakarta'
     })
-    async createRuangHariIni(){
+
+    async createRuangHariIni() {
+
+        const now = new Date()
+        const dayofWeek = now.getDay()
+
+        const distanceToMonday = dayofWeek === 0 ? -6 : 1 - dayofWeek
+        const monday = new Date(now)
+        monday.setDate(now.getDate() + distanceToMonday)
+
+        await this.databaseService.connection("peminjaman_ruang")
+        .where('waktu_peminjaman', '<', monday.toISOString().split('T')[0])
+        .delete()
+        
         const getAllRuang = await this.databaseService.connection("ruang").select("id")
         const mappingRuangId = getAllRuang.map((item) => item.id)
 
-        for(const ruangId of mappingRuangId){
-            await this.databaseService.connection("peminjaman_ruang").insert({
-                ruang_id: ruangId,
-                status: 'Kosong',
-                waktu_peminjaman: new Date()
-            })
+        const weekDates: string[] = []
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday)
+            date.setDate(monday.getDate() + i)
+            weekDates.push(date.toISOString().split('T')[0])
+        }
+
+        for (const ruangId of mappingRuangId) {
+            for (const targetDate of weekDates) {
+                await this.databaseService.connection("peminjaman_ruang").insert({
+                    ruang_id: ruangId,
+                    status: 'Kosong',
+                    waktu_peminjaman: targetDate
+                })
+            }
         }
 
         console.log("Berhasil Membuat Peminjaman Ruang Hari Ini ")
     }
 
+
+
     async getAllPmeminjamanRuangHariIni() {
-        const waktuHariIni = new Date().toISOString().split('T')[0] 
+        const waktuHariIni = new Date().toISOString().split('T')[0]
 
         const getAllRuang = await this.databaseService.connection("peminjaman_ruang")
             .select("*")
@@ -38,41 +62,35 @@ export class RuangService {
     }
 
     async updatePermintaan(
-        req: { name: string, nis: number, is_admin: boolean}, 
-        data: { peminjaman_ruang_id: number, description?: string, peminjam?: string }
-    ){
+        req: { name: string, nis: number, is_admin: boolean },
+        data: { peminjaman_ruang_id: number, status: string,description?: string, peminjam?: string }
+    ) {
         const getPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
-        .select("*")
-        .where({id: data.peminjaman_ruang_id})
-        .first()
+            .select("*")
+            .where({ id: data.peminjaman_ruang_id })
+            .first()
 
-        if(getPeminjamanRuang.status != "Kosong") throw new ConflictException("Ruang Sedang diajukan atau sudah di Pinjam")
+        if (getPeminjamanRuang.status != "Kosong") throw new ConflictException("Ruang Sedang diajukan atau sudah di Pinjam")
 
-        let status = ""
-        if(req.is_admin === true){ 
-            status = "Penuh"
-        }
-        else{ 
-            status = "Diajukan"
-        }
+        if(req.is_admin == false && data.status != "Diajukan") throw new ConflictException("Hanya Admin yang bisa mengubah status selain Diajukan")
 
         let dataPeminjam = data.peminjam
-        if(data.peminjam == "Pribadi") dataPeminjam = req.name
+        if (data.peminjam == "Pribadi") dataPeminjam = req.name
 
-        if(!getPeminjamanRuang) throw new NotFoundException("Maaf Tidak Menemukan Ruangan Yang Anda Cari")
+        if (!getPeminjamanRuang) throw new NotFoundException("Maaf Tidak Menemukan Ruangan Yang Anda Cari")
 
         const updatePeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
-        .update({
-            status: status,
-            description: data.description || getPeminjamanRuang.description,
-            peminjam: dataPeminjam || getPeminjamanRuang.peminjam
-        })
-        .where({ id: data.peminjaman_ruang_id})
+            .update({
+                status: data.status,
+                description: data.description || getPeminjamanRuang.description,
+                peminjam: dataPeminjam || getPeminjamanRuang.peminjam
+            })
+            .where({ id: data.peminjaman_ruang_id })
 
         const getNewPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
-        .select("*")
-        .where({id: data.peminjaman_ruang_id})
-        .first()
+            .select("*")
+            .where({ id: data.peminjaman_ruang_id })
+            .first()
 
         return {
             message: "Berhasil",

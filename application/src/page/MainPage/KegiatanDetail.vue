@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Icon } from '@iconify/vue';
 import { api } from '../../api';
 import { formatDate } from '../../helper';
+import MessageModal from '../../components/MessageModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
@@ -23,6 +24,9 @@ const hasLoadedDokumentasi = ref(false)
 const errorMessage = ref('')
 const deletingDocumentId = ref(null)
 const hasLoadedAbsensi = ref(false)
+const retryError = ref(null)
+const pendingDeleteDocumentId = ref(null)
+const deleteConfirmationMessage = ref('')
 
 const selectedImage = ref(null)
 
@@ -53,6 +57,7 @@ const getDetailKegiatan = async () => {
 		kegiatan.value = response.data.data || null
 	} catch (error) {
 		errorMessage.value = error.response?.data?.message || 'Gagal memuat detail kegiatan.'
+		retryError.value = getDetailKegiatan
 	} finally {
 		isLoading.value = false
 	}
@@ -68,6 +73,7 @@ const getAbsensi = async () => {
 		hasLoadedAbsensi.value = true
 	} catch (error) {
 		errorMessage.value = error.response?.data?.message || 'Gagal memuat data absensi.'
+		retryError.value = getAbsensi
 	} finally {
 		isLoadingAbsensi.value = false
 	}
@@ -83,14 +89,13 @@ const getDokumentasi = async () => {
 		hasLoadedDokumentasi.value = true
 	} catch (error) {
 		errorMessage.value = error.response?.data?.message || 'Gagal memuat dokumentasi kegiatan.'
+		retryError.value = getDokumentasi
 	} finally {
 		isLoadingDokumentasi.value = false
 	}
 }
 
 const handleDeleteDokumentasi = async (documentId) => {
-	if (!window.confirm('Hapus dokumentasi ini?')) return
-
 	deletingDocumentId.value = documentId
 	errorMessage.value = ''
 	try {
@@ -101,6 +106,25 @@ const handleDeleteDokumentasi = async (documentId) => {
 	} finally {
 		deletingDocumentId.value = null
 	}
+}
+
+const requestDeleteDokumentasi = (documentId) => {
+	pendingDeleteDocumentId.value = documentId
+	deleteConfirmationMessage.value = 'Hapus dokumentasi ini?'
+}
+
+const confirmDeleteDokumentasi = () => {
+	const documentId = pendingDeleteDocumentId.value
+	pendingDeleteDocumentId.value = null
+	deleteConfirmationMessage.value = ''
+	if (documentId !== null) handleDeleteDokumentasi(documentId)
+}
+
+const retryLastRequest = () => {
+	const retry = retryError.value
+	retryError.value = null
+	errorMessage.value = ''
+	if (retry) retry()
 }
 
 const handleChangeSection = (section) => {
@@ -136,7 +160,7 @@ onMounted(() => {
 			</div>
 
 			<section v-else-if="errorMessage && !kegiatan" class="bg-white rounded-2xl p-8 text-center">
-				<p class="text-sm text-rose-700">{{ errorMessage }}</p>
+				<p class="text-sm text-slate-600">Detail kegiatan belum tersedia.</p>
 				<button @click="getDetailKegiatan"
 					class="mt-4 text-sm font-semibold text-[#BE123C] hover:underline">Coba lagi</button>
 			</section>
@@ -186,11 +210,6 @@ onMounted(() => {
 							<Icon icon="lucide:loader-2" class="animate-spin" width="18" />
 							Memuat data absensi...
 						</div>
-						<div v-else-if="errorMessage" class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-							<p>{{ errorMessage }}</p>
-							<button @click="hasLoadedAbsensi = false; getAbsensi()"
-								class="mt-2 font-semibold text-[#9F1239] hover:underline">Coba lagi</button>
-						</div>
 						<div v-else-if="absensi.length === 0"
 							class="mt-6 py-8 text-center border border-dashed border-slate-200 rounded-xl">
 							<Icon icon="lucide:clipboard-check" class="mx-auto text-slate-300" width="32" />
@@ -238,8 +257,6 @@ onMounted(() => {
 							<Icon icon="lucide:loader-2" class="animate-spin" width="18" />
 							Memuat dokumentasi...
 						</div>
-						<p v-else-if="errorMessage" class="py-8 text-center text-sm text-rose-700">{{ errorMessage }}
-						</p>
 						<p v-else-if="dokumentasi.length === 0" class="py-10 text-center text-sm text-slate-500">
 							Belum ada dokumentasi untuk kegiatan ini.
 						</p>
@@ -251,7 +268,7 @@ onMounted(() => {
 									@click="openPreview(image)" />
 								<button 
 									v-if="isHumas" 
-									@click="handleDeleteDokumentasi(image.id)"
+									@click="requestDeleteDokumentasi(image.id)"
 									:disabled="deletingDocumentId === image.id"
 									:aria-label="`Hapus dokumentasi ${image.id}`" 
 									title="Hapus dokumentasi"
@@ -288,4 +305,10 @@ onMounted(() => {
 			</p>
 		</div>
 	</div>
+	<MessageModal :open="Boolean(errorMessage)" :message="errorMessage"
+		:action-label="retryError ? 'Coba lagi' : ''" @close="errorMessage = ''; retryError = null"
+		@action="retryLastRequest" />
+	<MessageModal :open="Boolean(deleteConfirmationMessage)" :message="deleteConfirmationMessage"
+		variant="confirm" confirm-label="Hapus" @close="deleteConfirmationMessage = ''; pendingDeleteDocumentId = null"
+		@confirm="confirmDeleteDokumentasi" />
 </template>

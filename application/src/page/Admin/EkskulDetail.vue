@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
 import { formatDate } from '../../helper';
+import MessageModal from '../../components/MessageModal.vue';
 
 // Global Config
 const API_URL = import.meta.env.VITE_API_URL
@@ -281,12 +282,6 @@ onMounted(() => {
             <!-- Main Content -->
             <main class="w-full lg:w-5/7 flex flex-col gap-5">
 
-                <!-- Error State -->
-                <div v-if="message"
-                    class="w-full p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    {{ message }}
-                </div>
-
                 <!-- Skeleton Loading State -->
                 <template v-if="isLoading">
                     <!-- Banner Skeleton -->
@@ -507,4 +502,5 @@ onMounted(() => {
 
         </div>
     </div>
+    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
+import MessageModal from '../../components/MessageModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
@@ -49,13 +50,6 @@ onMounted(() => {
                     <Icon icon="line-md:loading-loop" width="32" class="text-[#E0234E]" />
                     <span>Memuat ekstrakurikuler kamu...</span>
                 </div>
-            </div>
-
-            <!-- State Error -->
-            <div v-else-if="message"
-                class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3">
-                <Icon icon="lucide:alert-circle" width="24" />
-                <p>{{ message }}</p>
             </div>
 
             <!-- State Kosong (Belum mengikuti ekskul) -->
@@ -112,4 +106,5 @@ onMounted(() => {
 
         </div>
     </div>
+    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

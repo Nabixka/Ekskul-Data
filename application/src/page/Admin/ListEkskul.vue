@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { api } from '../../api';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
+import MessageModal from '../../components/MessageModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
@@ -229,11 +230,6 @@ onMounted(() => {
                     <p class="text-slate-500 text-sm animate-pulse">Memuat data ekstrakurikuler...</p>
                 </div>
 
-                <!-- Error Message -->
-                <div v-else-if="message" class="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-sm">
-                    {{ message }}
-                </div>
-
                 <!-- Empty State -->
                 <div v-else-if="filteredEkskul.length === 0"
                     class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm gap-2">
@@ -277,4 +273,5 @@ onMounted(() => {
             </main>
         </div>
     </div>
+    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

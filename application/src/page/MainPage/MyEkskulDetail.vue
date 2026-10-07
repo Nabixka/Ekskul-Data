@@ -4,6 +4,7 @@ import { Icon } from '@iconify/vue';
 import { api } from '../../api';
 import { useRoute, useRouter } from 'vue-router';
 import { formatDate, formatRupiah } from '../../helper';
+import MessageModal from '../../components/MessageModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL
 const route = useRoute()
@@ -44,6 +45,8 @@ const selectedAbsensiKegiatanId = ref('')
 const selectedImages = ref([])
 const selectedImage = ref(null)
 const uploadMessage = ref('')
+const confirmationMessage = ref('')
+const pendingConfirmationAction = ref(null)
 const searchNamaAbsensi = ref('')
 const isLoadingAbsensi = ref(false)
 const isSubmittingAbsensi = ref(false)
@@ -88,6 +91,18 @@ const visibleSections = computed(() =>
 const clearError = () => {
   message.value = ''
   errorCode.value = null
+}
+
+const requestConfirmation = (messageText, action) => {
+  confirmationMessage.value = messageText
+  pendingConfirmationAction.value = action
+}
+
+const confirmPendingAction = () => {
+  const action = pendingConfirmationAction.value
+  confirmationMessage.value = ''
+  pendingConfirmationAction.value = null
+  if (action) action()
 }
 
 function createKasForm(transaction = null) {
@@ -219,8 +234,6 @@ const handleUploadDokumentasi = async () => {
 }
 
 const handleDeleteDokumentasi = async (documentId) => {
-  if (!window.confirm('Hapus dokumentasi ini?')) return
-
   deletingDocumentId.value = documentId
   clearError()
   try {
@@ -295,7 +308,6 @@ const saveKasTransaction = async () => {
 }
 
 const deleteKasTransaction = async (transaction) => {
-  if (!window.confirm(`Hapus transaksi "${transaction.keterangan}"?`)) return
   clearError()
   try {
     await api.delete(`/kas/ekskul/${id}/${transaction.id}`)
@@ -932,7 +944,8 @@ onMounted(() => {
               <img :src="`${API_URL}${doc.path}`" :alt="doc.title"
                 class="w-full h-full object-cover group-hover:scale-105 opacity-90 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
                 />
-              <button v-if="canManageKegiatanAndDokumentasi" @click.stop="handleDeleteDokumentasi(doc.id)"
+              <button v-if="canManageKegiatanAndDokumentasi"
+                @click.stop="requestConfirmation('Hapus dokumentasi ini?', () => handleDeleteDokumentasi(doc.id))"
                 :disabled="deletingDocumentId === doc.id" :aria-label="`Hapus dokumentasi ${doc.id}`"
                 title="Hapus dokumentasi"
                 class="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/95 text-rose-700 shadow transition hover:bg-rose-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
@@ -1048,7 +1061,9 @@ onMounted(() => {
                       class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-nest-600 dark:hover:bg-slate-800">
                       <Icon icon="lucide:pencil" width="16" />
                     </button>
-                    <button @click="deleteKasTransaction(transaksi)" title="Hapus transaksi"
+                    <button
+                      @click="requestConfirmation(`Hapus transaksi: ${transaksi.keterangan}?`, () => deleteKasTransaction(transaksi))"
+                      title="Hapus transaksi"
                       class="rounded-lg p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50">
                       <Icon icon="lucide:trash-2" width="16" />
                     </button>
@@ -1150,6 +1165,10 @@ onMounted(() => {
         </form>
       </div>
     </Transition>
+    <MessageModal :open="Boolean(uploadMessage)" :message="uploadMessage" @close="uploadMessage = ''" />
+    <MessageModal :open="Boolean(confirmationMessage)" :message="confirmationMessage"
+      variant="confirm" confirm-label="Hapus" @close="confirmationMessage = ''; pendingConfirmationAction = null"
+      @confirm="confirmPendingAction" />
 
     <!-- Modal Form Tambah Kegiatan -->
     <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95"
@@ -1255,8 +1274,6 @@ onMounted(() => {
               {{ selectedImages.length }} gambar dipilih.
             </p>
           </div>
-
-          <p v-if="uploadMessage" class="text-sm text-slate-600">{{ uploadMessage }}</p>
 
           <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <button type="button" @click="isModalDokumentasiOpen = false" :disabled="isUploadingDokumentasi"

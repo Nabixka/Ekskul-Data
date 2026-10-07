@@ -1,5 +1,6 @@
 <script setup>
 import { Icon } from '@iconify/vue';
+import MessageModal from '../../components/MessageModal.vue';
 import { onMounted, ref } from 'vue';
 import { api } from '../../api';
 
@@ -93,4 +94,5 @@ onMounted(() => {
             </main>
         </div>
     </div>
+    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>
