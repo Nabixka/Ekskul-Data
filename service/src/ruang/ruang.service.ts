@@ -6,7 +6,7 @@ import { DatabaseService } from '../database/database.service';
 export class RuangService {
     constructor(private databaseService: DatabaseService) { }
 
-    @Cron('0 0 ? * MON *', {
+    @Cron('0 0 * * MON', {
         timeZone: 'Asia/Jakarta'
     })
 
