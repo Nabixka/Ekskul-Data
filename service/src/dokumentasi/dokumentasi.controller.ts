@@ -1,8 +1,8 @@
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { DokumentasiService } from './dokumentasi.service';
-import { AuthGuard } from 'src/auth/AuthGuard';
-import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
-import { ValidateKegiatanExist } from 'src/Pipe/ValidateKegiatanExist';
+import { AuthGuard } from '../auth/AuthGuard';
+import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
+import { ValidateKegiatanExist } from '../Pipe/ValidateKegiatanExist';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';

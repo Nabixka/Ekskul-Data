@@ -1,6 +1,6 @@
 import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { AuthGuard } from 'src/auth/AuthGuard';
+import { AuthGuard } from '../auth/AuthGuard';
 
 @Controller('admin')
 export class AdminController {

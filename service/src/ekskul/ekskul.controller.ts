@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { EkskulService } from './ekskul.service';
-import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
+import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
-import { AuthGuard } from 'src/auth/AuthGuard';
+import { AuthGuard } from '../auth/AuthGuard';
 
 
 @Controller('ekskul')

@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
 import { MemberService } from './member.service';
-import { AuthGuard } from 'src/auth/AuthGuard';
-import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
+import { AuthGuard } from '../auth/AuthGuard';
+import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
 
 @Controller('member')
 export class MemberController {

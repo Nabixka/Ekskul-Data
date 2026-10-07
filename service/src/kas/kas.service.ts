@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import ExcelJS from 'exceljs';
-import { DatabaseService } from 'src/database/database.service';
-import { RoleService } from 'src/role/role.service';
+import { DatabaseService } from '../database/database.service';
+import { RoleService } from '../role/role.service';
 
 const TABLE = 'kas_transcation'
 const MANAGE_ROLES = ['Bendahara', 'Ketua', 'Wakil Ketua']

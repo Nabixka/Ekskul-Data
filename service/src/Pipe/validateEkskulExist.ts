@@ -1,5 +1,5 @@
 import { ArgumentMetadata, Injectable, NotFoundException, PipeTransform } from "@nestjs/common";
-import { DatabaseService } from "src/database/database.service";
+import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class ValidateEkskulExist implements PipeTransform{

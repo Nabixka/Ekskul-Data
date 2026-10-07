@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuthGuard } from 'src/auth/AuthGuard';
-import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
+import { AuthGuard } from '../auth/AuthGuard';
+import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
 import { KasService } from './kas.service';
 
 @Controller('kas')

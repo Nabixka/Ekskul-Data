@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
-import { RoleService } from 'src/role/role.service';
+import { DatabaseService } from '../database/database.service';
+import { RoleService } from '../role/role.service';
 
 const DOKUMENTASI_MANAGEMENT_ROLES = ['Ketua', 'Wakil Ketua', 'Humas']
 

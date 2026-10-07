@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from 'src/database/database.module';
-import { RoleModule } from 'src/role/role.module';
+import { DatabaseModule } from '../database/database.module';
+import { RoleModule } from '../role/role.module';
 import { KasController } from './kas.controller';
 import { KasService } from './kas.service';
 

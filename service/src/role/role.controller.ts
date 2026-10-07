@@ -1,6 +1,6 @@
 import { Body, Controller, Put, Request, UseGuards } from '@nestjs/common';
 import { RoleService } from './role.service';
-import { AuthGuard } from 'src/auth/AuthGuard';
+import { AuthGuard } from '../auth/AuthGuard';
 
 @Controller('role')
 export class RoleController {

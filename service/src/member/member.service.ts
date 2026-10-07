@@ -1,9 +1,9 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
-import { EkskulService } from 'src/ekskul/ekskul.service';
-import { KegiatanService } from 'src/kegiatan/kegiatan.service';
-import { getMyEkskulMapping } from 'src/Mapping/EkskulMapping';
-import { ProfilMapping } from 'src/Mapping/ProfilMapping';
+import { DatabaseService } from '../database/database.service';
+import { EkskulService } from '../ekskul/ekskul.service';
+import { KegiatanService } from '../kegiatan/kegiatan.service';
+import { getMyEkskulMapping } from '../Mapping/EkskulMapping';
+import { ProfilMapping } from '../Mapping/ProfilMapping';
 
 @Injectable()
 export class MemberService {

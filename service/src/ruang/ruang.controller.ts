@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Request, UseGuards } from '@nestjs/common';
 import { RuangService } from './ruang.service';
-import { AuthGuard } from 'src/auth/AuthGuard';
+import { AuthGuard } from '../auth/AuthGuard';
 
 @Controller('ruang')
 export class RuangController {

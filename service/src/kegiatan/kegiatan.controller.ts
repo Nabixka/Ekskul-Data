@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Request, Res, UseGuards } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
-import { ValidateKegiatanExist } from 'src/Pipe/ValidateKegiatanExist';
-import { ValidateEkskulExist } from 'src/Pipe/validateEkskulExist';
-import { AuthGuard } from 'src/auth/AuthGuard';
+import { ValidateKegiatanExist } from '../Pipe/ValidateKegiatanExist';
+import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
+import { AuthGuard } from '../auth/AuthGuard';
 import type { Response } from 'express';
 
 @Controller('kegiatan')

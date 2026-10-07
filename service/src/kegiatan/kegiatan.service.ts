@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
-import { RoleService } from 'src/role/role.service';
+import { DatabaseService } from '../database/database.service';
+import { RoleService } from '../role/role.service';
 import { AlignmentType, Document, HeightRule, ImageRun, Packer, Paragraph, Table, TableCell, TableRow, TextRun, VerticalAlign } from 'docx';
 import { readFile } from 'fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'path';
