@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import { api } from '../../api';
 
 const dashboardInformation = ref({})
+const listRuang = ref([])
 
 const isLoading = ref(true)
 const message = ref('')
@@ -12,7 +13,7 @@ const message = ref('')
 const getDashboard = async () => {
     isLoading.value = true
     try {
-        const res = await api.get('/user/admin/dashboard')
+        const res = await api.get('/admin/dashboard')
         dashboardInformation.value = res.data.data
     }
     catch (error) {
@@ -23,8 +24,24 @@ const getDashboard = async () => {
     }
 }
 
+const getRuang = async () => {
+    isLoading.value = true
+    try{
+        const res = await api.get('/ruang')
+        listRuang.value = res.data.data
+    }
+    catch(error){
+        message.value = error.response?.data?.message || 'Gagal Terhubung, Coba lagi nanti'
+    }
+    finally{
+        isLoading.value = false
+    }
+}
+
+
 onMounted(() => {
     getDashboard()
+    getRuang()
 })
 </script>
 
@@ -86,11 +103,6 @@ onMounted(() => {
                         
                     </div>
                 </div>
-
-                <!-- Right -->
-                <aside class="w-2/7 bg-white rounded-lg p-4">
-                    <h3>Pengajuan Tempat Ekskul</h3>
-                </aside>
             </main>
         </div>
     </div>

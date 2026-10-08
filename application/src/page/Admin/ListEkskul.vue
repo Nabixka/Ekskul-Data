@@ -26,6 +26,7 @@ const message = ref('')
 const form = ref({
     name: '',
     bidang: '',
+    description: '',
     bannerFile: null,
     bannerPreview: null
 })
@@ -81,6 +82,7 @@ const handleCreateEkskul = async () => {
         const formData = new FormData
         formData.append('name', form.value.name)
         formData.append('bidang', form.value.bidang)
+        formData.append('description', form.value.description)
         formData.append('banner', form.value.bannerFile)
 
         const res = await api.post('/ekskul', formData)
@@ -135,17 +137,24 @@ onMounted(() => {
                             </select>
                         </div>
 
+                        <!-- Deksripsi Ekskul -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-semibold text-gray-400">Deksripsi Ekskul</label>
+                            <textarea v-model="form.description" rows="4" cols="4" class="border border-slate-400 rounded-lg py-1 p-2"
+                                placeholder="Masukkan Deksripsi Ekskul"></textarea>
+                        </div>
+
                         <!-- Banner Ekskul -->
                         <div class="flex flex-col gap-1">
                             <label class="font-semibold text-gray-400 text-sm">Banner Ekskul</label>
 
                             <div
-                                class="relative border-2 border-dashed border-slate-300 hover:border-blue-500 transition-colors p-4 rounded-xl bg-slate-50 hover:bg-blue-50/50 flex flex-col items-center justify-center cursor-pointer overflow-hidden group h-40">
+                                class="relative border-2 border-dashed border-slate-300 hover:border-nest-500 transition-colors p-4 rounded-xl bg-slate-50 hover:bg-nest-50/50 flex flex-col items-center justify-center cursor-pointer overflow-hidden group h-40">
 
                                 <div v-if="!form.bannerPreview"
                                     class="flex flex-col items-center justify-center text-center gap-2">
                                     <div
-                                        class="p-3 bg-blue-100 text-blue-600 rounded-full group-hover:scale-110 transition-transform">
+                                        class="p-3 bg-nest-100 text-nest-600 rounded-full group-hover:scale-110 transition-transform">
                                         <Icon width="24" icon="akar-icons:image" />
                                     </div>
                                     <div>
@@ -215,7 +224,7 @@ onMounted(() => {
                                 <Icon icon="lucide:search" class="w-4 h-4" />
                             </span>
                             <input v-model="searchEkskul"
-                                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
+                                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-nest-500 focus:border-transparent transition shadow-sm"
                                 type="text" placeholder="Cari nama ekskul...">
                         </div>
                         <button @click="modelCreate = true"
@@ -253,18 +262,18 @@ onMounted(() => {
                             <!-- Left -->
                             <div class="flex flex-col gap-1.5">
                                 <h4
-                                    class="font-semibold text-slate-800 text-base group-hover:text-blue-600 transition-colors">
+                                    class="font-semibold text-slate-800 text-base group-hover:text-nest-600 transition-colors">
                                     {{ list.name }}
                                 </h4>
                                 <span
-                                    class="bg-blue-50 text-blue-600 border border-blue-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full">
+                                    class="bg-nest-50 text-nest-600 border border-nest-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full">
                                     {{ list.bidang }}
                                 </span>
                             </div>
 
                             <!-- Right -->
                             <div
-                                class="bg-blue-500 group-hover:bg-blue-600 rounded-full p-2 text-white shadow-sm transition-transform group-hover:translate-x-1 duration-200 flex items-center justify-center">
+                                class="bg-nest-500 group-hover:bg-nest-600 rounded-full p-2 text-white shadow-sm transition-transform group-hover:translate-x-1 duration-200 flex items-center justify-center">
                                 <Icon class="w-4 h-4" icon="grommet-icons:form-next" />
                             </div>
                         </div>

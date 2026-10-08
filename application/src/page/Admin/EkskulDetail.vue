@@ -122,7 +122,7 @@ const handleChangeRole = async () => {
     isLoading.value = true
     message.value = ''
     try{
-        await api.put('/user/change-role', {
+        await api.put('/role/change-role', {
             ekskul: id, 
             nis: updateData.value.nis, 
             incomingRole: updateData.value.role
@@ -312,7 +312,7 @@ onMounted(() => {
                         <div class="relative z-10 flex flex-col gap-1">
                             <h3 class="text-white font-bold text-2xl drop-shadow">{{ ekskulDetail.ekskul?.name }}</h3>
                             <span
-                                class="bg-blue-50 text-blue-600 border border-blue-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full shadow-sm">
+                                class="bg-nest-50 text-nest-600 border border-nest-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full shadow-sm">
                                 {{ ekskulDetail.ekskul?.bidang }}
                             </span>
                         </div>
@@ -325,7 +325,7 @@ onMounted(() => {
                             :class="[
                                 'cursor-pointer text-center py-2 text-sm font-medium transition-all duration-200 rounded-lg',
                                 currentSection === section.name
-                                    ? 'font-bold text-[#E0234E] bg-blue-50 shadow-inner'
+                                    ? 'font-bold text-[#E0234E] bg-nest-50 shadow-inner'
                                     : 'text-[#BE123C] hover:bg-slate-50'
                             ]">
                             {{ section.name }}
@@ -383,7 +383,7 @@ onMounted(() => {
                         <div class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                             <div class="flex items-center gap-2">
                                 <h4 class="text-[#E0234E] font-semibold text-lg">Daftar Anggota</h4>
-                                <span class="text-xs bg-blue-50 text-[#E0234E] px-2.5 py-1 rounded-full font-medium">
+                                <span class="text-xs bg-nest-50 text-[#E0234E] px-2.5 py-1 rounded-full font-medium">
                                     Total: {{ filteredMember.length }}
                                 </span>
                             </div>
@@ -423,7 +423,7 @@ onMounted(() => {
                                             </span>
                                         </td>
                                         <td class="py-3.5 px-4 text-center">
-                                            <button @click="handleOpenModal(member.member_name, member.nis, member.role)" class="px-3 py-1 text-xs font-medium text-[#E0234E] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
+                                            <button @click="handleOpenModal(member.member_name, member.nis, member.role)" class="px-3 py-1 text-xs font-medium text-[#E0234E] bg-nest-50 hover:bg-nest-100 rounded-lg transition-colors cursor-pointer">
                                                 Edit
                                             </button>
                                         </td>

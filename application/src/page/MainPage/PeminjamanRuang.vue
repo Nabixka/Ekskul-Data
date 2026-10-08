@@ -119,12 +119,7 @@ const submitRequest = async () => {
                     class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5">
                 </div>
                 <div class="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-                    <div class="max-w-2xl">
-                        <span
-                            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-rose-100">
-                            <Icon icon="lucide:door-open" width="15" />
-                            Fasilitas sekolah
-                        </span>
+                    <div class="max-w-2xl">         
                         <h1 class="mt-4 text-2xl font-bold tracking-tight md:text-3xl">Peminjaman Ruang</h1>
                         <p class="mt-2 text-sm leading-relaxed text-white/75">
                             Temukan ruang yang tersedia dan ajukan peminjaman untuk kegiatanmu.
@@ -177,10 +172,10 @@ const submitRequest = async () => {
                             :aria-pressed="selectedRoomId === room.id" :class="[
                                 'rounded-xl border p-4 text-left transition-all',
                                 room.status !== 'Kosong'
-                                    ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-70'
+                                    ? 'cursor-not-allowed border-slate-200'
                                     : selectedRoomId === room.id
-                                        ? 'border-rose-400 bg-rose-50/70 shadow-sm ring-2 ring-rose-100'
-                                        : 'border-slate-200 bg-white hover:border-rose-200 hover:bg-rose-50/30'
+                                        ? 'border-rose-400 bg-slate-50 shadow-sm'
+                                        : 'border-slate-200 bg-white hover:border-rose-200 hover:bg-salte-700'
                             ]">
                             <div class="flex items-start justify-between gap-3">
                                 <span
@@ -195,7 +190,7 @@ const submitRequest = async () => {
                                     {{ room.status }}
                                 </span>
                             </div>
-                            <h3 class="mt-3 font-bold text-slate-800">Ruang {{ room.ruang_id }}</h3>
+                            <h3 class="mt-3 font-bold text-slate-700">Ruang {{ room.ruang_id }}</h3>
                             <p v-if="room.description" class="mt-3 text-sm text-slate-600">{{ room.description }}</p>
                             <p v-if="room.peminjam" class="mt-2 text-xs text-slate-600">
                                 Peminjam: <span class="font-medium">{{ room.peminjam }}</span>

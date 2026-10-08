@@ -128,13 +128,18 @@ onMounted(() => {
             <template v-else-if="!message">
                 <!-- Header Section -->
                 <header
-                    class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white flex flex-col gap-3">
-                    <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
-                        Jelajahi Potensi & Minatmu Bersama Kami
-                    </h1>
-                    <p class="text-white/80 text-sm max-w-2xl">
-                        Pantau jadwal kegiatan mendatang dan kelola ekstrakurikuler yang kamu ikuti dalam satu tempat.
-                    </p>
+                    class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white relative overflow-hidden">
+                    <div
+                        class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5">
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
+                            Jelajahi Potensi & Minatmu Bersama Kami
+                        </h1>
+                        <p class="text-white/80 text-sm max-w-2xl">
+                            Pantau jadwal kegiatan mendatang dan kelola ekstrakurikuler yang kamu ikuti dalam satu tempat.
+                        </p>
+                    </div>
                 </header>
 
                 <!-- Stats Grid -->

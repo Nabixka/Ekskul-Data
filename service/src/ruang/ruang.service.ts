@@ -9,7 +9,6 @@ export class RuangService {
     @Cron('0 0 * * MON', {
         timeZone: 'Asia/Jakarta'
     })
-
     async createRuangHariIni() {
 
         const now = new Date()
@@ -45,8 +44,6 @@ export class RuangService {
 
         console.log("Berhasil Membuat Peminjaman Ruang Hari Ini ")
     }
-
-
 
     async getAllPmeminjamanRuangHariIni() {
         const waktuHariIni = new Date().toISOString().split('T')[0]
