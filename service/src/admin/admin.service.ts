@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { listEkskulSiswa } from 'src/Mapping/ListEkskulSiswa';
 
 @Injectable()
 export class AdminService {
@@ -47,10 +48,11 @@ export class AdminService {
 
             ekskul_name: "ekskul.name",
         })
+        .orderBy("murid_name", "asc")
 
         return {
             message: "Berhasil Mendapat Data Ekskul Siswa",
-            data: getData
+            data: listEkskulSiswa(getData)
         }
     }
 }

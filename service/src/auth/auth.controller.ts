@@ -14,7 +14,7 @@ export class AuthController {
 
   @Post('/register')
   register(
-    @Body() data: { name: string, nis: number, password: string}
+    @Body() data: { name: string, nis: number, password: string, kelas: string, jurusan: string}
   ){
     return this.authService.register(data)
   }

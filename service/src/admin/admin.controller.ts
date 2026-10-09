@@ -14,4 +14,12 @@ export class AdminController {
   ) {
     return this.adminService.getDashboardAdmin(req.user)
   }
+
+  @Get('/data-siswa')
+  @UseGuards(AuthGuard)
+  getListEkskulSiswa(
+    @Request() req
+  ){
+    return this.adminService.getListEkskulSiswaByKelas(req.user)
+  }
 }
