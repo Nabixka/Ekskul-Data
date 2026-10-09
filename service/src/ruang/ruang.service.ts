@@ -50,7 +50,8 @@ export class RuangService {
 
         const getAllRuang = await this.databaseService.connection("peminjaman_ruang")
             .select("*")
-            .whereRaw('DATE(waktu_peminjaman) = ?', [waktuHariIni])
+            .orderBy("id", "asc")
+            // .whereRaw('DATE(waktu_peminjaman) = ?', [waktuHariIni])
 
         return {
             message: "Berhasil Mendapat List Peminjaman Ruang",
@@ -60,28 +61,33 @@ export class RuangService {
 
     async updatePermintaan(
         req: { name: string, nis: number, is_admin: boolean },
-        data: { peminjaman_ruang_id: number, status: string,description?: string, peminjam?: string }
+        data: { peminjaman_ruang_id: number, status: string, description?: string, peminjam?: string }
     ) {
         const getPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
             .select("*")
             .where({ id: data.peminjaman_ruang_id })
             .first()
 
-        if (getPeminjamanRuang.status != "Kosong") throw new ConflictException("Ruang Sedang diajukan atau sudah di Pinjam")
+        if (getPeminjamanRuang.status != "Kosong" && req.is_admin != true) throw new ConflictException("Ruang Sedang diajukan atau sudah di Pinjam")
 
         if(req.is_admin == false && data.status != "Diajukan") throw new ConflictException("Hanya Admin yang bisa mengubah status selain Diajukan")
 
-        let dataPeminjam = data.peminjam
-        if (data.peminjam == "Pribadi") dataPeminjam = req.name
+        let dataPayload = {
+            peminjam: data.peminjam,
+            status: data.status,
+            description: data.description || getPeminjamanRuang.description
+        }
+
+        if (data.peminjam == "Pribadi") dataPayload.peminjam = req.name
+        if (req.is_admin == true && data.status == "Kosong") {
+            dataPayload.peminjam = ''
+            dataPayload.description = ''
+        }
 
         if (!getPeminjamanRuang) throw new NotFoundException("Maaf Tidak Menemukan Ruangan Yang Anda Cari")
 
         const updatePeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")
-            .update({
-                status: data.status,
-                description: data.description || getPeminjamanRuang.description,
-                peminjam: dataPeminjam || getPeminjamanRuang.peminjam
-            })
+            .update(dataPayload)
             .where({ id: data.peminjaman_ruang_id })
 
         const getNewPeminjamanRuang = await this.databaseService.connection("peminjaman_ruang")

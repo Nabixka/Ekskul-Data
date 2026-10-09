@@ -11,6 +11,7 @@ const getLocalDate = () => {
 }
 
 const selectedDate = ref(getLocalDate())
+const filterDate = ref(getLocalDate()) 
 const selectedRoomId = ref(null)
 const selectedPeminjam = ref('Pribadi') 
 const purpose = ref('')
@@ -55,12 +56,19 @@ onMounted(() => {
     fetchUserEkskul()
 })
 
+const filteredRoomBookings = computed(() => {
+    return roomBookings.value.filter((room) => {
+        const roomDate = room.waktu_peminjaman ? room.waktu_peminjaman.slice(0, 10) : ''
+        return roomDate === filterDate.value
+    })
+})
+
 const availableRoomCount = computed(() =>
-    roomBookings.value.filter((room) => room.status === 'Kosong').length
+    filteredRoomBookings.value.filter((room) => room.status === 'Kosong').length
 )
 
 const selectedRoom = computed(() =>
-    roomBookings.value.find((room) => room.id === selectedRoomId.value && room.status === 'Kosong')
+    filteredRoomBookings.value.find((room) => room.id === selectedRoomId.value && room.status === 'Kosong')
 )
 
 const submitRequest = async () => {
@@ -88,7 +96,7 @@ const submitRequest = async () => {
 
         await api.patch('/ruang', payload)
 
-        const formattedDate = new Date(`${selectedDate.value}T00:00:00`).toLocaleDateString('id-ID', {
+        const formattedDate = new Date(`${filterDate.value}T00:00:00`).toLocaleDateString('id-ID', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
@@ -133,7 +141,7 @@ const submitRequest = async () => {
                         <div>
                             <p class="text-xs text-white/60">Ruang tersedia</p>
                             <p class="text-lg font-bold">{{ availableRoomCount }} <span
-                                    class="text-sm font-medium text-white/70">dari {{ roomBookings.length }}
+                                    class="text-sm font-medium text-white/70">dari {{ filteredRoomBookings.length }}
                                     ruang</span></p>
                         </div>
                     </div>
@@ -146,14 +154,21 @@ const submitRequest = async () => {
                     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 class="text-lg font-bold text-slate-800">Data ketersediaan ruang</h2>
-                            <p class="mt-1 text-sm text-slate-500">Pilih ruang berstatus kosong untuk mengajukan
-                                peminjaman.</p>
+                            <p class="mt-1 text-sm text-slate-500">Pilih ruang berstatus kosong untuk mengajukan peminjaman.</p>
                         </div>
-                        <button type="button" @click="fetchRoomList"
-                            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-rose-200 hover:text-[#BE123C]">
-                            <Icon icon="lucide:refresh-cw" width="15" />
-                            Muat ulang
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <!-- Input Filter Tanggal -->
+                            <input 
+                                type="date" 
+                                v-model="filterDate"
+                                class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 focus:border-rose-400 focus:outline-none"
+                            />
+                            <button type="button" @click="fetchRoomList"
+                                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-rose-200 hover:text-[#BE123C]">
+                                <Icon icon="lucide:refresh-cw" width="15" />
+                                Muat ulang
+                            </button>
+                        </div>
                     </div>
 
                     <div v-if="isLoading"
@@ -161,12 +176,12 @@ const submitRequest = async () => {
                         <Icon icon="lucide:loader-circle" width="18" class="animate-spin" />
                         Memuat data ruang...
                     </div>
-                    <div v-else-if="roomBookings.length === 0"
+                    <div v-else-if="filteredRoomBookings.length === 0"
                         class="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
-                        Belum ada data ruang.
+                        Tidak ada data ruang untuk tanggal tersebut.
                     </div>
                     <div v-else class="grid gap-3 sm:grid-cols-2">
-                        <button v-for="room in roomBookings" :key="room.id" type="button"
+                        <button v-for="room in filteredRoomBookings" :key="room.id" type="button"
                             :disabled="room.status !== 'Kosong'"
                             @click="selectedRoomId = room.id, confirmationMessage = '', fetchError = ''"
                             :aria-pressed="selectedRoomId === room.id" :class="[
@@ -175,7 +190,7 @@ const submitRequest = async () => {
                                     ? 'cursor-not-allowed border-slate-200'
                                     : selectedRoomId === room.id
                                         ? 'border-rose-400 bg-slate-50 shadow-sm'
-                                        : 'border-slate-200 bg-white hover:border-rose-200 hover:bg-salte-700'
+                                        : 'border-slate-200 bg-white hover:border-rose-200 hover:bg-slate-50'
                             ]">
                             <div class="flex items-start justify-between gap-3">
                                 <span
@@ -239,7 +254,8 @@ const submitRequest = async () => {
                             <span class="relative">
                                 <Icon icon="lucide:calendar-days" width="18"
                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input disabled v-model="selectedDate" :min="getLocalDate()" type="date" required
+                                <!-- Menggunakan filterDate agar input tanggal mengikuti tanggal yang sedang difilter -->
+                                <input v-model="filterDate" :min="getLocalDate()" type="date" required
                                     class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm font-normal focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100">
                             </span>
                         </label>

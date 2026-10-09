@@ -195,12 +195,15 @@ onMounted(() => {
 
             <!-- Header Section -->
             <header
-                class="bg-linear-to-br from-[#F43F5E] to-[#D9387A] p-6 rounded-2xl shadow-md text-white flex flex-col gap-1">
-                <span class="text-white/80 text-sm font-medium">Halo,</span>
-                <h1 class="font-bold text-2xl tracking-tight">Selamat Datang di Panel List Ekskul</h1>
-                <p class="text-white/90 text-sm mt-1">
-                    Kelola ekstrakurikuler yang ada, pendaftaran? pelaporan? pilih ekskul yang ingin dilihat.
-                </p>
+                class="relative overflow-hidden rounded-2xl border border-rose-950/20 bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8">
+                <div class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"></div>
+                <div class="relative">
+                    <span class="text-sm font-medium text-white/80">Halo,</span>
+                    <h1 class="text-2xl font-bold tracking-tight">Selamat Datang di Panel List Ekskul</h1>
+                    <p class="mt-1 text-sm text-white/90">
+                        Kelola ekstrakurikuler yang ada, pendaftaran? pelaporan? pilih ekskul yang ingin dilihat.
+                    </p>
+                </div>
             </header>
 
             <main class="flex flex-col gap-5">

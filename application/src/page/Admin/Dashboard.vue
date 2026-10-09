@@ -5,13 +5,12 @@ import { onMounted, ref } from 'vue';
 import { api } from '../../api';
 
 const dashboardInformation = ref({})
-const listRuang = ref([])
-
 const isLoading = ref(true)
 const message = ref('')
 
 const getDashboard = async () => {
     isLoading.value = true
+    message.value = ''
     try {
         const res = await api.get('/admin/dashboard')
         dashboardInformation.value = res.data.data
@@ -24,35 +23,26 @@ const getDashboard = async () => {
     }
 }
 
-const getRuang = async () => {
-    isLoading.value = true
-    try{
-        const res = await api.get('/ruang')
-        listRuang.value = res.data.data
-    }
-    catch(error){
-        message.value = error.response?.data?.message || 'Gagal Terhubung, Coba lagi nanti'
-    }
-    finally{
-        isLoading.value = false
-    }
-}
-
-
 onMounted(() => {
     getDashboard()
-    getRuang()
 })
 </script>
 
 <template>
     <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="w-full lg:w-7/9 bg-slate-100 p-6 lg:p-8 flex flex-col gap-6">
+        <main class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
+            <header
+                class="relative overflow-hidden rounded-2xl border border-rose-950/20 bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8">
+                <div class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"></div>
+                <div class="relative">
+                    <h1 class="text-2xl font-bold tracking-tight md:text-3xl">Dashboard Admin</h1>
+                    <p class="mt-2 text-sm text-white/75">Ringkasan pengelolaan ekstrakurikuler dan kegiatan.</p>
+                </div>
+            </header>
 
-            <!-- Header -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 w-full gap-4">
+            <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <!-- Ekskul -->
-                <div class="bg-white rounded-lg p-4 h-fit">
+                <div class="h-fit rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                     <h5 class="text-sm text-[#BE123C]">Total Ekstrakurikuler</h5>
                     <div class="flex justify-between items-center">
                         <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.ekskul }}</h3>
@@ -62,7 +52,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg p-4 h-fit">
+                <div class="h-fit rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                     <h5 class="text-sm text-[#BE123C]">Total Siswa</h5>
                     <div class="flex justify-between items-center">
                         <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.member }}</h3>
@@ -72,7 +62,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg p-4 h-fit">
+                <div class="h-fit rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                     <h5 class="text-sm text-[#BE123C]">Total Kegiatan</h5>
                     <div class="flex justify-between items-center">
                         <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.kegiatan }}</h3>
@@ -82,7 +72,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg p-4 h-fit">
+                <div class="h-fit rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
                     <h5 class="text-sm text-[#BE123C]">Total Dokumentasi</h5>
                     <div class="flex justify-between items-center">
                         <h3 class="text-4xl font-bold text-[#E0234E]">{{ dashboardInformation.dokumentasi }}</h3>
@@ -91,20 +81,8 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Main -->
-            <main class="flex w-full gap-4">
-
-                <!-- Left -->
-                <div class="w-5/7 bg-white rounded-lg p-4">
-                    <h3 class="text-[#E0234E] font-bold text-xl min-h-90">Pengajuan Tempat Ekskul</h3>
-                    <div>
-                        
-                    </div>
-                </div>
-            </main>
-        </div>
+            </section>
+        </main>
     </div>
     <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

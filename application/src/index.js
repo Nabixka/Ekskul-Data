@@ -11,6 +11,7 @@ import MyEkskul from "./page/MainPage/MyEkskul.vue";
 import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
 import KegiatanDetail from "./page/MainPage/KegiatanDetail.vue";
 import PeminjamanRuang from "./page/MainPage/PeminjamanRuang.vue";
+import AdminRuang from "./page/Admin/Ruang.vue";
 
 const routes = [
     {
@@ -87,6 +88,12 @@ const routes = [
         path: '/admin/list-ekskul',
         name: "List Ekskul Admin",
         component: ListEkskulAdmin,
+        meta: { showBar: true }
+    },
+    {
+        path: '/admin/ruang',
+        name: "Ruang Admin",
+        component: AdminRuang,
         meta: { showBar: true }
     },
     {

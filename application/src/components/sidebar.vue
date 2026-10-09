@@ -44,6 +44,11 @@ const adminList = ref([
         name: "List Ekskul",
         path: "/admin/list-ekskul",
         icon: "fluent:people-community-24-filled"
+    },
+    {
+        name: "Ruang",
+        path: "/admin/ruang",
+        icon: "lucide:door-open"
     }
 ])
 
