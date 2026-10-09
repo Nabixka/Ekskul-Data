@@ -31,4 +31,26 @@ export class AdminService {
             }
         }
     }
+
+    // Get List Siswa Dan Ekskul Nya Berdasarkan Kelas
+    async getListEkskulSiswaByKelas(req: {is_admin: boolean}){
+        if(req.is_admin !== true) throw new ForbiddenException("Anda Tidak Berhak")
+
+        const getData = await this.databaseService.connection("member_ekskul")
+        .innerJoin("ekskul", "ekskul.id", "member_ekskul.ekskul_id")
+        .innerJoin("users", "users.nis", "member_ekskul.nis_user")
+        .select({
+            nis: "users.nis",
+            murid_name: "users.name",
+            kelas: "users.kelas",
+            jurusan: "users.jurusan",
+
+            ekskul_name: "ekskul.name",
+        })
+
+        return {
+            message: "Berhasil Mendapat Data Ekskul Siswa",
+            data: getData
+        }
+    }
 }

@@ -12,6 +12,7 @@ import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
 import KegiatanDetail from "./page/MainPage/KegiatanDetail.vue";
 import PeminjamanRuang from "./page/MainPage/PeminjamanRuang.vue";
 import AdminRuang from "./page/Admin/Ruang.vue";
+import LaporanBulananAdmin from "./page/Admin/LaporanBulanan.vue";
 
 const routes = [
     {
@@ -94,6 +95,12 @@ const routes = [
         path: '/admin/ruang',
         name: "Ruang Admin",
         component: AdminRuang,
+        meta: { showBar: true }
+    },
+    {
+        path: '/admin/laporan-bulanan',
+        name: "Laporan Bulanan Admin",
+        component: LaporanBulananAdmin,
         meta: { showBar: true }
     },
     {

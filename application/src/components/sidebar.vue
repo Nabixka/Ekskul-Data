@@ -18,7 +18,7 @@ const listNav = ref([
         icon: "ant-design:home-filled"
     },
     {
-        name: "List Ekskul",
+        name: "Ekskul",
         path: "/list-ekskul",
         icon: "fluent:people-community-24-filled"
     },
@@ -41,9 +41,14 @@ const adminList = ref([
         icon: "ant-design:home-filled"
     },
     {
-        name: "List Ekskul",
+        name: "Ekskul",
         path: "/admin/list-ekskul",
         icon: "fluent:people-community-24-filled"
+    },
+    {
+        name: "Laporan Bulanan",
+        path: "/admin/laporan-bulanan",
+        icon: "lucide:file-text"
     },
     {
         name: "Ruang",

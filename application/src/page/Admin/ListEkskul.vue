@@ -110,7 +110,7 @@ onMounted(() => {
 
         <!-- Card -->
         <div class="flex justify-center items-center min-h-screen">
-            <div class="absolute z-51 rounded-lg overflow-hidden w-1/3">
+            <div class="absolute z-51 w-[calc(100%-2rem)] max-w-xl overflow-hidden rounded-2xl">
                 <!-- Card Header -->
                 <div class="bg-[#E0234E] p-3">
                     <h3 class="text-white font-semibold">Form Tambah Ekskul</h3>
@@ -190,8 +190,8 @@ onMounted(() => {
     </div>
 
     <!-- Main -->
-    <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="lg:w-7/9 bg-slate-100 p-8 flex flex-col gap-6">
+    <div class="w-full min-h-screen bg-slate-100">
+        <main class="flex w-full flex-col gap-6 p-4 md:p-8 lg:w-4/5 lg:ml-auto">
 
             <!-- Header Section -->
             <header
@@ -200,22 +200,22 @@ onMounted(() => {
                 <div class="relative">
                     <span class="text-sm font-medium text-white/80">Halo,</span>
                     <h1 class="text-2xl font-bold tracking-tight">Selamat Datang di Panel List Ekskul</h1>
-                    <p class="mt-1 text-sm text-white/90">
-                        Kelola ekstrakurikuler yang ada, pendaftaran? pelaporan? pilih ekskul yang ingin dilihat.
+                    <p class="mt-1 text-sm text-white/80">
+                        Kelola daftar ekstrakurikuler dan pilih ekskul untuk melihat informasi lengkapnya.
                     </p>
                 </div>
             </header>
 
-            <main class="flex flex-col gap-5">
+            <section class="flex flex-col gap-5">
                 <!-- Title & Filter Container -->
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h3 class="text-2xl font-bold text-slate-800">Daftar Ekskul</h3>
                         <p class="text-sm text-slate-500">Pilih ekskul yang ingin Anda ketahui lebih dalam</p>
                     </div>
 
                     <!-- Filter Input -->
-                    <div class="flex gap-2">
+                    <div class="flex flex-col gap-2 sm:flex-row">
                         <select v-model="selectedBidang"
                             class="px-3 py-2 bg-white border border-slate-200 shadow-sm rounded-xl">
                             <option value="">Semua</option>
@@ -263,7 +263,7 @@ onMounted(() => {
                         <!-- Card Detail -->
                         <div class="p-4 flex justify-between items-center mt-auto">
                             <!-- Left -->
-                            <div class="flex flex-col gap-1.5">
+                            <div class="flex flex-col items-start gap-1">
                                 <h4
                                     class="font-semibold text-slate-800 text-base group-hover:text-nest-600 transition-colors">
                                     {{ list.name }}
@@ -282,8 +282,8 @@ onMounted(() => {
                         </div>
                     </button>
                 </div>
-            </main>
-        </div>
+            </section>
+        </main>
     </div>
     <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
 </template>

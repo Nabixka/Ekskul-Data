@@ -7,8 +7,13 @@ import MessageModal from '../../components/MessageModal.vue';
 const registerPayload = ref({
     name: '',
     nis: '',
-    password: ''
+    password: '',
+    kelas: '',
+    jurusan: ''
 })
+
+const listKelas = ref(['X', 'XI', 'XII'])
+const listJurusan = ref(['RPL', 'AKL 1', 'AKL 2', 'BDP', 'BR', 'MLOG', 'MP'])
 
 const isLoading = ref(false)
 const message = ref('')
@@ -72,6 +77,22 @@ const handleLogin = async () => {
                         <label class="text-[#E0234E]">NIS</label>
                         <input required v-model="registerPayload.nis" class="py-2 p-2 border-2 border-gray-200 rounded-lg" type="text"
                             placeholder="Masukkan NIS">
+                    </div>
+
+                    <!-- Kelas -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[#E0234E]">Kelas</label>
+                        <div class="grid grid-cols-2 gap-5">
+                            <select required v-model="registerPayload.kelas" class="py-2 p-2 border-2 border-gray-200 rounded-lg">
+                                <option value="" disabled selected>Pilih Kelas</option>
+                                <option v-for="kelas in listKelas" :key="kelas">{{ kelas }}</option>
+                            </select>
+
+                            <select required v-model="registerPayload.jurusan" class="py-2 p-2 border-2 border-gray-200 rounded-lg">
+                                <option value="" disabled selected>Pilih Jurusan</option>
+                                <option v-for="jurusan in listJurusan" :key="jurusan">{{ jurusan }}</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Password -->

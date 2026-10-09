@@ -8,7 +8,9 @@ exports.up = function(knex) {
     table.string('name')
     table.integer('nis').unique(),
     table.text('password'),
-    table.boolean('is_admin').defaultTo(false)
+    table.boolean('is_admin').defaultTo(false),
+    table.enum('kelas', ['X', 'XI', 'XIII']).nullable(),
+    table.string('jurusan').nullable()
   })
 };
 

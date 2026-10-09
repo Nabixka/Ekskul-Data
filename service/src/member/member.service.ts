@@ -4,6 +4,7 @@ import { EkskulService } from '../ekskul/ekskul.service';
 import { KegiatanService } from '../kegiatan/kegiatan.service';
 import { getMyEkskulMapping } from '../Mapping/EkskulMapping';
 import { ProfilMapping } from '../Mapping/ProfilMapping';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class MemberService {
@@ -111,5 +112,34 @@ export class MemberService {
             message: "Berhasil Mendapatkan Detail Ekskul Anda",
             data: payload
         }
+    }
+
+    @Cron('0 0 1 6 *', {
+        timeZone: 'Asia/Jakarta'
+    })
+    async updateKelas(){
+        const updateKelas10 = await this.databaseService.connection("users")
+        .update({kelas: "XI"})
+        .where({kelas: "X"})
+
+        console.log("Berhasil Update Kelas 10 ke kelas 11")
+
+        const updateKelas11 = await this.databaseService.connection("users")
+        .update({kelas: "XII"})
+        .where({kelas: "XI"})
+
+        console.log("Berhasil Update Kelas 11 ke kelas 12")
+
+        const updateKelas12 = await this.databaseService.connection("users")
+        .update({kelas: "XIII"})
+        .where({kelas: "XII"})
+
+        console.log("Berhasil Update Kelas 12 ke kelas 13 (Lulus)")
+
+        const updateMuridLulus = await this.databaseService.connection("users")
+        .delete()
+        .where({kelas: "XIII"})
+
+        console.log("Berhasil menghapus Murid Telah Lulus")
     }
 }

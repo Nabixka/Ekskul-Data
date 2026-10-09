@@ -34,10 +34,12 @@ export class AuthService {
         }
     }
 
-    async register(data: {name: string, nis: number, password: string} ){
+    async register(data: {name: string, nis: number, password: string, kelas: string, jurusan: string} ){
         if(!data.name || !data.nis || !data.password) throw new BadRequestException("Harap Isi Semua Data")
         if(isNaN(data.nis)) throw new BadRequestException("NIS Harus Angka")
-        
+
+        if(!data.kelas.includes("X") && !data.kelas.includes("XI") && !data.kelas.includes("XII")) throw new BadRequestException("Kelas Tidak Valid")
+
         const exist = await this.databaseService.connection("users")
         .select("nis")
         .where({nis: data.nis})
@@ -46,7 +48,14 @@ export class AuthService {
         
         const hashPassword = await bcrypt.hash(data.password, 10)
         const [register] = await this.databaseService.connection("users")
-        .insert({name: data.name, nis: data.nis, password: hashPassword, is_admin: false})
+        .insert({
+            name: data.name, 
+            nis: data.nis, 
+            password: hashPassword, 
+            is_admin: false, 
+            kelas: data.kelas, 
+            jurusan: data.jurusan
+        })
         .returning(["id", "name", "nis", "is_admin"])
 
         return {
