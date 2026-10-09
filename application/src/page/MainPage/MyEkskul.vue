@@ -1,110 +1,135 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue';
-import { api } from '../../api';
-import { Icon } from '@iconify/vue';
-import { useRouter } from 'vue-router';
-import MessageModal from '../../components/MessageModal.vue';
+import { onMounted, ref, computed } from "vue";
+import { api } from "../../api";
+import { Icon } from "@iconify/vue";
+import { useRouter } from "vue-router";
+import MessageModal from "../../components/MessageModal.vue";
 
-const API_URL = import.meta.env.VITE_API_URL
-const router = useRouter()
+const API_URL = import.meta.env.VITE_API_URL;
+const router = useRouter();
 
-const ekskulList = ref([])
-const message = ref('')
-const isLoading = ref(true)
+const ekskulList = ref([]);
+const message = ref("");
+const isLoading = ref(true);
 
 const getMyEkskul = async () => {
-    isLoading.value = true
-    try {
-        const res = await api.get('/member/ekskul')
-        ekskulList.value = res.data.data || []
-    } catch (error) {
-        message.value = error.response?.data?.message || 'Terjadi kesalahan saat mengambil data ekskul.'
-    } finally {
-        isLoading.value = false
-    }
-}
+  isLoading.value = true;
+  try {
+    const res = await api.get("/member/ekskul");
+    ekskulList.value = res.data.data || [];
+  } catch (error) {
+    message.value =
+      error.response?.data?.message ||
+      "Terjadi kesalahan saat mengambil data ekskul.";
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 onMounted(() => {
-    getMyEkskul()
-})
+  getMyEkskul();
+});
 </script>
 
 <template>
-    <div class="w-full flex justify-end min-h-screen bg-slate-50">
-        <div class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
+  <div class="w-full flex justify-end min-h-screen bg-slate-50">
+    <div class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
+      <!-- Header Section -->
+      <header
+        class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 md:p-8 rounded-2xl border border-rose-950/20 shadow-md text-white flex flex-col gap-3"
+      >
+        <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
+          Ekskul Yang Kamu Ikuti
+        </h1>
+        <p class="text-white/90 text-sm max-w-2xl">
+          Kelola dan pantau seluruh kegiatan ekstrakurikuler serta peran aktifmu
+          di lingkungan sekolah.
+        </p>
+      </header>
 
-            <!-- Header Section -->
-            <header
-                class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 md:p-8 rounded-2xl border border-rose-950/20 shadow-md text-white flex flex-col gap-3">
-                <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
-                    Ekskul Yang Kamu Ikuti
-                </h1>
-                <p class="text-white/90 text-sm max-w-2xl">
-                    Kelola dan pantau seluruh kegiatan ekstrakurikuler serta peran aktifmu di lingkungan sekolah.
-                </p>
-            </header>
-
-            <!-- State Loading -->
-            <div v-if="isLoading" class="flex items-center justify-center min-h-[300px]">
-                <div class="flex items-center gap-3 text-slate-500 font-medium">
-                    <Icon icon="line-md:loading-loop" width="32" class="text-[#E0234E]" />
-                    <span>Memuat ekstrakurikuler kamu...</span>
-                </div>
-            </div>
-
-            <!-- State Kosong (Belum mengikuti ekskul) -->
-            <div v-else-if="!ekskulList.length"
-                class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center gap-3">
-                <div class="p-4 bg-blue-50 text-[#E0234E] rounded-full">
-                    <Icon icon="lucide:folder-open" width="40" />
-                </div>
-                <h3 class="font-bold text-slate-800 text-lg">Belum Mengikuti Ekskul</h3>
-                <p class="text-slate-500 text-sm max-w-md">
-                    Kamu belum terdaftar di ekstrakurikuler manapun. Silakan jelajahi daftar ekskul yang tersedia dan
-                    ajukan pendaftaran.
-                </p>
-            </div>
-
-            <!-- Grid List Ekskul -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div @click="router.push(`/my-ekskul/${item.id}`)" v-for="item in ekskulList" :key="item.id"
-                    class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 flex flex-col hover:shadow-md transition-shadow duration-200">
-                    <!-- Banner Head -->
-                    <div class="relative h-44 bg-slate-200 overflow-hidden">
-                        <img :src="`${API_URL}${item.banner}`" :alt="item.name" class="w-full h-full object-cover" />
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent">
-                        </div>
-
-                        <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                            <h2 class="text-xl font-bold text-white drop-shadow-sm">
-                                {{ item.name }}
-                            </h2>
-                        </div>
-                    </div>
-
-                    <!-- Body Content -->
-                    <div class="p-5 flex flex-col justify-between flex-1 gap-4">
-                        <div>
-                            <p class="text-slate-600 text-sm line-clamp-3 leading-relaxed">
-                                {{ item.about || 'Belum ada deskripsi ekstrakurikuler.' }}
-                            </p>
-                        </div>
-
-                        <!-- List Peran/Role -->
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                Peran Kamu:
-                                <strong class="text-[#E0234E]">
-                                    {{ item.role }}
-                                </strong>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+      <!-- State Loading -->
+      <div
+        v-if="isLoading"
+        class="flex items-center justify-center min-h-[300px]"
+      >
+        <div class="flex items-center gap-3 text-slate-500 font-medium">
+          <Icon icon="line-md:loading-loop" width="32" class="text-[#E0234E]" />
+          <span>Memuat ekstrakurikuler kamu...</span>
         </div>
+      </div>
+
+      <!-- State Kosong (Belum mengikuti ekskul) -->
+      <div
+        v-else-if="!ekskulList.length"
+        class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center gap-3"
+      >
+        <div class="p-4 bg-blue-50 text-[#E0234E] rounded-full">
+          <Icon icon="lucide:folder-open" width="40" />
+        </div>
+        <h3 class="font-bold text-slate-800 text-lg">Belum Mengikuti Ekskul</h3>
+        <p class="text-slate-500 text-sm max-w-md">
+          Kamu belum terdaftar di ekstrakurikuler manapun. Silakan jelajahi
+          daftar ekskul yang tersedia dan ajukan pendaftaran.
+        </p>
+      </div>
+
+      <!-- Grid List Ekskul -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          @click="router.push(`/my-ekskul/${item.id}`)"
+          v-for="item in ekskulList"
+          :key="item.id"
+          class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 flex flex-col hover:shadow-md transition-shadow duration-200"
+        >
+          <!-- Banner Head -->
+          <div class="relative h-44 bg-slate-200 overflow-hidden">
+            <img
+              :src="`${API_URL}${item.banner}`"
+              :alt="item.name"
+              class="w-full h-full object-cover"
+            />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"
+            ></div>
+
+            <div
+              class="absolute bottom-4 left-4 right-4 flex items-end justify-between"
+            >
+              <h2 class="text-xl font-bold text-white drop-shadow-sm">
+                {{ item.name }}
+              </h2>
+            </div>
+          </div>
+
+          <!-- Body Content -->
+          <div class="p-5 flex flex-col justify-between flex-1 gap-4">
+            <div>
+              <p class="text-slate-600 text-sm line-clamp-3 leading-relaxed">
+                {{ item.about || "Belum ada deskripsi ekstrakurikuler." }}
+              </p>
+            </div>
+
+            <!-- List Peran/Role -->
+            <div
+              class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2"
+            >
+              <span
+                class="text-xs font-semibold text-slate-400 uppercase tracking-wider"
+              >
+                Peran Kamu:
+                <strong class="text-[#E0234E]">
+                  {{ item.role }}
+                </strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <MessageModal :open="Boolean(message)" :message="message" @close="message = ''" />
+  </div>
+  <MessageModal
+    :open="Boolean(message)"
+    :message="message"
+    @close="message = ''"
+  />
 </template>
