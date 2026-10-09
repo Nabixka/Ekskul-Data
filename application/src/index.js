@@ -6,6 +6,7 @@ import ListEkskul from "./page/MainPage/ListEkskul.vue";
 import EkskulDetail from "./page/MainPage/EkskulDetail.vue";
 import DashboardAdmin from "./page/Admin/Dashboard.vue";
 import ListEkskulAdmin from "./page/Admin/ListEkskul.vue";
+import DataSiswaAdmin from "./page/Admin/DataSiswa.vue";
 import EkskulDetailAdmin from "./page/Admin/EkskulDetail.vue";
 import MyEkskul from "./page/MainPage/MyEkskul.vue";
 import MyEkskulDetail from "./page/MainPage/MyEkskulDetail.vue";
@@ -89,6 +90,12 @@ const routes = [
         path: '/admin/list-ekskul',
         name: "List Ekskul Admin",
         component: ListEkskulAdmin,
+        meta: { showBar: true }
+    },
+    {
+        path: '/admin/data-siswa',
+        name: "Data Siswa Admin",
+        component: DataSiswaAdmin,
         meta: { showBar: true }
     },
     {

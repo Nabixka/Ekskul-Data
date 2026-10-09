@@ -46,6 +46,11 @@ const adminList = ref([
         icon: "fluent:people-community-24-filled"
     },
     {
+        name: "Data Siswa",
+        path: "/admin/data-siswa",
+        icon: "lucide:users"
+    },
+    {
         name: "Laporan Bulanan",
         path: "/admin/laporan-bulanan",
         icon: "lucide:file-text"

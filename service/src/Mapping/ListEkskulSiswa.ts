@@ -24,6 +24,11 @@ export function listEkskulSiswa(data: any) {
         ekskul_list: undefined
     }))
 
+    const kelasOrder = ["X", "XI", "XII"]
+    uniqueStudents.sort((a: any, b: any) => {
+        return kelasOrder.indexOf(a.kelas) - kelasOrder.indexOf(b.kelas)
+    })
+
     const grouped = uniqueStudents.reduce((acc: any, item: any) => {
         if (!acc[item.kelas]) {
             acc[item.kelas] = {}

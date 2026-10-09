@@ -104,7 +104,7 @@ onMounted(() => {
                         <!-- Card Detail -->
                         <div class="p-4 flex justify-between items-center mt-auto">
                             <!-- Left -->
-                            <div class="flex flex-col gap-1.5">
+                            <div class="flex flex-col items-start gap-1.5">
                                 <h4
                                     class="font-semibold text-slate-800 text-base group-hover:text-nest-600 transition-colors">
                                     {{ list.name }}
