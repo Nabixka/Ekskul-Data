@@ -119,14 +119,14 @@ onMounted(() => {
         </form>
 
         <!-- Register -->
-        <span class="justify-center flex text-[#B4234E] gap-1 items-center"
+        <!-- <span class="justify-center flex text-[#B4234E] gap-1 items-center"
           >Belum punya akun?
           <RouterLink
             to="/auth/register"
             class="text-[#E0234E] font-semibold hover:cursor-pointer"
             >Register
           </RouterLink>
-        </span>
+        </span> -->
       </div>
     </main>
   </section>

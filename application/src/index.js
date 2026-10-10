@@ -28,11 +28,11 @@ const routes = [
         name: "Login",
         component: Login,
     },
-    {
-        path: '/auth/register',
-        name: "Register",
-        component: Register
-    },
+    // {
+    //     path: '/auth/register',
+    //     name: "Register",
+    //     component: Register
+    // },
 
 
     // Member
