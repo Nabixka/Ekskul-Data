@@ -1,6 +1,7 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/AuthGuard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('admin')
 export class AdminController {
@@ -21,5 +22,16 @@ export class AdminController {
     @Request() req
   ){
     return this.adminService.getListEkskulSiswaByKelas(req.user)
+  }
+
+  @Post('/data-siswa')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async insertDataSiswa(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File
+  ){
+    if(!file) throw new BadRequestException("Mana File nya")
+    return this.adminService.insertDataSiswa(req.user, file)
   }
 }

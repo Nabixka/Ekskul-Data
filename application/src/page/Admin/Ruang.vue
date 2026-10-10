@@ -91,17 +91,19 @@ onMounted(fetchRoomList);
   <div class="w-full flex min-h-screen justify-end bg-slate-50">
     <main class="flex w-full flex-col gap-6 bg-slate-100 p-4 md:p-8 lg:w-4/5">
       <header
-        class="relative overflow-hidden rounded-2xl border border-rose-950/20 bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8"
+        class="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 text-rose-950 shadow-md dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white md:p-8"
       >
         <div
-          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"
+          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
         ></div>
         <div class="relative">
-          <p class="text-sm font-medium text-white/70">Admin</p>
+          <p class="text-sm font-medium text-rose-700 dark:text-white/70">
+            Admin
+          </p>
           <h1 class="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
             Pengelolaan Ruang
           </h1>
-          <p class="mt-2 text-sm text-white/75">
+          <p class="mt-2 text-sm text-rose-800/80 dark:text-white/75">
             Tinjau pengajuan dan atur ketersediaan ruang.
           </p>
         </div>

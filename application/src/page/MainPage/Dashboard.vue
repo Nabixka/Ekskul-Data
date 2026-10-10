@@ -32,7 +32,18 @@ const getDashboard = async () => {
 
     if (status === 401) {
       localStorage.removeItem("token");
-      router.push("/login");
+      localStorage.removeItem("is_admin");
+      router.replace("/auth/login");
+      return;
+    }
+
+    if (status === 403) {
+      router.replace(
+        localStorage.getItem("is_admin") === "true"
+          ? "/admin/dashboard"
+          : "/dashboard",
+      );
+      return;
     }
 
     if (status === 500) {
@@ -146,10 +157,10 @@ onMounted(() => {
       <template v-else-if="!message">
         <!-- Header Section -->
         <header
-          class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white relative overflow-hidden"
+          class="bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 border border-rose-200/80 shadow-md p-6 md:p-8 rounded-2xl text-rose-950 relative overflow-hidden dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white"
         >
           <div
-            class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"
+            class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
           ></div>
           <div class="flex flex-col gap-3">
             <h1
@@ -157,7 +168,7 @@ onMounted(() => {
             >
               Jelajahi Potensi & Minatmu Bersama Kami
             </h1>
-            <p class="text-white/80 text-sm max-w-2xl">
+            <p class="text-rose-800/80 dark:text-white/80 text-sm max-w-2xl">
               Pantau jadwal kegiatan mendatang dan kelola ekstrakurikuler yang
               kamu ikuti dalam satu tempat.
             </p>

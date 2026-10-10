@@ -122,19 +122,19 @@ const ekskulCount = computed(
   <div class="w-full min-h-screen bg-slate-100">
     <main class="flex w-full flex-col gap-6 p-4 md:p-8 lg:w-4/5 lg:ml-auto">
       <header
-        class="relative overflow-hidden rounded-2xl border border-rose-950/20 bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8"
+        class="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 text-rose-950 shadow-md dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white md:p-8"
       >
         <div
-          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"
+          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
         ></div>
         <div class="relative">
-          <span class="text-sm font-medium text-white/70"
+          <span class="text-sm font-medium text-rose-700 dark:text-white/70"
             >Administrasi ekstrakurikuler</span
           >
           <h1 class="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
             Laporan Bulanan
           </h1>
-          <p class="mt-2 max-w-2xl text-sm text-white/80">
+          <p class="mt-2 max-w-2xl text-sm text-rose-800/80 dark:text-white/80">
             Lihat laporan kegiatan, kas, dan absensi yang dikirim oleh setiap
             ekstrakurikuler.
           </p>

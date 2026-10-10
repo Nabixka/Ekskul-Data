@@ -2,8 +2,10 @@
 import { Icon } from "@iconify/vue";
 import MessageModal from "../../components/MessageModal.vue";
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { api } from "../../api";
 
+const router = useRouter();
 const dashboardInformation = ref({});
 const isLoading = ref(true);
 const message = ref("");
@@ -15,6 +17,24 @@ const getDashboard = async () => {
     const res = await api.get("/admin/dashboard");
     dashboardInformation.value = res.data.data;
   } catch (error) {
+    const status = error.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("is_admin");
+      router.replace("/auth/login");
+      return;
+    }
+
+    if (status === 403) {
+      router.replace(
+        localStorage.getItem("is_admin") === "true"
+          ? "/admin/dashboard"
+          : "/dashboard",
+      );
+      return;
+    }
+
     message.value =
       error.response?.data?.message || "Gagal Terhubung, Coba lagi nanti";
   } finally {
@@ -31,16 +51,16 @@ onMounted(() => {
   <div class="w-full flex justify-end min-h-screen bg-slate-50">
     <main class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
       <header
-        class="relative overflow-hidden rounded-2xl border border-rose-950/20 bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8"
+        class="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 text-rose-950 shadow-md dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white md:p-8"
       >
         <div
-          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"
+          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
         ></div>
         <div class="relative">
           <h1 class="text-2xl font-bold tracking-tight md:text-3xl">
             Dashboard Admin
           </h1>
-          <p class="mt-2 text-sm text-white/75">
+          <p class="mt-2 text-sm text-rose-800/80 dark:text-white/75">
             Ringkasan pengelolaan ekstrakurikuler dan kegiatan.
           </p>
         </div>

@@ -27,6 +27,7 @@ const handleLogin = async () => {
   try {
     const res = await api.post("/auth/register", registerPayload.value);
     localStorage.setItem("token", res.data.access_token);
+    localStorage.setItem("is_admin", "false");
     router.push("/dashboard");
   } catch (error) {
     message.value =

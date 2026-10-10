@@ -22,6 +22,7 @@ const handleLogin = async () => {
       password: password.value,
     });
     localStorage.setItem("token", res.data.access_token);
+    localStorage.setItem("is_admin", String(res.data.is_admin === true));
     if (res.data.is_admin === true) {
       router.push("/admin/dashboard");
     } else {
@@ -38,7 +39,11 @@ const handleLogin = async () => {
 onMounted(() => {
   const token = localStorage.getItem("token");
   if (token) {
-    router.push("/dashboard");
+    router.push(
+      localStorage.getItem("is_admin") === "true"
+        ? "/admin/dashboard"
+        : "/dashboard",
+    );
   }
 });
 </script>

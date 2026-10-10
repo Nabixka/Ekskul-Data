@@ -65,6 +65,7 @@ const adminList = ref([
 const handleLogout = () => {
   isMobileMenuOpen.value = false;
   localStorage.removeItem("token");
+  localStorage.removeItem("is_admin");
   router.push("/");
 };
 

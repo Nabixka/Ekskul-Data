@@ -43,17 +43,17 @@ onMounted(() => {
     <div class="lg:w-4/5 bg-slate-100 p-8 flex flex-col gap-6">
       <!-- Header Section -->
       <header
-        class="bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] border border-rose-950/20 shadow-md p-6 md:p-8 rounded-2xl text-white flex flex-col gap-3"
+        class="bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 border border-rose-200/80 shadow-md p-6 md:p-8 rounded-2xl text-rose-950 flex flex-col gap-3 dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white"
       >
         <span
-          class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full w-fit"
+          class="inline-flex items-center gap-2 text-xs font-semibold bg-rose-100 text-rose-800 backdrop-blur-md px-3 py-1.5 rounded-full w-fit dark:bg-white/20 dark:text-white"
         >
           Selamat Datang
         </span>
         <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
           Jelajahi Potensi & Minatmu Bersama Kami
         </h1>
-        <p class="text-white/90 text-sm max-w-2xl">
+        <p class="text-rose-800/80 dark:text-white/90 text-sm max-w-2xl">
           Cari ekstrakurikuler yang ada dan temukan ekskul yang Anda minati
           untuk bergabung.
         </p>

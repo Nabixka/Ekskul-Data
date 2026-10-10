@@ -137,10 +137,10 @@ const submitRequest = async () => {
   <div class="w-full flex justify-end min-h-screen bg-slate-50">
     <main class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
       <header
-        class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#17080C] via-[#281117] to-[#421923] p-6 text-white shadow-md md:p-8"
+        class="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 text-rose-950 shadow-md dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white md:p-8"
       >
         <div
-          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-white/5"
+          class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
         ></div>
         <div
           class="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between"
@@ -149,24 +149,26 @@ const submitRequest = async () => {
             <h1 class="mt-4 text-2xl font-bold tracking-tight md:text-3xl">
               Peminjaman Ruang
             </h1>
-            <p class="mt-2 text-sm leading-relaxed text-white/75">
+            <p class="mt-2 text-sm leading-relaxed text-rose-800/80 dark:text-white/75">
               Temukan ruang yang tersedia dan ajukan peminjaman untuk
               kegiatanmu.
             </p>
           </div>
           <div
-            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+            class="flex items-center gap-3 rounded-xl border border-rose-200/70 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/5"
           >
             <span
-              class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-300"
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
             >
               <Icon icon="lucide:check-circle-2" width="22" />
             </span>
             <div>
-              <p class="text-xs text-white/60">Ruang tersedia</p>
+              <p class="text-xs text-slate-500 dark:text-white/60">
+                Ruang tersedia
+              </p>
               <p class="text-lg font-bold">
                 {{ availableRoomCount }}
-                <span class="text-sm font-medium text-white/70"
+                <span class="text-sm font-medium text-rose-700 dark:text-white/70"
                   >dari {{ filteredRoomBookings.length }} ruang</span
                 >
               </p>
