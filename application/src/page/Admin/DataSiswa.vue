@@ -9,6 +9,9 @@ const searchQuery = ref("");
 const selectedClass = ref("");
 const isLoading = ref(true);
 const isCopying = ref(false);
+const isUploadModalOpen = ref(false);
+const isUploading = ref(false);
+const selectedFile = ref(null);
 const message = ref("");
 const messageVariant = ref("error");
 
@@ -40,14 +43,62 @@ const fetchStudentData = async () => {
     }
 
     studentGroups.value = data;
+    return true;
   } catch (error) {
     studentGroups.value = {};
     message.value =
       error.response?.data?.message ||
       error.message ||
       "Gagal memuat data siswa.";
+    return false;
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleFileSelection = (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith(".xlsx")) {
+    selectedFile.value = null;
+    messageVariant.value = "error";
+    message.value = "Gunakan file template Excel dengan format .xlsx.";
+    event.target.value = "";
+    return;
+  }
+
+  selectedFile.value = file;
+  message.value = "";
+};
+
+const uploadStudentTemplate = async () => {
+  if (!selectedFile.value) {
+    messageVariant.value = "error";
+    message.value = "Pilih file template Excel terlebih dahulu.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", selectedFile.value);
+  isUploading.value = true;
+  message.value = "";
+
+  try {
+    await api.post("/admin/data-siswa", formData);
+    isUploadModalOpen.value = false;
+    selectedFile.value = null;
+    const refreshed = await fetchStudentData();
+    if (refreshed) {
+      messageVariant.value = "success";
+      message.value = "Data siswa berhasil diunggah.";
+    }
+  } catch (error) {
+    messageVariant.value = "error";
+    message.value =
+      error.response?.data?.message || "Gagal mengunggah template siswa.";
+  } finally {
+    isUploading.value = false;
   }
 };
 
@@ -140,6 +191,146 @@ onMounted(fetchStudentData);
 </script>
 
 <template>
+  <!-- upload modal -->
+  <div
+    v-if="isUploadModalOpen"
+    class="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm"
+    @click.self="!isUploading && (isUploadModalOpen = false)"
+  >
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="student-upload-title"
+      class="my-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#1d1518]"
+    >
+      <header
+        class="flex items-start justify-between gap-4 border-b border-slate-100 p-5 dark:border-white/10 sm:p-6"
+      >
+        <div>
+          <p
+            class="text-xs font-bold uppercase tracking-[0.16em] text-[#BE123C] dark:text-rose-300"
+          >
+            Kelola data siswa
+          </p>
+          <h2
+            id="student-upload-title"
+            class="mt-1 text-xl font-bold text-slate-900 dark:text-white"
+          >
+            Input siswa dengan template
+          </h2>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Unduh format resmi, isi data siswa, lalu unggah kembali file Excel.
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Tutup modal"
+          :disabled="isUploading"
+          @click="isUploadModalOpen = false"
+          class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
+        >
+          <Icon icon="lucide:x" width="20" />
+        </button>
+      </header>
+
+      <form @submit.prevent="uploadStudentTemplate">
+        <div class="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+          <article
+            class="flex flex-col rounded-2xl border border-rose-200/80 bg-rose-50/60 p-5 dark:border-rose-400/15 dark:bg-rose-500/[0.06]"
+          >
+            <span
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#BE123C] shadow-sm dark:bg-white/10 dark:text-rose-300"
+            >
+              <Icon icon="lucide:download" width="21" />
+            </span>
+            <h3 class="mt-4 font-bold text-slate-800 dark:text-slate-100">
+              1. Unduh template
+            </h3>
+            <p
+              class="mt-1 flex-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+            >
+              Isi kolom NIS, password, nama, kelas, dan jurusan sesuai format
+              yang tersedia.
+            </p>
+            <a
+              href="/data_siswa.xlsx"
+              download
+              class="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-[#9F1239] transition hover:border-rose-300 hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:border-white/10 dark:bg-white/5 dark:text-rose-200 dark:hover:bg-rose-500/10"
+            >
+              <Icon icon="lucide:file-spreadsheet" width="18" />
+              Download template
+            </a>
+          </article>
+
+          <article
+            class="flex flex-col rounded-2xl border border-slate-200 bg-slate-50/70 p-5 dark:border-white/10 dark:bg-white/[0.03]"
+          >
+            <span
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm dark:bg-white/10 dark:text-slate-200"
+            >
+              <Icon icon="lucide:upload" width="21" />
+            </span>
+            <h3 class="mt-4 font-bold text-slate-800 dark:text-slate-100">
+              2. Upload template
+            </h3>
+            <p
+              class="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+            >
+              Pilih file Excel berformat .xlsx yang sudah diisi.
+            </p>
+            <label
+              class="mt-4 flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-center transition hover:border-rose-300 hover:bg-rose-50/60 dark:border-white/15 dark:bg-white/[0.03] dark:hover:border-rose-400/40 dark:hover:bg-rose-500/[0.06]"
+            >
+              <Icon
+                icon="lucide:file-up"
+                width="20"
+                class="text-slate-500 dark:text-slate-300"
+              />
+              <span
+                class="mt-1 max-w-full truncate text-sm font-semibold text-slate-700 dark:text-slate-200"
+              >
+                {{ selectedFile?.name || "Pilih file Excel" }}
+              </span>
+              <span class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                {{ selectedFile ? "File siap diunggah" : "Format .xlsx" }}
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                class="sr-only"
+                @change="handleFileSelection"
+              />
+            </label>
+            <button
+              type="submit"
+              :disabled="!selectedFile || isUploading"
+              class="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-[#1d1518]"
+            >
+              <Icon
+                :icon="isUploading ? 'lucide:loader-circle' : 'lucide:upload'"
+                width="17"
+                :class="{ 'animate-spin': isUploading }"
+              />
+              {{ isUploading ? "Mengunggah..." : "Upload data siswa" }}
+            </button>
+          </article>
+        </div>
+        <footer
+          class="flex justify-end border-t border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-white/10 dark:bg-white/[0.02] sm:px-6"
+        >
+          <button
+            type="button"
+            :disabled="isUploading"
+            @click="isUploadModalOpen = false"
+            class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            Tutup
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
   <div class="w-full flex min-h-screen justify-end bg-slate-50">
     <main class="flex w-full flex-col gap-6 bg-slate-100 p-4 md:p-8 lg:w-4/5">
       <header
@@ -164,33 +355,39 @@ onMounted(fetchStudentData);
 
       <section class="grid gap-4 sm:grid-cols-2">
         <article
-          class="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm"
+          class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md dark:border-white/10 dark:bg-[#1d1518] dark:hover:border-rose-400/20 dark:hover:shadow-black/20"
         >
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="text-sm font-medium text-slate-500">Total siswa</p>
-              <p class="mt-1 text-3xl font-bold text-slate-800">
+              <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Total siswa
+              </p>
+              <p class="mt-1 text-3xl font-bold text-slate-800 dark:text-white">
                 {{ students.length }}
               </p>
             </div>
-            <span class="rounded-xl bg-rose-50 p-3 text-[#BE123C]">
+            <span
+              class="rounded-xl bg-rose-50 p-3 text-[#BE123C] transition-colors group-hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:group-hover:bg-rose-500/20"
+            >
               <Icon icon="lucide:users" width="24" />
             </span>
           </div>
         </article>
         <article
-          class="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm"
+          class="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md dark:border-white/10 dark:bg-[#1d1518] dark:hover:border-rose-400/20 dark:hover:shadow-black/20"
         >
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="text-sm font-medium text-slate-500">
+              <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Total kelas / jurusan
               </p>
-              <p class="mt-1 text-3xl font-bold text-slate-800">
+              <p class="mt-1 text-3xl font-bold text-slate-800 dark:text-white">
                 {{ numberOfClasses }}
               </p>
             </div>
-            <span class="rounded-xl bg-rose-50 p-3 text-[#BE123C]">
+            <span
+              class="rounded-xl bg-rose-50 p-3 text-[#BE123C] transition-colors group-hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:group-hover:bg-rose-500/20"
+            >
               <Icon icon="lucide:school" width="24" />
             </span>
           </div>
@@ -198,29 +395,37 @@ onMounted(fetchStudentData);
       </section>
 
       <section
-        class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm"
+        class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1d1518]"
       >
         <div
-          class="flex flex-col gap-4 border-b border-slate-100 p-5 md:flex-row md:items-end md:justify-between md:p-6"
+          class="flex flex-col gap-5 border-b border-slate-100 p-5 dark:border-white/10 md:p-6 xl:flex-row xl:items-end xl:justify-between"
         >
           <div>
-            <h2 class="text-lg font-bold text-slate-800">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white">
               Daftar siswa dan ekstrakurikuler
             </h2>
-            <p class="mt-1 text-sm text-slate-500">
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Cari berdasarkan nama, NIS, kelas, jurusan, atau ekstrakurikuler.
             </p>
           </div>
 
-          <div class="flex flex-col gap-2">
-            <div class="gap-3 grid grid-cols-2 md:justify-end">
+          <div class="flex flex-col gap-3 xl:items-end">
+            <div class="flex flex-col gap-2 md:flex-row md:justify-end">
+              <button
+                type="button"
+                @click="isUploadModalOpen = true"
+                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+              >
+                <Icon icon="lucide:user-round-plus" width="16" />
+                Input siswa
+              </button>
               <button
                 type="button"
                 @click="copyStudentData"
                 :disabled="
                   isLoading || isCopying || filteredStudents.length === 0
                 "
-                class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
+                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#9F1239] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Icon
                   :icon="isCopying ? 'lucide:loader-circle' : 'lucide:copy'"
@@ -233,7 +438,7 @@ onMounted(fetchStudentData);
                 type="button"
                 @click="fetchStudentData"
                 :disabled="isLoading"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-rose-200 hover:text-[#BE123C] disabled:cursor-wait disabled:opacity-50"
+                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50/60 hover:text-[#BE123C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-wait disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:border-rose-400/30 dark:hover:bg-rose-500/[0.07] dark:hover:text-rose-200"
               >
                 <Icon
                   icon="lucide:refresh-cw"
@@ -243,14 +448,14 @@ onMounted(fetchStudentData);
                 Muat ulang
               </button>
             </div>
-            <div class="flex flex-col md:flex-row gap-3">
+            <div class="flex flex-col gap-2 sm:flex-row">
               <label class="sr-only" for="student-class"
                 >Filter kelas dan jurusan</label
               >
               <select
                 id="student-class"
                 v-model="selectedClass"
-                class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                class="min-h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition hover:border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-rose-400/30 dark:focus:ring-rose-950"
               >
                 <option value="">Semua kelas / jurusan</option>
                 <option
@@ -272,7 +477,7 @@ onMounted(fetchStudentData);
                   v-model="searchQuery"
                   type="search"
                   placeholder="Cari data siswa..."
-                  class="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 sm:w-56"
+                  class="min-h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:border-rose-400/30 dark:focus:ring-rose-950 sm:w-56"
                 />
               </label>
             </div>
@@ -281,14 +486,14 @@ onMounted(fetchStudentData);
 
         <div
           v-if="isLoading"
-          class="flex items-center justify-center gap-2 p-12 text-sm text-slate-500"
+          class="flex items-center justify-center gap-2 p-12 text-sm text-slate-500 dark:text-slate-400"
         >
           <Icon icon="lucide:loader-circle" width="18" class="animate-spin" />
           Memuat data siswa...
         </div>
         <div
           v-else-if="filteredStudents.length === 0"
-          class="p-12 text-center text-sm text-slate-500"
+          class="p-12 text-center text-sm text-slate-500 dark:text-slate-400"
         >
           {{
             students.length
@@ -299,7 +504,7 @@ onMounted(fetchStudentData);
         <div v-else class="overflow-x-auto">
           <table class="w-full min-w-[720px] text-left text-sm">
             <thead
-              class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
+              class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-white/[0.04] dark:text-slate-300"
             >
               <tr>
                 <th scope="col" class="px-5 py-3 font-semibold">NIS</th>
@@ -311,33 +516,35 @@ onMounted(fetchStudentData);
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-slate-200/10">
+            <tbody class="divide-y divide-slate-200 dark:divide-white/10">
               <tr
                 v-for="(student, index) in filteredStudents"
                 :key="`${student.nis}-${student.kelas}-${student.jurusan}-${index}`"
-                class="transition hover:bg-rose-50/40"
+                class="transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]"
               >
                 <td
-                  class="whitespace-nowrap px-5 py-4 font-medium text-slate-600"
+                  class="whitespace-nowrap px-5 py-4 font-medium text-slate-600 dark:text-slate-300"
                 >
                   {{ student.nis }}
                 </td>
                 <td
-                  class="whitespace-nowrap px-5 py-4 font-semibold text-slate-800"
+                  class="whitespace-nowrap px-5 py-4 font-semibold text-slate-800 dark:text-slate-100"
                 >
                   {{ student.murid_name }}
                 </td>
                 <td class="px-5 py-4">
                   <span
-                    class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                    class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300"
                   >
                     {{ student.kelas }}
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-5 py-4 text-slate-600">
+                <td
+                  class="whitespace-nowrap px-5 py-4 text-slate-600 dark:text-slate-300"
+                >
                   {{ student.jurusan }}
                 </td>
-                <td class="px-5 py-4 text-slate-600">
+                <td class="px-5 py-4 text-slate-600 dark:text-slate-300">
                   {{ student.ekskul || "—" }}
                 </td>
               </tr>
@@ -347,7 +554,7 @@ onMounted(fetchStudentData);
 
         <footer
           v-if="!isLoading && filteredStudents.length > 0"
-          class="border-t border-slate-100 px-5 py-3 text-xs text-slate-500"
+          class="border-t border-slate-100 px-5 py-3 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400"
         >
           Menampilkan {{ filteredStudents.length }} dari
           {{ students.length }} siswa
