@@ -47,14 +47,15 @@ export class AdminService {
     async getListEkskulSiswaByKelas(req: { is_admin: boolean }) {
         if (req.is_admin !== true) throw new ForbiddenException("Anda Tidak Berhak")
 
-        const getData = await this.databaseService.connection("member_ekskul")
-            .innerJoin("ekskul", "ekskul.id", "member_ekskul.ekskul_id")
-            .innerJoin("users", "users.nis", "member_ekskul.nis_user")
+        const getData = await this.databaseService.connection("users")
+            .leftJoin("member_ekskul", "users.nis", "member_ekskul.nis_user")
+            .leftJoin("ekskul", "ekskul.id", "member_ekskul.ekskul_id")
             .select({
                 nis: "users.nis",
                 murid_name: "users.name",
                 kelas: "users.kelas",
                 jurusan: "users.jurusan",
+                is_admin: "users.is_admin",
 
                 ekskul_name: "ekskul.name",
             })
@@ -66,7 +67,8 @@ export class AdminService {
                 WHEN 'XIII' THEN 4
                 ELSE 5
             END ASC
-        `)
+            `)
+            .where("users.is_admin", false)
 
         return {
             message: "Berhasil Mendapat Data Ekskul Siswa",
