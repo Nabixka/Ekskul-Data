@@ -228,14 +228,15 @@ onMounted(() => {
 
     <!-- Card Container -->
     <div
-      class="relative z-20 w-11/12 sm:w-1/2 lg:w-1/3 bg-white rounded-xl shadow-xl overflow-hidden"
+      class="relative z-20 w-11/12 max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#1d1518]"
     >
       <!-- Card Header -->
-      <div class="bg-[#E0234E] p-4 flex justify-between items-center">
+      <div class="flex items-center justify-between bg-gradient-to-r from-[#BE123C] to-[#E0234E] p-4">
         <h3 class="text-white font-semibold text-lg">Edit Role Anggota</h3>
         <button
           @click="modalRole = false"
-          class="text-white/80 hover:text-white cursor-pointer"
+          aria-label="Tutup modal"
+          class="rounded-lg p-1 text-white/80 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <Icon width="20" icon="akar-icons:cross" />
         </button>
@@ -247,12 +248,12 @@ onMounted(() => {
           <!-- Nama Anggota -->
           <div class="flex flex-col gap-1.5">
             <label
-              class="font-semibold text-xs text-slate-500 uppercase tracking-wider"
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >Nama Anggota</label
             >
             <input
               disabled
-              class="border border-slate-200 bg-slate-50 text-slate-700 rounded-lg py-2 px-3 text-sm"
+              class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-80 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
               type="text"
               :value="updateData.name"
             />
@@ -261,12 +262,12 @@ onMounted(() => {
           <!-- NIS -->
           <div class="flex flex-col gap-1.5">
             <label
-              class="font-semibold text-xs text-slate-500 uppercase tracking-wider"
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >NIS</label
             >
             <input
               disabled
-              class="border border-slate-200 bg-slate-50 text-slate-700 rounded-lg py-2 px-3 text-sm"
+              class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-80 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
               type="text"
               :value="updateData.nis"
             />
@@ -275,12 +276,12 @@ onMounted(() => {
           <!-- Role Dropdown -->
           <div class="flex flex-col gap-1.5">
             <label
-              class="font-semibold text-xs text-slate-500 uppercase tracking-wider"
+              class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >Pilih Role Baru</label
             >
             <select
               v-model="updateData.role"
-              class="border border-slate-300 focus:border-[#E0234E] focus:ring-1 focus:ring-[#E0234E] outline-none rounded-lg py-2 px-3 text-sm bg-white cursor-pointer"
+              class="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#E0234E] focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-[#171114] dark:text-slate-100 dark:focus:ring-rose-950"
             >
               <option value="" disabled>Pilih Role</option>
               <option
@@ -296,18 +297,18 @@ onMounted(() => {
 
         <!-- Button Actions -->
         <div
-          class="flex justify-end gap-3 p-4 bg-slate-50 border-t border-slate-100"
+          class="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.03]"
         >
           <button
             type="button"
             @click="modalRole = false"
-            class="border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            class="cursor-pointer rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/10"
           >
             Batal
           </button>
           <button
             type="submit"
-            class="bg-[#E0234E] hover:bg-nest-700 px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer"
+            class="cursor-pointer rounded-lg bg-[#BE123C] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#9F1239] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#1d1518]"
           >
             Simpan
           </button>
@@ -316,35 +317,38 @@ onMounted(() => {
     </div>
   </div>
 
-  <div class="w-full flex justify-end min-h-screen bg-slate-50">
-    <div
-      class="w-full lg:w-7/9 bg-slate-100 p-6 lg:p-8 flex flex-col lg:flex-row gap-6"
-    >
+  <div class="w-full flex min-h-screen justify-end bg-slate-50">
+    <div class="flex w-full flex-col gap-6 bg-slate-100 p-4 md:p-8 lg:w-4/5">
+  
       <!-- Main Content -->
-      <main class="w-full lg:w-5/7 flex flex-col gap-5">
+      <main class="flex min-w-0 flex-col gap-5">
         <!-- Skeleton Loading State -->
         <template v-if="isLoading">
           <!-- Banner Skeleton -->
           <div
-            class="w-full h-52 bg-slate-200 rounded-2xl animate-pulse shadow-sm"
+            class="h-56 w-full animate-pulse rounded-2xl bg-slate-200 shadow-sm dark:bg-white/5"
           ></div>
 
           <!-- Nav Skeleton -->
-          <div class="grid grid-cols-4 bg-white rounded-xl shadow-sm p-2 gap-2">
+          <div
+            class="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/70 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:grid-cols-4"
+          >
             <div
               v-for="i in 4"
               :key="i"
-              class="h-9 bg-slate-200 rounded-lg animate-pulse"
+              class="h-10 animate-pulse rounded-xl bg-slate-200 dark:bg-white/5"
             ></div>
           </div>
 
           <!-- Content Body Skeleton -->
-          <div class="bg-white rounded-xl shadow-md p-6 flex flex-col gap-4">
-            <div class="w-32 h-6 bg-slate-200 rounded animate-pulse"></div>
+          <div
+            class="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#1d1518]"
+          >
+            <div class="h-6 w-32 animate-pulse rounded bg-slate-200 dark:bg-white/5"></div>
             <div class="flex flex-col gap-2">
-              <div class="w-full h-4 bg-slate-200 rounded animate-pulse"></div>
-              <div class="w-5/6 h-4 bg-slate-200 rounded animate-pulse"></div>
-              <div class="w-2/3 h-4 bg-slate-200 rounded animate-pulse"></div>
+              <div class="h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-white/5"></div>
+              <div class="h-4 w-5/6 animate-pulse rounded bg-slate-200 dark:bg-white/5"></div>
+              <div class="h-4 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-white/5"></div>
             </div>
           </div>
         </template>
@@ -355,17 +359,22 @@ onMounted(() => {
             :style="{
               backgroundImage: `url(${API_URL}${ekskulDetail.ekskul?.banner})`,
             }"
-            class="p-6 rounded-2xl shadow-md text-white flex flex-col justify-end gap-2 bg-cover bg-center h-52 relative overflow-hidden"
+            class="relative flex min-h-60 flex-col justify-end gap-3 overflow-hidden rounded-2xl border border-rose-950/10 bg-cover bg-center p-6 text-white shadow-lg shadow-rose-950/10 sm:min-h-72 sm:p-8"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+              class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/5"
             ></div>
-            <div class="relative z-10 flex flex-col gap-1">
-              <h3 class="text-white font-bold text-2xl drop-shadow">
-                {{ ekskulDetail.ekskul?.name }}
-              </h3>
+            <div class="relative z-10 flex flex-col items-start gap-3">
               <span
-                class="bg-nest-50 text-nest-600 border border-nest-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full shadow-sm"
+                class="rounded-full border border-white/25 bg-black/25 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm"
+              >
+                Detail ekstrakurikuler
+              </span>
+              <h1 class="text-2xl font-bold tracking-tight drop-shadow sm:text-4xl">
+                {{ ekskulDetail.ekskul?.name }}
+              </h1>
+              <span
+                class="w-fit rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm"
               >
                 {{ ekskulDetail.ekskul?.bidang }}
               </span>
@@ -373,16 +382,18 @@ onMounted(() => {
           </header>
 
           <!-- Nav -->
-          <div class="grid grid-cols-4 bg-white rounded-xl shadow-sm p-2">
+          <div
+            class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200/70 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:grid-cols-4"
+          >
             <button
               v-for="section in listSection"
               :key="section.name"
               @click="handleChangeSection(section.name)"
               :class="[
-                'cursor-pointer text-center py-2 text-sm font-medium transition-all duration-200 rounded-lg',
+                'cursor-pointer rounded-xl px-2 py-2.5 text-center text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 sm:text-sm',
                 currentSection === section.name
-                  ? 'font-bold text-[#E0234E] bg-nest-50 shadow-inner'
-                  : 'text-[#BE123C] hover:bg-slate-50',
+                  ? 'bg-rose-50 text-[#9F1239] shadow-sm dark:bg-rose-500/15 dark:text-rose-200'
+                  : 'text-slate-600 hover:bg-rose-50 hover:text-[#9F1239] dark:text-slate-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
               ]"
             >
               {{ section.name }}
@@ -392,10 +403,18 @@ onMounted(() => {
           <!-- Section About -->
           <section
             v-if="currentSection == 'About'"
-            class="bg-white rounded-xl shadow-md p-6 flex flex-col gap-3"
+            class="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:p-6"
           >
-            <h4 class="text-[#E0234E] font-semibold text-lg">Deskripsi</h4>
-            <p class="text-sm leading-relaxed text-[#BE123C]">
+            <div class="flex items-center gap-3">
+              <span class="rounded-xl bg-rose-50 p-2.5 text-[#BE123C] dark:bg-rose-500/10 dark:text-rose-300">
+                <Icon icon="lucide:info" width="20" />
+              </span>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-[#BE123C] dark:text-rose-300">Tentang ekskul</p>
+                <h2 class="mt-0.5 text-lg font-bold text-slate-800 dark:text-white">Deskripsi</h2>
+              </div>
+            </div>
+            <p class="whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-300">
               {{ ekskulDetail.ekskul?.about || "Belum ada deskripsi." }}
             </p>
           </section>
@@ -403,20 +422,21 @@ onMounted(() => {
           <!-- Section Kegiatan -->
           <section
             v-if="currentSection == 'Kegiatan'"
-            class="bg-white p-5 rounded-xl shadow-md flex flex-col gap-4"
+            class="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:p-6"
           >
             <div
-              class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3"
+              class="flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 dark:border-white/10 sm:flex-row sm:items-center"
             >
-              <h4 class="text-[#E0234E] font-semibold text-lg">
+              <h2 class="text-lg font-bold text-slate-800 dark:text-white">
                 Daftar Kegiatan
-              </h4>
+              </h2>
 
               <!-- Filter Bulan & Tahun Kegiatan -->
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <select
                   v-model="filterMonth"
-                  class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#E0234E] cursor-pointer"
+                  aria-label="Filter bulan kegiatan"
+                  class="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none transition hover:border-rose-300 focus:border-[#E0234E] focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-rose-400/50 dark:focus:ring-rose-950"
                 >
                   <option value="">Semua Bulan</option>
                   <option
@@ -429,7 +449,8 @@ onMounted(() => {
                 </select>
                 <select
                   v-model="filterYear"
-                  class="border border-slate-200 text-slate-700 bg-slate-50 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-[#E0234E] cursor-pointer"
+                  aria-label="Filter tahun kegiatan"
+                  class="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none transition hover:border-rose-300 focus:border-[#E0234E] focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-rose-400/50 dark:focus:ring-rose-950"
                 >
                   <option value="">Semua Tahun</option>
                   <option value="2026">2026</option>
@@ -443,25 +464,25 @@ onMounted(() => {
               <div
                 v-for="kegiatan in filteredKegiatan"
                 :key="kegiatan.id"
-                class="flex flex-col sm:flex-row gap-4 p-4 border border-slate-100 rounded-xl hover:bg-slate-50/50 transition-colors"
+                class="group flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 transition duration-200 hover:border-rose-200 hover:bg-rose-50/40 hover:shadow-sm dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-rose-400/20 dark:hover:bg-rose-500/[0.07] sm:flex-row"
               >
                 <img
                   :src="kegiatan.path"
                   :alt="kegiatan.title"
-                  class="w-full sm:w-1/3 h-30 object-cover rounded-lg shadow-sm"
+                  class="h-44 w-full rounded-xl object-cover shadow-sm sm:h-32 sm:w-1/3"
                 />
                 <div class="flex flex-col justify-between">
                   <div class="flex flex-col gap-1">
                     <span
-                      class="text-xs text-slate-400 font-medium flex items-center gap-1"
+                      class="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400"
                     >
                       <Icon icon="akar-icons:calendar" width="14" />
                       {{ formatDate(kegiatan.waktu) }}
                     </span>
-                    <h5 class="font-semibold text-slate-800 text-base">
+                    <h3 class="text-base font-bold text-slate-800 transition-colors group-hover:text-[#BE123C] dark:text-slate-100 dark:group-hover:text-rose-300">
                       {{ kegiatan.title }}
-                    </h5>
-                    <p class="text-xs text-slate-600 leading-relaxed">
+                    </h3>
+                    <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                       {{ kegiatan.description }}
                     </p>
                   </div>
@@ -469,7 +490,7 @@ onMounted(() => {
               </div>
               <div
                 v-if="filteredKegiatan.length === 0"
-                class="py-8 text-center text-slate-400 text-sm"
+                class="rounded-xl border border-dashed border-slate-200 py-10 text-center text-sm text-slate-500 dark:border-white/10 dark:text-slate-400"
               >
                 Tidak ada kegiatan pada periode yang dipilih.
               </div>
@@ -479,17 +500,17 @@ onMounted(() => {
           <!-- Section Anggota -->
           <section
             v-if="currentSection == 'Anggota'"
-            class="bg-white p-5 rounded-xl shadow-md overflow-hidden flex flex-col gap-4"
+            class="flex flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:p-6"
           >
             <div
-              class="pb-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3"
+              class="flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 dark:border-white/10 sm:flex-row sm:items-center"
             >
               <div class="flex items-center gap-2">
-                <h4 class="text-[#E0234E] font-semibold text-lg">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">
                   Daftar Anggota
-                </h4>
+                </h2>
                 <span
-                  class="text-xs bg-nest-50 text-[#E0234E] px-2.5 py-1 rounded-full font-medium"
+                  class="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-[#BE123C] dark:bg-rose-500/10 dark:text-rose-300"
                 >
                   Total: {{ filteredMember.length }}
                 </span>
@@ -506,16 +527,17 @@ onMounted(() => {
                   v-model="searchMemberQuery"
                   type="text"
                   placeholder="Cari nama atau NIS..."
-                  class="w-full pl-9 pr-3 py-1.5 border border-slate-200 bg-slate-50 text-slate-700 text-xs rounded-lg outline-none focus:border-[#E0234E] focus:bg-white transition-colors"
+                  aria-label="Cari anggota berdasarkan nama atau NIS"
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-xs text-slate-700 outline-none transition focus:border-[#E0234E] focus:bg-white focus:ring-2 focus:ring-rose-100 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:focus:bg-white/[0.08] dark:focus:ring-rose-950"
                 />
               </div>
             </div>
 
-            <div class="overflow-x-auto shadow-md rounded-lg">
-              <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-white/10">
+              <table class="w-full min-w-[620px] border-collapse text-left">
                 <thead>
                   <tr
-                    class="bg-[#BE123C] text-white text-xs uppercase tracking-wider"
+                    class="bg-rose-50 text-xs uppercase tracking-wider text-[#9F1239] dark:bg-white/[0.04] dark:text-rose-200"
                   >
                     <th class="py-3 px-4 text-center font-semibold w-16">No</th>
                     <th class="py-3 px-4 font-semibold">NIS</th>
@@ -526,21 +548,21 @@ onMounted(() => {
                     </th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-sm">
+                <tbody class="divide-y divide-slate-100 text-sm dark:divide-white/10">
                   <tr
                     v-for="(member, index) in filteredMember"
                     :key="member.id || index"
-                    class="hover:bg-slate-50/80 transition-colors"
+                    class="transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]"
                   >
                     <td
-                      class="py-3.5 px-4 text-center text-slate-500 font-medium"
+                      class="px-4 py-3.5 text-center font-medium text-slate-500 dark:text-slate-400"
                     >
                       {{ index + 1 }}
                     </td>
-                    <td class="py-3.5 px-4 text-slate-700 font-medium">
+                    <td class="px-4 py-3.5 font-medium text-slate-600 dark:text-slate-300">
                       {{ member.nis }}
                     </td>
-                    <td class="py-3.5 px-4 text-slate-800 font-semibold">
+                    <td class="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-100">
                       {{ member.member_name }}
                     </td>
                     <td class="py-3.5 px-4">
@@ -548,8 +570,8 @@ onMounted(() => {
                         :class="[
                           'px-2.5 py-1 text-xs font-medium rounded-full inline-block',
                           member.role === 'Ketua'
-                            ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                            : 'bg-slate-100 text-slate-600',
+                            ? 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300'
+                            : 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300',
                         ]"
                       >
                         {{ member.role }}
@@ -564,7 +586,7 @@ onMounted(() => {
                             member.role,
                           )
                         "
-                        class="px-3 py-1 text-xs font-medium text-[#E0234E] bg-nest-50 hover:bg-nest-100 rounded-lg transition-colors cursor-pointer"
+                        class="cursor-pointer rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-[#9F1239] transition-colors hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
                       >
                         Edit
                       </button>
@@ -573,7 +595,7 @@ onMounted(() => {
                   <tr v-if="filteredMember.length === 0">
                     <td
                       colspan="5"
-                      class="py-8 text-center text-slate-400 text-sm"
+                      class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
                     >
                       Anggota tidak ditemukan.
                     </td>
@@ -586,29 +608,29 @@ onMounted(() => {
           <!-- Section Dokumentasi (Dummy) -->
           <section
             v-if="currentSection == 'Dokumentasi'"
-            class="bg-white p-5 rounded-xl shadow-md flex flex-col gap-4"
+            class="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518] sm:p-6"
           >
-            <div class="pb-3 border-b border-slate-100">
-              <h4 class="text-[#E0234E] font-semibold text-lg">
+            <div class="border-b border-slate-100 pb-4 dark:border-white/10">
+              <h2 class="text-lg font-bold text-slate-800 dark:text-white">
                 Dokumentasi Kegiatan
-              </h4>
+              </h2>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div
                 v-for="dokumentasi in listDokumentasi"
                 :key="dokumentasi.id"
-                class="border border-slate-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col"
+                class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-rose-400/20 dark:hover:shadow-black/20"
               >
                 <img
                   :src="dokumentasi.path"
                   :alt="dokumentasi.title"
-                  class="w-full h-40 object-cover"
+                  class="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                 />
-                <div class="p-3 flex flex-col gap-1">
-                  <h5 class="font-semibold text-slate-800 text-sm">
+                <div class="flex flex-col gap-1 p-4">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">
                     {{ dokumentasi.title }}
-                  </h5>
-                  <span class="text-xs text-slate-400">{{
+                  </h3>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">{{
                     formatDate(dokumentasi.waktu)
                   }}</span>
                 </div>
@@ -619,59 +641,59 @@ onMounted(() => {
       </main>
 
       <!-- Sidebar -->
-      <aside class="w-full lg:w-2/7">
+      <aside class="min-w-0">
         <div
           v-if="currentSection == 'About'"
-          class="flex flex-col gap-5 sticky top-6"
+          class="flex flex-col gap-4 lg:sticky lg:top-6"
         >
           <!-- Informasi Ekskul -->
-          <div class="bg-white rounded-xl shadow-md p-4 flex flex-col gap-3">
+          <div class="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518]">
             <h4
-              class="font-semibold text-[#E0234E] pb-2 border-b border-slate-100"
+              class="border-b border-slate-100 pb-3 text-sm font-bold text-slate-800 dark:border-white/10 dark:text-white"
             >
               Informasi Ekskul
             </h4>
 
             <div class="flex flex-col gap-3.5 pt-1">
-              <div class="flex gap-3 items-start">
+              <div class="flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]">
                 <Icon
-                  width="22"
-                  class="text-[#F04C70] mt-0.5 shrink-0"
-                  icon="akar-icons:tag"
+                  width="20"
+                  class="mt-0.5 shrink-0 text-[#BE123C] dark:text-rose-300"
+                  icon="lucide:tag"
                 />
                 <div class="text-sm">
-                  <h5 class="text-slate-500 text-xs">Kategori</h5>
-                  <h5 class="font-semibold text-slate-800">
+                  <h5 class="text-xs text-slate-500 dark:text-slate-400">Kategori</h5>
+                  <h5 class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">
                     {{ ekskulDetail.ekskul?.bidang || "-" }}
                   </h5>
                 </div>
               </div>
 
-              <div class="flex gap-3 items-start">
+              <div class="flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]">
                 <Icon
-                  width="22"
-                  class="text-[#F04C70] mt-0.5 shrink-0"
-                  icon="akar-icons:person"
+                  width="20"
+                  class="mt-0.5 shrink-0 text-[#BE123C] dark:text-rose-300"
+                  icon="lucide:user-round"
                 />
                 <div class="text-sm">
-                  <h5 class="text-slate-500 text-xs">Pembina</h5>
-                  <h5 class="font-semibold text-slate-800">{{ pembina }}</h5>
+                  <h5 class="text-xs text-slate-500 dark:text-slate-400">Pembina</h5>
+                  <h5 class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">{{ pembina }}</h5>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Informasi Ketua -->
-          <div class="bg-white rounded-xl shadow-md p-4 flex flex-col gap-3">
-            <div class="flex gap-3 items-start">
+          <div class="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#1d1518]">
+            <div class="flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]">
               <Icon
-                width="22"
-                class="text-[#F04C70] mt-0.5 shrink-0"
-                icon="akar-icons:crown"
+                width="20"
+                class="mt-0.5 shrink-0 text-[#BE123C] dark:text-rose-300"
+                icon="lucide:crown"
               />
               <div class="text-sm">
-                <h5 class="text-slate-500 text-xs">Ketua Ekskul</h5>
-                <h5 class="font-semibold text-slate-800">{{ ketua }}</h5>
+                <h5 class="text-xs text-slate-500 dark:text-slate-400">Ketua Ekskul</h5>
+                <h5 class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">{{ ketua }}</h5>
               </div>
             </div>
           </div>

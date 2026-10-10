@@ -175,10 +175,10 @@ watch(
       >
         <Icon
           width="18"
-          :icon="props.isDarkMode ? 'lucide:sun' : 'lucide:moon'"
+          :icon="props.isDarkMode ? 'lucide:moon' : 'lucide:sun'"
         />
         <span class="flex-1 text-left">{{
-          props.isDarkMode ? "Mode terang" : "Mode gelap"
+          props.isDarkMode ? "Mode gelap" : "Mode terang"
         }}</span>
         <span
           :class="props.isDarkMode ? 'bg-[#E0234E]/70' : 'bg-rose-200'"
@@ -349,10 +349,10 @@ watch(
             >
               <Icon
                 width="18"
-                :icon="props.isDarkMode ? 'lucide:sun' : 'lucide:moon'"
+                :icon="props.isDarkMode ? 'lucide:moon' : 'lucide:sun'"
               />
               <span class="flex-1 text-left">{{
-                props.isDarkMode ? "Mode terang" : "Mode gelap"
+                props.isDarkMode ? "Mode gelap" : "Mode terang"
               }}</span>
             </button>
             <button
