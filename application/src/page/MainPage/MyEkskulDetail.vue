@@ -48,6 +48,10 @@ const message = ref("");
 const errorCode = ref(null);
 const isLoading = ref(false);
 const isUploadingDokumentasi = ref(false);
+const selectedReportFile = ref(null);
+const isUploadingReport = ref(false);
+const reportUploadMessage = ref("");
+const reportUploadError = ref(false);
 const deletingDocumentId = ref(null);
 const selectedKegiatanId = ref("");
 const selectedAbsensiKegiatanId = ref("");
@@ -82,6 +86,7 @@ const listSection = ref([
   { name: "Absensi", icon: "reicon:checklist" },
   { name: "Dokumentasi", icon: "lucide:image" },
   { name: "Kas", icon: "lucide:wallet" },
+  { name: "Laporan", icon: "lucide:cloud-upload" },
 ]);
 
 const canAccessAbsensi = computed(() =>
@@ -93,9 +98,16 @@ const canManageKegiatanAndDokumentasi = computed(() =>
 const canManageKas = computed(() =>
   ["Bendahara", "Ketua", "Wakil Ketua"].includes(ekskulDetail.value.role),
 );
+const canUploadReport = computed(() =>
+  ["Ketua", "Wakil Ketua", "Sekretaris", "Bendahara", "Humas"].includes(
+    ekskulDetail.value.role,
+  ),
+);
 const visibleSections = computed(() =>
   listSection.value.filter(
-    (section) => section.name !== "Absensi" || canAccessAbsensi.value,
+    (section) =>
+      (section.name !== "Absensi" || canAccessAbsensi.value) &&
+      (section.name !== "Laporan" || canUploadReport.value),
   ),
 );
 
@@ -382,12 +394,18 @@ const downloadKasReport = async () => {
 
 const handleChangeSection = (sectionName) => {
   if (sectionName === "Absensi" && !canAccessAbsensi.value) return;
+  if (sectionName === "Laporan" && !canUploadReport.value) return;
   currentSection.value = sectionName;
   if (sectionName === "Anggota") getAnggota();
   if (sectionName === "Kegiatan") getKegiatan();
   if (sectionName === "Absensi") loadAbsensi();
   if (sectionName === "Dokumentasi") getKegiatan().then(getDokumentasi);
   if (sectionName === "Kas") getKas();
+  if (sectionName === "Laporan") {
+    selectedReportFile.value = null;
+    reportUploadMessage.value = "";
+    reportUploadError.value = false;
+  }
 };
 
 const handleRetry = () => {
@@ -398,6 +416,57 @@ const handleRetry = () => {
   else if (currentSection.value === "Dokumentasi")
     getKegiatan().then(getDokumentasi);
   else if (currentSection.value === "Kas") getKas();
+};
+
+const handleSelectReportFile = (event) => {
+  selectedReportFile.value = event.target.files?.[0] || null;
+  reportUploadMessage.value = "";
+  reportUploadError.value = false;
+};
+
+const handleUploadReport = async () => {
+  if (!selectedReportFile.value) {
+    reportUploadMessage.value = "Pilih file laporan terlebih dahulu.";
+    reportUploadError.value = true;
+    return;
+  }
+
+  const extension = selectedReportFile.value.name.split(".").pop()?.toLowerCase();
+  if (!["doc", "docx", "xls", "xlsx"].includes(extension)) {
+    reportUploadMessage.value =
+      "Format file harus Word (.doc, .docx) atau Excel (.xls, .xlsx).";
+    reportUploadError.value = true;
+    return;
+  }
+
+  if (selectedReportFile.value.size > 10 * 1024 * 1024) {
+    reportUploadMessage.value = "Ukuran file maksimal 10 MiB.";
+    reportUploadError.value = true;
+    return;
+  }
+
+  isUploadingReport.value = true;
+  reportUploadMessage.value = "";
+  reportUploadError.value = false;
+  const formData = new FormData();
+  formData.append("file", selectedReportFile.value);
+
+  try {
+    const response = await api.post(`/laporan/upload/${id}`, formData, {
+      timeout: 120000,
+    });
+    reportUploadMessage.value =
+      response.data.message || "Laporan berhasil diunggah ke Google Drive.";
+    selectedReportFile.value = null;
+    const input = document.getElementById("report-file");
+    if (input) input.value = "";
+  } catch (error) {
+    reportUploadMessage.value =
+      error.response?.data?.message || "Gagal mengunggah laporan ke Google Drive.";
+    reportUploadError.value = true;
+  } finally {
+    isUploadingReport.value = false;
+  }
 };
 
 const loadAbsensi = async () => {
@@ -1502,8 +1571,100 @@ onMounted(() => {
               }}</strong>
             </p>
           </div>
-        </div>
-      </main>
+          </div>
+
+          <!-- TAB: LAPORAN -->
+          <div
+            v-else-if="currentSection === 'Laporan'"
+            class="flex flex-col gap-5"
+          >
+            <div class="flex items-start gap-3 border-b border-slate-100 pb-4">
+              <div class="rounded-xl bg-rose-50 p-3 text-[#BE123C]">
+                <Icon icon="lucide:cloud-upload" width="22" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">
+                  Upload laporan {{ ekskulDetail.name }}
+                </h3>
+                <p class="mt-1 text-sm text-slate-500">
+                  Laporan disimpan otomatis pada folder tahun dan bulan berjalan
+                  di Google Drive.
+                </p>
+              </div>
+            </div>
+
+            <form
+              @submit.prevent="handleUploadReport"
+              class="flex max-w-2xl flex-col gap-4"
+            >
+              <label
+                for="report-file"
+                class="text-sm font-semibold text-slate-700"
+              >
+                File laporan (Word atau Excel)
+              </label>
+              <input
+                id="report-file"
+                type="file"
+                accept=".doc,.docx,.xls,.xlsx"
+                :disabled="isUploadingReport"
+                @change="handleSelectReportFile"
+                class="max-w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-semibold file:text-[#9F1239] hover:file:bg-rose-100 disabled:opacity-60"
+              />
+              <p class="text-xs text-slate-500">
+                Format .doc, .docx, .xls, .xlsx · Maksimal 10 MiB
+              </p>
+
+              <div
+                v-if="selectedReportFile"
+                class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+              >
+                <Icon icon="lucide:file-check-2" width="20" class="text-[#BE123C]" />
+                <span class="min-w-0 flex-1 break-all text-sm font-medium text-slate-700">
+                  {{ selectedReportFile.name }}
+                </span>
+                <span class="shrink-0 text-xs text-slate-500">
+                  {{ (selectedReportFile.size / (1024 * 1024)).toFixed(2) }} MiB
+                </span>
+              </div>
+
+              <div
+                v-if="reportUploadMessage"
+                role="status"
+                :class="
+                  reportUploadError
+                    ? 'border-rose-200 bg-rose-50 text-rose-800'
+                    : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                "
+                class="flex items-start gap-2 rounded-xl border p-3 text-sm"
+              >
+                <Icon
+                  :icon="
+                    reportUploadError
+                      ? 'lucide:circle-alert'
+                      : 'lucide:circle-check'
+                  "
+                  width="18"
+                  class="mt-0.5 shrink-0"
+                />
+                {{ reportUploadMessage }}
+              </div>
+
+              <button
+                type="submit"
+                :disabled="isUploadingReport || !selectedReportFile"
+                class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon
+                  :icon="isUploadingReport ? 'lucide:loader-2' : 'lucide:upload'"
+                  :class="isUploadingReport ? 'animate-spin' : ''"
+                  width="17"
+                />
+                {{ isUploadingReport ? "Mengunggah..." : "Upload ke Google Drive" }}
+              </button>
+            </form>
+          </div>
+        </main>
     </div>
 
     <!-- Modal Form Transaksi Kas -->

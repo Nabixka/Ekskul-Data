@@ -58,3 +58,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Storage
 uploads/
 seeder/01_users_seeder.js
+
+client_secret.json
+pelaporan_data.json

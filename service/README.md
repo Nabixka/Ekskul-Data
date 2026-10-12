@@ -25,6 +25,12 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Upload laporan kegiatan ke Google Drive
+
+Panduan konfigurasi OAuth, pembuatan refresh token, struktur folder otomatis,
+serta endpoint penelusuran dashboard admin tersedia di
+[docs/google-drive-reports.md](./docs/google-drive-reports.md).
+
 ## Project setup
 
 ```bash

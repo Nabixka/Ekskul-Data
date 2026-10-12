@@ -9,6 +9,7 @@ import { RoleModule } from './role/role.module';
 import { KasModule } from './kas/kas.module';
 import { RuangModule } from './ruang/ruang.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     RoleModule, 
     KasModule, 
     RuangModule,
+    ReportModule,
     ScheduleModule.forRoot()  
   ]
 })
