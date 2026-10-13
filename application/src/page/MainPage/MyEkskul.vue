@@ -36,15 +36,20 @@ onMounted(() => {
     <div class="w-full lg:w-4/5 bg-slate-100 p-4 md:p-8 flex flex-col gap-6">
       <!-- Header Section -->
       <header
-        class="bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 md:p-8 rounded-2xl border border-rose-200/80 shadow-md text-rose-950 flex flex-col gap-3 dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white"
+        class="bg-gradient-to-br from-rose-50 via-[#FFF7F8] to-rose-100 p-6 md:p-8 rounded-2xl border border-rose-200/80 shadow-md text-rose-950 relative overflow-hidden gap-3 dark:border-rose-950/20 dark:from-[#17080C] dark:via-[#281117] dark:to-[#421923] dark:text-white"
       >
-        <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
-          Ekskul Yang Kamu Ikuti
+        <div
+            class="pointer-events-none absolute -right-8 -top-16 h-56 w-56 rounded-full border-[32px] border-rose-500/10 dark:border-white/5"
+          ></div>
+        <div class="flex flex-col gap-3">
+          <h1 class="font-bold text-2xl md:text-3xl tracking-tight leading-tight">
+            Ekskul Yang Kamu Ikuti
         </h1>
         <p class="text-rose-800/80 dark:text-white/90 text-sm max-w-2xl">
           Kelola dan pantau seluruh kegiatan ekstrakurikuler serta peran aktifmu
           di lingkungan sekolah.
         </p>
+      </div>
       </header>
 
       <!-- State Loading -->

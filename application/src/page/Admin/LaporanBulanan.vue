@@ -333,7 +333,7 @@ onMounted(loadYears);
             Belum ada laporan di folder ekstrakurikuler ini.
           </p>
         </div>
-        <div v-else-if="selectedEkskulId" class="divide-y divide-slate-100">
+        <div v-else-if="selectedEkskulId" class="divide-y divide-slate-100 dark:divide-slate-200/20">
           <article
             v-for="file in files"
             :key="file.id"

@@ -729,7 +729,7 @@ onMounted(() => {
         class="bg-cover bg-center rounded-2xl shadow-md text-white relative overflow-hidden h-52 bg-gradient-to-r from-nest-700 to-nest-950"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"
+          class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/5"
         ></div>
 
         <button
@@ -751,14 +751,14 @@ onMounted(() => {
             class="flex flex-wrap gap-2 items-center text-xs md:text-sm text-slate-200"
           >
             <span
-              class="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-md font-medium border border-white/20"
+              class="bg-black/40 backdrop-blur-md px-2.5 py-0.5 rounded-md font-medium border border-white/20"
             >
               {{ ekskulDetail.bidang || "Umum" }}
             </span>
             <span>•</span>
             <span
-              >Peran Kamu:
-              <strong class="text-white font-semibold">{{
+              class="font-semibold">Peran Kamu:
+              <strong class="font-bold">{{
                 ekskulDetail.role || "Anggota"
               }}</strong></span
             >
@@ -822,8 +822,8 @@ onMounted(() => {
           :class="[
             'px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap',
             currentSection === section.name
-              ? 'bg-[#E0234E] text-white shadow-sm'
-              : 'text-slate-600 hover:bg-nest-800 hover:text-white',
+              ? 'bg-rose-50 text-[#9F1239] shadow-sm dark:bg-rose-500/15 dark:text-rose-200'
+              : 'text-slate-600 hover:bg-rose-50 hover:text-[#9F1239] dark:text-slate-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
           ]"
         >
           <Icon :icon="section.icon" width="16" />
@@ -1368,10 +1368,10 @@ onMounted(() => {
               <button
                 v-if="canManageKas"
                 @click="downloadKasReport"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <Icon icon="lucide:file-spreadsheet" width="16" />
-                Ekspor Laporan Kas
+                <Icon icon="lucide:download" width="16" />
+                Download Laporan
               </button>
               <button
                 v-if="canManageKas"

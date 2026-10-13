@@ -362,7 +362,7 @@ onMounted(() => {
             class="relative flex min-h-60 flex-col justify-end gap-3 overflow-hidden rounded-2xl border border-rose-950/10 bg-cover bg-center p-6 text-white shadow-lg shadow-rose-950/10 sm:min-h-72 sm:p-8"
           >
             <div
-              class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/5"
+              class="absolute inset-0 bg-gradient-to-t from-black/20 via-black/25 to-black/5"
             ></div>
             <div class="relative z-10 flex flex-col items-start gap-3">
               <span
