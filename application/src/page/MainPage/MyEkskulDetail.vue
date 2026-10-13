@@ -873,46 +873,52 @@ onMounted(() => {
             class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2"
           >
             <Icon icon="lucide:users" class="text-[#E0234E]" />
-            Daftar Pengurus & Anggota
+            Daftar Anggota
           </h3>
 
-          <div
-            v-if="listAnggota.length === 0 && !isLoading"
-            class="text-center py-8 text-slate-400 text-sm anggota-kosong"
-          >
-            Belum ada data anggota.
-          </div>
-
-          <div
-            v-else
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 grid-anggota"
-          >
-            <div
-              v-for="member in listAnggota"
-              :key="member.id || member.nis"
-              class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-100 dark:hover:bg-black/20 transition-colors"
-            >
-              <div
-                class="w-10 h-10 rounded-full bg-nest-100 text-[#E0234E] flex items-center justify-center font-bold text-sm shrink-0"
-              >
-                {{
-                  member.member_name
-                    ? member.member_name.charAt(0).toUpperCase()
-                    : "A"
-                }}
-              </div>
-              <div class="overflow-hidden">
-                <h4 class="font-semibold text-slate-800 text-sm truncate">
-                  {{ member.member_name }}
-                </h4>
-                <p class="text-xs text-slate-400">NIS: {{ member.nis }}</p>
-                <span
-                  class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md bg-[#E0234E]/10 text-[#E0234E] font-semibold"
+          <div class="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-white/10">
+            <table class="w-full min-w-[720px] border-collapse text-left">
+              <thead>
+                <tr class="bg-rose-50 text-xs uppercase tracking-wider text-[#9F1239] dark:bg-white/[0.04] dark:text-rose-200">
+                  <th class="px-4 py-3 font-semibold">NIS</th>
+                  <th class="px-4 py-3 font-semibold">Nama</th>
+                  <th class="px-4 py-3 font-semibold">Kelas</th>
+                  <th class="px-4 py-3 font-semibold">Jurusan</th>
+                  <th class="px-4 py-3 font-semibold">Role</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-sm dark:divide-white/10">
+                <tr
+                  v-for="member in listAnggota"
+                  :key="member.member_ekskul_id"
+                  class="transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]"
                 >
-                  {{ member.role }}
-                </span>
-              </div>
-            </div>
+                  <td class="px-4 py-3.5 font-medium text-slate-600 dark:text-slate-300">
+                    {{ member.nis }}
+                  </td>
+                  <td class="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-100">
+                    {{ member.member_name }}
+                  </td>
+                  <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                    {{ member.kelas || "-" }}
+                  </td>
+                  <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                    {{ member.jurusan || "-" }}
+                  </td>
+                  <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                    {{ member.role }}
+                  </td>
+                </tr>
+                <tr v-if="listAnggota.length === 0 && !isLoading">
+                  <td
+                    colspan="5"
+                    class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400"
+                  >
+                    Belum ada data anggota.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 

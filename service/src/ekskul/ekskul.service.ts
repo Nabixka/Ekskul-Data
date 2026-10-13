@@ -100,9 +100,12 @@ export class EkskulService {
             member_ekskul_id: "member_ekskul.id",
             nis: "users.nis",
             member_name: "users.name",
-            role: "member_ekskul.role"
+            role: "member_ekskul.role",
+            kelas: "users.kelas",
+            jurusan: "users.jurusan"
         })
         .where({ ekskul_id: ekskul_id})
+        .orderBy("member_ekskul.role", "asc")
 
         return {
             message: "Berhasil Mendapatkan Seluruh Member",

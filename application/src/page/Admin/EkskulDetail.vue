@@ -464,28 +464,37 @@ onMounted(() => {
               <div
                 v-for="kegiatan in filteredKegiatan"
                 :key="kegiatan.id"
-                class="group flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 transition duration-200 hover:border-rose-200 hover:bg-rose-50/40 hover:shadow-sm dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-rose-400/20 dark:hover:bg-rose-500/[0.07] sm:flex-row"
+                class="group flex gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 transition duration-200 hover:border-rose-200 hover:bg-rose-50/40 hover:shadow-sm dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-rose-400/20 dark:hover:bg-rose-500/[0.07]"
               >
-                <img
-                  :src="kegiatan.path"
-                  :alt="kegiatan.title"
-                  class="h-44 w-full rounded-xl object-cover shadow-sm sm:h-32 sm:w-1/3"
-                />
-                <div class="flex flex-col justify-between">
-                  <div class="flex flex-col gap-1">
-                    <span
-                      class="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400"
-                    >
-                      <Icon icon="akar-icons:calendar" width="14" />
+                <div
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-[#BE123C] shadow-sm dark:bg-rose-500/10 dark:text-rose-300"
+                >
+                  <Icon icon="lucide:calendar-check" width="20" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3
+                    class="text-base font-bold text-slate-800 transition-colors group-hover:text-[#BE123C] dark:text-slate-100 dark:group-hover:text-rose-300"
+                  >
+                    {{ kegiatan.title }}
+                  </h3>
+                  <p
+                    class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-slate-500 dark:text-slate-400"
+                  >
+                    <span class="inline-flex items-center gap-1.5">
+                      <Icon icon="lucide:clock-3" width="14" />
                       {{ formatDate(kegiatan.waktu) }}
                     </span>
-                    <h3 class="text-base font-bold text-slate-800 transition-colors group-hover:text-[#BE123C] dark:text-slate-100 dark:group-hover:text-rose-300">
-                      {{ kegiatan.title }}
-                    </h3>
-                    <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                      {{ kegiatan.description }}
-                    </p>
-                  </div>
+                    <span class="inline-flex items-center gap-1.5">
+                      <Icon icon="lucide:map-pin" width="14" />
+                      {{ kegiatan.location || "Lokasi menyusul" }}
+                    </span>
+                  </p>
+                  <p
+                    v-if="kegiatan.description"
+                    class="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                  >
+                    {{ kegiatan.description }}
+                  </p>
                 </div>
               </div>
               <div
@@ -534,7 +543,7 @@ onMounted(() => {
             </div>
 
             <div class="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-white/10">
-              <table class="w-full min-w-[620px] border-collapse text-left">
+              <table class="w-full min-w-[820px] border-collapse text-left">
                 <thead>
                   <tr
                     class="bg-rose-50 text-xs uppercase tracking-wider text-[#9F1239] dark:bg-white/[0.04] dark:text-rose-200"
@@ -542,6 +551,8 @@ onMounted(() => {
                     <th class="py-3 px-4 text-center font-semibold w-16">No</th>
                     <th class="py-3 px-4 font-semibold">NIS</th>
                     <th class="py-3 px-4 font-semibold">Nama</th>
+                    <th class="py-3 px-4 font-semibold">Kelas</th>
+                    <th class="py-3 px-4 font-semibold">Jurusan</th>
                     <th class="py-3 px-4 font-semibold">Role</th>
                     <th class="py-3 px-4 text-center font-semibold w-24">
                       Aksi
@@ -551,7 +562,7 @@ onMounted(() => {
                 <tbody class="divide-y divide-slate-100 text-sm dark:divide-white/10">
                   <tr
                     v-for="(member, index) in filteredMember"
-                    :key="member.id || index"
+                    :key="member.member_ekskul_id || index"
                     class="transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]"
                   >
                     <td
@@ -564,6 +575,12 @@ onMounted(() => {
                     </td>
                     <td class="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-100">
                       {{ member.member_name }}
+                    </td>
+                    <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                      {{ member.kelas || "-" }}
+                    </td>
+                    <td class="px-4 py-3.5 text-slate-600 dark:text-slate-300">
+                      {{ member.jurusan || "-" }}
                     </td>
                     <td class="py-3.5 px-4">
                       <span
@@ -594,7 +611,7 @@ onMounted(() => {
                   </tr>
                   <tr v-if="filteredMember.length === 0">
                     <td
-                      colspan="5"
+                      colspan="7"
                       class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
                     >
                       Anggota tidak ditemukan.
