@@ -380,7 +380,7 @@ const downloadKasReport = async () => {
     const fileUrl = window.URL.createObjectURL(response.data);
     const link = document.createElement("a");
     link.href = fileUrl;
-    link.download = `laporan-kas-${selectedKasYear.value}-${String(selectedKasMonth.value).padStart(2, "0")}.xlsx`;
+    link.download = `LAPORAN KAS.xlsx`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -664,7 +664,7 @@ const downloadLaporanKegiatan = async () => {
     const url = window.URL.createObjectURL(res.data);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `laporan_kegiatan_${filterBulanKegiatan.value}.docx`;
+    link.download = `LAPORAN KEGIATAN.docx`;
     document.body.appendChild(link);
     link.click();
     link.remove();

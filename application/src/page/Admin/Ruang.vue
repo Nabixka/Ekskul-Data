@@ -138,7 +138,7 @@ onMounted(fetchRoomList);
               type="button"
               @click="fetchRoomList"
               :disabled="isLoading"
-              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-rose-200 hover:text-[#BE123C] disabled:opacity-50"
+              class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:border-rose-300 hover:bg-rose-50/60 hover:text-[#BE123C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-wait disabled:opacity-50 dark:border-white/10 dark:text-slate-300 dark:hover:border-rose-400/30 dark:hover:bg-rose-500/[0.07] dark:hover:text-rose-200"
             >
               <Icon
                 icon="lucide:refresh-cw"

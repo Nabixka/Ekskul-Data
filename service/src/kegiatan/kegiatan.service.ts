@@ -471,4 +471,9 @@ export class KegiatanService {
         return Packer.toBuffer(doc)
     }
 
+    // Export Absensi
+    async exportAbsensi(req: { nis: number, is_admin: boolean}){
+        // const absen
+    }
+
 }

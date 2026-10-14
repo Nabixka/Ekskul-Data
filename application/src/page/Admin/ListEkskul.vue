@@ -296,7 +296,7 @@ onMounted(() => {
             </div>
             <button
               @click="modelCreate = true"
-              class="bg-white rounded-xl border shadow-sm text-slate-400 border-slate-200 py-2 px-4 flex items-center text-sm gap-1 hover:bg-slate-300/10 cursor-pointer"
+              class="bg-[#BE123C] hover:bg-[#9F1239] rounded-xl border shadow-sm text-white font-bold border-slate-200 py-2 px-4 flex items-center text-sm gap-1 cursor-pointer"
             >
               <Icon icon="ant-design:plus-outlined" />Tambah Ekskul Baru
             </button>
