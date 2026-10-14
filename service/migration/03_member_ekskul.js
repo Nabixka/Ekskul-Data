@@ -8,6 +8,7 @@ exports.up = function(knex) {
     table.integer('nis_user').unsigned()
     table.integer('ekskul_id').unsigned()
     table.enum('role', ['Pembina', 'Ketua', 'Wakil Ketua', 'Bendahara', 'Sekretaris', 'Humas', 'Member'])
+    table.timestamp('join_date')
 
     table.foreign('nis_user').references('users.nis').onDelete('CASCADE')
     table.foreign('ekskul_id').references('ekskul.id').onDelete('CASCADE')

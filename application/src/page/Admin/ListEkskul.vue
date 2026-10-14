@@ -113,23 +113,39 @@ onMounted(() => {
     <!-- Card -->
     <div class="flex justify-center items-center min-h-screen">
       <div
-        class="absolute z-51 w-[calc(100%-2rem)] max-w-xl overflow-hidden rounded-2xl"
+        class="absolute z-51 w-full p-3 lg:w-2/5 max-w-xl overflow-hidden rounded-2xl"
       >
-        <!-- Card Header -->
-        <div class="bg-[#E0234E] p-3">
-          <h3 class="text-white font-semibold">Form Tambah Ekskul</h3>
-        </div>
-
         <!-- Card Body -->
-        <form @submit.prevent="handleCreateEkskul()" class="bg-white">
+        <form @submit.prevent="handleCreateEkskul()" class="bg-white p-3 rounded-2xl">
+          <!-- Header -->
+          <div class="flex p-3 justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">
+                Tambah Dokumentasi
+              </h3>
+              <p class="mt-1 text-sm text-slate-500">
+                Pilih kegiatan dan gambar yang akan diunggah.
+              </p>
+            </div>
+            <button
+              type="button"
+              @click="modelCreate = false"
+              :disabled="isUploadingDokumentasi"
+              class="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+              aria-label="Tutup modal"
+            >
+              <Icon icon="lucide:x" width="20" />
+            </button>
+          </div>
+
           <!-- FIll -->
           <div class="w-full p-3 flex flex-col gap-3">
             <!-- Nama Ekskul -->
             <div class="flex flex-col gap-1">
-              <label class="font-semibold text-gray-400">Nama Ekskul</label>
+              <label class="text-sm font-semibold text-slate-700">Nama Ekskul</label>
               <input
                 v-model="form.name"
-                class="border border-slate-400 rounded-lg py-1 p-2"
+                class="border border-slate-200 rounded-lg py-1 p-2"
                 type="text"
                 placeholder="Masukkan Nama Ekskul"
               />
@@ -137,10 +153,10 @@ onMounted(() => {
 
             <!-- Bidang Ekskul -->
             <div class="flex flex-col gap-1">
-              <label class="font-semibold text-gray-400">Bidang Ekskul</label>
+              <label class="text-sm font-semibold text-slate-700">Bidang Ekskul</label>
               <select
                 v-model="form.bidang"
-                class="border border-slate-400 rounded-lg py-1 p-2"
+                class="border border-slate-200  rounded-lg py-1 p-2"
               >
                 <option value="" disabled>Pilih Bidang</option>
                 <option :value="bidang.value" v-for="bidang in listBidang">
@@ -151,21 +167,21 @@ onMounted(() => {
 
             <!-- Deksripsi Ekskul -->
             <div class="flex flex-col gap-1">
-              <label class="font-semibold text-gray-400"
+              <label class="text-sm font-semibold text-slate-700"
                 >Deksripsi Ekskul</label
               >
               <textarea
                 v-model="form.description"
-                rows="4"
-                cols="4"
-                class="border border-slate-400 rounded-lg py-1 p-2"
+                rows="3"
+                cols="3"
+                class="border border-slate-200  rounded-lg py-1 p-2"
                 placeholder="Masukkan Deksripsi Ekskul"
               ></textarea>
             </div>
 
             <!-- Banner Ekskul -->
             <div class="flex flex-col gap-1">
-              <label class="font-semibold text-gray-400 text-sm"
+              <label class="text-sm font-semibold text-slate-700"
                 >Banner Ekskul</label
               >
 
@@ -219,12 +235,12 @@ onMounted(() => {
           <div class="flex justify-end gap-3 p-3">
             <button
               @click="modelCreate = false"
-              class="border border-slate-400 px-5 py-1 rounded-lg"
+              class="border border-slate-200  px-5 py-1 rounded-lg"
             >
               Batal
             </button>
             <button
-              class="bg-[#E0234E] px-5 py-1 rounded-lg font-semibold text-white"
+              class="bg-[#BE123C] hover:bg-[#9F1239] px-5 py-1 rounded-lg font-semibold text-white"
             >
               Tambah
             </button>
