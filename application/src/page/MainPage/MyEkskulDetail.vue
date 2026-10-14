@@ -595,10 +595,14 @@ const handleSubmitKegiatan = async () => {
 
   isSubmittingKegiatan.value = true;
   try {
+
     const res = await api.post(`/kegiatan/ekskul/${id}`, formKegiatan.value);
 
     if (res.data?.data) {
       kegiatanDetail.value.unshift(res.data.data);
+      copyKegiatanAnnouncement(formKegiatan.value)
+      errorCode.value = 200
+      message.value = "Berhasil Membuat Kegiatan, Text telah dicopy"
     } else {
       kegiatanDetail.value = [];
       hasLoadedKegiatan.value = false;
@@ -615,6 +619,26 @@ const handleSubmitKegiatan = async () => {
     isSubmittingKegiatan.value = false;
   }
 };
+
+
+const copyKegiatanAnnouncement = async (data) => {
+
+  const text = 
+  `📢 *PENGUMUMAN KEGIATAN* 📢
+
+📌 *Nama Kegiatan:* ${data.title}
+
+🗓 *Waktu:* ${formatDate(data.waktu)}
+
+📍 *Lokasi:* ${data.location}
+
+📝 *Deskripsi:* ${data.description}
+
+---
+✨ *Jangan sampai terlewat! Mari bergabung dan ramaikan kegiatan ini!* ✨
+`
+  await navigator.clipboard.writeText(text)
+}
 
 const getKegiatanStatus = (waktu) => {
   if (!waktu) return "upcoming";
@@ -710,6 +734,7 @@ const filteredKegiatan = computed(() => {
 const handleNavigate = (kegiatanId) => {
   router.push(`/my-ekskul/${id}/kegiatan/${kegiatanId}`);
 };
+
 
 onMounted(() => {
   getDetail();

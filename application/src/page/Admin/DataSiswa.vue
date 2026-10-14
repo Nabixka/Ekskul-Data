@@ -398,7 +398,7 @@ onMounted(fetchStudentData);
         class="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-[#1d1518]"
       >
         <div
-          class="flex flex-col gap-5 border-b border-slate-100 p-5 dark:border-white/10 md:p-6 xl:flex-row xl:items-end xl:justify-between"
+          class="flex flex-col gap-5 border-b border-slate-100 p-5 dark:border-white/10 md:p-6 xl:flex-row items-center xl:justify-between"
         >
           <div>
             <h2 class="text-lg font-bold text-slate-800 dark:text-white">
