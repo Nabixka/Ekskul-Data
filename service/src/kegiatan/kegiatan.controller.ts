@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Request, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Request, Res, UseGuards } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
 import { ValidateKegiatanExist } from '../Pipe/ValidateKegiatanExist';
 import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
@@ -16,6 +16,30 @@ export class KegiatanController {
     @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string
   ) {
     return this.kegiatanService.getListKegiatanEkskul(Number(ekskul_id))
+  }
+
+  @Get('/ekskul/:ekskul_id/absensi/export')
+  @UseGuards(AuthGuard)
+  async exportAbsensi(
+    @Request() req,
+    @Res() res: Response,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
+    @Query('bulan') month?: string,
+    @Query('tahun') year?: string
+  ) {
+    const { buffer, filename } = await this.kegiatanService.exportAbsensi(
+      req.user,
+      Number(ekskul_id),
+      month,
+      year
+    )
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send(buffer)
   }
 
   // Detail Kegiatan

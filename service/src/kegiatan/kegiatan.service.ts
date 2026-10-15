@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, InternalServerErro
 import { DatabaseService } from '../database/database.service';
 import { RoleService } from '../role/role.service';
 import { AlignmentType, Document, HeightRule, ImageRun, Packer, Paragraph, Table, TableCell, TableRow, TextRun, VerticalAlign } from 'docx';
+import ExcelJS from 'exceljs';
 import { readFile } from 'fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'path';
 
@@ -25,6 +26,11 @@ type DokumentasiImage = {
 
 const KEGIATAN_MANAGEMENT_ROLES = ['Ketua', 'Wakil Ketua', 'Humas']
 const ABSENSI_ROLES = ['Sekretaris', 'Ketua', 'Wakil Ketua']
+const ABSENSI_MONTH_NAMES = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+]
+const JAKARTA_OFFSET_MS = 7 * 60 * 60 * 1000
 
 @Injectable()
 export class KegiatanService {
@@ -433,7 +439,7 @@ export class KegiatanService {
                                 ? imageParagraphs
                                 : [new Paragraph({
                                     alignment: AlignmentType.CENTER,
-                                    children: [new TextRun({ text: 'Tidak ada dokumentasi', font: 'Times New Roman', size: 20,  })]
+                                    children: [new TextRun({ text: 'Tidak ada dokumentasi', font: 'Times New Roman', size: 20, })]
                                 })]
                         }),
                         makeTextCell(eventDate),
@@ -471,9 +477,308 @@ export class KegiatanService {
         return Packer.toBuffer(doc)
     }
 
-    // Export Absensi
-    async exportAbsensi(req: { nis: number, is_admin: boolean}){
-        // const absen
+    async exportAbsensi(
+        req: { nis: number, is_admin: boolean },
+        ekskulId: number,
+        monthValue?: string,
+        yearValue?: string
+    ) {
+        if (req.is_admin !== false) throw new ForbiddenException("Anda Tidak Berhak")
+
+        const role = await this.roleService.getRole(req.nis, ekskulId)
+        if (!ABSENSI_ROLES.includes(role)) throw new ForbiddenException("Anda Tidak Berhak")
+
+        const nowInJakarta = new Date(Date.now() + JAKARTA_OFFSET_MS)
+        const month = monthValue === undefined ? nowInJakarta.getUTCMonth() + 1 : Number(monthValue)
+        const year = yearValue === undefined ? nowInJakarta.getUTCFullYear() : Number(yearValue)
+        if (!Number.isInteger(month) || month < 1 || month > 12) {
+            throw new BadRequestException("Bulan laporan harus bernilai antara 1 dan 12")
+        }
+        if (!Number.isInteger(year) || year < 2000 || year > 2200) {
+            throw new BadRequestException("Tahun laporan tidak valid")
+        }
+
+        const periodStart = new Date(Date.UTC(year, month - 1, 1) - JAKARTA_OFFSET_MS)
+        const periodEnd = new Date(Date.UTC(year, month, 1) - JAKARTA_OFFSET_MS)
+        const [ekskul, members, activities] = await Promise.all([
+            this.databaseService.connection("ekskul")
+                .select("name")
+                .where({ id: ekskulId })
+                .first(),
+            this.databaseService.connection("member_ekskul")
+                .innerJoin("users", "users.nis", "member_ekskul.nis_user")
+                .select({
+                    id: "member_ekskul.id",
+                    nis: "users.nis",
+                    name: "users.name",
+                    kelas: "users.kelas",
+                    jurusan: "users.jurusan",
+                    role: "member_ekskul.role"
+                })
+                .where("member_ekskul.ekskul_id", ekskulId),
+            this.databaseService.connection("kegiatan")
+                .select("id", "title", "description", "waktu")
+                .where("ekskul_id", ekskulId)
+                .andWhere("waktu", ">=", periodStart)
+                .andWhere("waktu", "<", periodEnd)
+                .orderBy("waktu", "asc")
+                .orderBy("id", "asc")
+        ])
+        if (!ekskul) throw new NotFoundException("Ekskul tidak ditemukan")
+
+        const attendance = activities.length > 0
+            ? await this.databaseService.connection("absen as attendance")
+                .innerJoin("kegiatan as activity", "activity.id", "attendance.kegiatan_id")
+                .innerJoin("member_ekskul as member", "member.id", "attendance.member_ekskul_id")
+                .select({
+                    memberId: "attendance.member_ekskul_id",
+                    activityId: "attendance.kegiatan_id",
+                    keterangan: "attendance.keterangan"
+                })
+                .where("activity.ekskul_id", ekskulId)
+                .andWhere("activity.waktu", ">=", periodStart)
+                .andWhere("activity.waktu", "<", periodEnd)
+            : []
+
+        const roster = members
+            .filter((member) => member.kelas && member.role !== "Pembina")
+            .sort((a, b) => {
+                const gradeOrder: Record<string, number> = { X: 10, XI: 11, XII: 12}
+                const gradeDifference = (gradeOrder[String(b.kelas)] ?? 0) - (gradeOrder[String(a.kelas)] ?? 0)
+                if (gradeDifference !== 0) return gradeDifference
+                const classDifference = String(a.jurusan ?? "").localeCompare(String(b.jurusan ?? ""), "id")
+                return classDifference || String(a.name ?? "").localeCompare(String(b.name ?? ""), "id")
+            })
+        const staffName = (staffRole: string) =>
+            members.find((member) => member.role === staffRole)?.name || "-"
+
+        const attendanceByMemberAndActivity = new Map<string, string>()
+        const statusCodes: Record<string, string> = {
+            hadir: "H",
+            izin: "I",
+            alpha: "A",
+            sakit: "S"
+        }
+        for (const record of attendance) {
+            const code = statusCodes[String(record.keterangan)]
+            if (code) {
+                attendanceByMemberAndActivity.set(
+                    `${Number(record.memberId)}:${Number(record.activityId)}`,
+                    code
+                )
+            }
+        }
+
+        const workbook = new ExcelJS.Workbook()
+        workbook.creator = "Ekskul Data"
+        workbook.subject = "Laporan absensi ekstrakurikuler"
+        const worksheet = workbook.addWorksheet(`Absensi ${ABSENSI_MONTH_NAMES[month - 1]}`)
+        worksheet.properties.defaultRowHeight = 20
+        
+        worksheet.columns = [
+            { width: 4 },
+            { key: "no", width: 10 },
+            { key: "name", width: 42 },
+            { key: "kelas", width: 22 },
+            { key: "nis", width: 18 },
+            ...activities.map((_, index) => ({ key: `activity${index + 1}`, width: 12 }))
+        ]
+        const firstColumn = 2
+        const attendanceColumn = 6
+        const lastColumn = Math.max(attendanceColumn, 5 + activities.length)
+        const endColumnLetter = worksheet.getColumn(lastColumn).letter
+        const thinBorder = {
+            top: { style: "thin" as const },
+            left: { style: "thin" as const },
+            bottom: { style: "thin" as const },
+            right: { style: "thin" as const }
+        }
+
+        for (const rowNumber of [2, 3, 4]) {
+            worksheet.mergeCells(rowNumber, firstColumn, rowNumber, lastColumn)
+            const cell = worksheet.getCell(rowNumber, firstColumn)
+            cell.alignment = { horizontal: "center", vertical: "middle" }
+            cell.font = { name: "Times New Roman", bold: true, size: 12 }
+        }
+        worksheet.getCell("B2").value = `DAFTAR HADIR EKSTRAKURIKULER ${String(ekskul.name).toLocaleUpperCase("id-ID")}`
+        worksheet.getCell("B3").value = "SMK NEGERI 10 JAKARTA"
+        const academicYearStart = month >= 7 ? year : year - 1
+        worksheet.getCell("B4").value = `TAHUN AJARAN ${academicYearStart}/${academicYearStart + 1}`
+
+        for (const [rowNumber, label, value] of [
+            [6, "Pembina", staffName("Pembina")],
+            [7, "Ketua Ekstrakurikuler", staffName("Ketua")],
+            [8, "Pelatih", "-"]
+        ] as const) {
+            worksheet.mergeCells(rowNumber, 2, rowNumber, 3)
+            worksheet.mergeCells(rowNumber, 4, rowNumber, 5)
+
+            const labelCell = worksheet.getCell(rowNumber, 2)
+            const valueCell = worksheet.getCell(rowNumber, 4)
+
+            labelCell.value = label
+            labelCell.font = { name: "Times New Roman", size: 12 }
+
+            valueCell.value = `: ${value}`
+            valueCell.font = { name: "Times New Roman", size: 12 }
+        }
+
+        for (let column = firstColumn; column <= lastColumn; column++) {
+            const header = worksheet.getCell(10, column)
+            header.font = { name: "Times New Roman", bold: true, size: 12 }
+            header.alignment = { horizontal: "center", vertical: "middle" }
+            header.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF" } }
+            header.border = thinBorder
+        }
+        for (const column of [2, 3, 4, 5]) {
+            worksheet.mergeCells(10, column, 11, column)
+        }
+        worksheet.getCell("B10").value = "NO"
+        worksheet.getCell("C10").value = "NAMA"
+        worksheet.getCell("D10").value = "KELAS"
+        worksheet.getCell("E10").value = "NIS"
+
+        if (activities.length > 1) worksheet.mergeCells(10, attendanceColumn, 10, lastColumn)
+        const monthCell = worksheet.getCell(10, attendanceColumn)
+        monthCell.value = new Date(Date.UTC(year, month - 1, 1))
+        monthCell.numFmt = "mmmm yyyy"
+        monthCell.font = { name: "Times New Roman", bold: true, size: 12 }
+        monthCell.alignment = { horizontal: "center", vertical: "middle" }
+        monthCell.border = thinBorder
+
+        const getJakartaDay = (value: Date | string) => {
+            const parts = new Intl.DateTimeFormat("en-US", {
+                day: "numeric",
+                timeZone: "Asia/Jakarta"
+            }).formatToParts(new Date(value))
+            return Number(parts.find((part) => part.type === "day")?.value)
+        }
+        activities.forEach((activity, index) => {
+            const cell = worksheet.getCell(11, attendanceColumn + index)
+            cell.value = activity.waktu ? getJakartaDay(activity.waktu) : ""
+            cell.font = { name: "Times New Roman", bold: true, size: 12 }
+            cell.alignment = { horizontal: "center", vertical: "middle" }
+            cell.border = thinBorder
+        })
+
+        let rowNumber = 12
+        let memberNumber = 0
+        const membersByGrade = new Map<string, typeof roster>()
+        for (const member of roster) {
+            const grade = String(member.kelas)
+            const group = membersByGrade.get(grade) ?? []
+            group.push(member)
+            membersByGrade.set(grade, group)
+        }
+        for (const [grade, gradeMembers] of membersByGrade) {
+            worksheet.mergeCells(rowNumber, firstColumn, rowNumber, lastColumn)
+            const gradeCell = worksheet.getCell(rowNumber, firstColumn)
+            gradeCell.value = `KELAS ${grade}`
+            gradeCell.font = { name: "Times New Roman", bold: true, size: 12 }
+            gradeCell.alignment = { horizontal: "center", vertical: "middle" }
+            gradeCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF" } }
+            
+            for (let column = firstColumn; column <= lastColumn; column++) {
+                worksheet.getCell(rowNumber, column).border = thinBorder
+            }
+            rowNumber++
+
+            for (const member of gradeMembers) {
+                memberNumber++
+                const row = worksheet.getRow(rowNumber)
+                row.getCell(2).value = memberNumber
+                row.getCell(3).value = String(member.name ?? "").toLocaleUpperCase("id-ID")
+                row.getCell(4).value = [member.kelas, member.jurusan].filter(Boolean).join(" ")
+                
+                const nisCell = row.getCell(5)
+                nisCell.value = member.nis === null ? "" : String(member.nis)
+                nisCell.alignment = { horizontal: "center", vertical: "middle" }
+
+                row.alignment = { vertical: "middle" }
+
+                for (let column = firstColumn; column <= lastColumn; column++) {
+                    const cell = row.getCell(column)
+                    cell.font = { name: "Times New Roman", size: 12 }
+                    cell.border = thinBorder
+                    if (column === 2 || column === 4) {
+                        cell.alignment = { horizontal: "center", vertical: "middle" }
+                    }
+                    if (column >= attendanceColumn) {
+                        const activity = activities[column - attendanceColumn]
+                        cell.alignment = { horizontal: "center", vertical: "middle" }
+                        cell.value = activity
+                            ? attendanceByMemberAndActivity.get(`${Number(member.id)}:${Number(activity.id)}`) ?? ""
+                            : ""
+                    }
+                }
+                rowNumber++
+            }
+        }
+
+        rowNumber++
+        const legendItems = [
+            { label: "HADIR", color: "FF34A853" },
+            { label: "IZIN", color: "FFFFFF00" },
+            { label: "ALPA", color: "FFFF0000" },
+            { label: "TIDAK ADA EKSTRAKURIKULER", color: "FF3C78D8" }
+        ]
+        for (const item of legendItems) {
+            worksheet.mergeCells(rowNumber, firstColumn, rowNumber, 4)
+            const legend = worksheet.getCell(rowNumber, firstColumn)
+            legend.value = item.label
+            legend.font = { name: "Times New Roman", size: 12 }
+            legend.alignment = { horizontal: "center", vertical: "middle" }
+            legend.fill = { type: "pattern", pattern: "solid", fgColor: { argb: item.color } }
+            
+            for (let c = firstColumn; c <= 4; c++) {
+                worksheet.getCell(rowNumber, c).border = thinBorder
+            }
+            rowNumber++
+        }
+
+        rowNumber += 2
+        worksheet.mergeCells(rowNumber, 3, rowNumber, 5)
+        worksheet.getCell(rowNumber, 2).value = "TANGGAL"
+        worksheet.getCell(rowNumber, 3).value = "KETERANGAN"
+        for (let column = 2; column <= 5; column++) {
+            const cell = worksheet.getCell(rowNumber, column)
+            cell.font = { name: "Times New Roman", bold: true, size: 12 }
+            cell.alignment = { horizontal: "center", vertical: "middle" }
+            cell.border = thinBorder
+        }
+        rowNumber++
+
+        for (const activity of activities) {
+            worksheet.mergeCells(rowNumber, 3, rowNumber, 5)
+            worksheet.getCell(rowNumber, 2).value = activity.waktu ? getJakartaDay(activity.waktu) : ""
+            worksheet.getCell(rowNumber, 3).value = String(activity.description ?? "")
+            worksheet.getCell(rowNumber, 2).alignment = { horizontal: "center", vertical: "middle" }
+            worksheet.getCell(rowNumber, 3).alignment = { vertical: "middle" }
+            for (let column = 2; column <= 5; column++) {
+                const cell = worksheet.getCell(rowNumber, column)
+                cell.font = { name: "Times New Roman", size: 12 }
+                cell.border = thinBorder
+            }
+            rowNumber++
+        }
+
+        worksheet.views = []
+
+        worksheet.pageSetup = {
+            orientation: "landscape",
+            fitToPage: true,
+            fitToWidth: 1,
+            fitToHeight: 0,
+            printArea: `B2:${endColumnLetter}${rowNumber}`,
+            printTitlesRow: "10:11",
+            margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }
+        }
+
+        const buffer = Buffer.from(await workbook.xlsx.writeBuffer())
+        return {
+            buffer,
+            filename: `laporan-absensi-${ABSENSI_MONTH_NAMES[month - 1].toLowerCase()}-${year}.xlsx`
+        }
     }
 
 }

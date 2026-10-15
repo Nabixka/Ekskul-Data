@@ -55,6 +55,10 @@ const reportUploadError = ref(false);
 const deletingDocumentId = ref(null);
 const selectedKegiatanId = ref("");
 const selectedAbsensiKegiatanId = ref("");
+const now = new Date();
+const selectedAbsensiMonth = ref(
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+);
 const selectedImages = ref([]);
 const selectedImage = ref(null);
 const uploadMessage = ref("");
@@ -63,6 +67,7 @@ const pendingConfirmationAction = ref(null);
 const searchNamaAbsensi = ref("");
 const isLoadingAbsensi = ref(false);
 const isSubmittingAbsensi = ref(false);
+const isExportingAbsensi = ref(false);
 let absensiRequestVersion = 0;
 
 const searchQueryKegiatan = ref("");
@@ -574,6 +579,41 @@ const saveAbsensi = async () => {
     message.value = error.response?.data?.message || "Gagal menyimpan absensi.";
   } finally {
     isSubmittingAbsensi.value = false;
+  }
+};
+
+const downloadAbsensiReport = async () => {
+  if (!selectedAbsensiMonth.value) {
+    errorCode.value = 400;
+    message.value = "Pilih bulan laporan absensi terlebih dahulu.";
+    return;
+  }
+
+  const [year, month] = selectedAbsensiMonth.value.split("-");
+  isExportingAbsensi.value = true;
+  clearError();
+  try {
+    const response = await api.get(
+      `/kegiatan/ekskul/${id}/absensi/export`,
+      {
+        params: { bulan: month, tahun: year },
+        responseType: "blob",
+      },
+    );
+    const fileUrl = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = `LAPORAN ABSENSI-${selectedAbsensiMonth.value}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => window.URL.revokeObjectURL(fileUrl), 1000);
+  } catch (error) {
+    errorCode.value = error.response?.status || 500;
+    message.value =
+      error.response?.data?.message || "Gagal mengunduh laporan absensi.";
+  } finally {
+    isExportingAbsensi.value = false;
   }
 };
 
@@ -1181,23 +1221,42 @@ onMounted(() => {
                 Pilih kegiatan dan catat status kehadiran anggotanya.
               </p>
             </div>
-            <button
-              v-if="canAccessAbsensi"
-              @click="saveAbsensi"
-              :disabled="
-                isSubmittingAbsensi ||
-                isLoadingAbsensi ||
-                !selectedAbsensiKegiatanId
-              "
-              class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Icon
-                :icon="isSubmittingAbsensi ? 'lucide:loader-2' : 'lucide:save'"
-                :class="isSubmittingAbsensi ? 'animate-spin' : ''"
-                width="16"
+            <div v-if="canAccessAbsensi" class="flex flex-wrap gap-2">
+              <input
+                v-model="selectedAbsensiMonth"
+                type="month"
+                aria-label="Bulan laporan absensi"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-nest-600 focus:outline-none"
               />
-              {{ isSubmittingAbsensi ? "Menyimpan..." : "Simpan Absensi" }}
-            </button>
+              <button
+                @click="downloadAbsensiReport"
+                :disabled="isExportingAbsensi || !selectedAbsensiMonth"
+                class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Icon
+                  :icon="isExportingAbsensi ? 'lucide:loader-2' : 'lucide:download'"
+                  :class="isExportingAbsensi ? 'animate-spin' : ''"
+                  width="16"
+                />
+                {{ isExportingAbsensi ? "Mengunduh..." : "Download Laporan" }}
+              </button>
+              <button
+                @click="saveAbsensi"
+                :disabled="
+                  isSubmittingAbsensi ||
+                  isLoadingAbsensi ||
+                  !selectedAbsensiKegiatanId
+                "
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon
+                  :icon="isSubmittingAbsensi ? 'lucide:loader-2' : 'lucide:save'"
+                  :class="isSubmittingAbsensi ? 'animate-spin' : ''"
+                  width="16"
+                />
+                {{ isSubmittingAbsensi ? "Menyimpan..." : "Simpan Absensi" }}
+              </button>
+            </div>
           </div>
 
           <div class="flex flex-col gap-3 sm:flex-row">
