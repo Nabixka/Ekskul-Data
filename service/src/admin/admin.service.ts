@@ -59,16 +59,9 @@ export class AdminService {
 
                 ekskul_name: "ekskul.name",
             })
-            .orderByRaw(`
-            CASE users.kelas
-                WHEN 'X' THEN 1
-                WHEN 'XI' THEN 2
-                WHEN 'XII' THEN 3
-                WHEN 'XIII' THEN 4
-                ELSE 5
-            END ASC
-            `)
+            .orderBy("users.nis", "asc")
             .where("users.is_admin", false)
+            .whereIn("users.kelas", ["X", "XI"])
 
         return {
             message: "Berhasil Mendapat Data Ekskul Siswa",
