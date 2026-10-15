@@ -543,7 +543,7 @@ export class KegiatanService {
         const roster = members
             .filter((member) => member.kelas && member.role !== "Pembina")
             .sort((a, b) => {
-                const gradeOrder: Record<string, number> = { X: 10, XI: 11, XII: 12}
+                const gradeOrder: Record<string, number> = { X: 10, XI: 11, XII: 12 }
                 const gradeDifference = (gradeOrder[String(b.kelas)] ?? 0) - (gradeOrder[String(a.kelas)] ?? 0)
                 if (gradeDifference !== 0) return gradeDifference
                 const classDifference = String(a.jurusan ?? "").localeCompare(String(b.jurusan ?? ""), "id")
@@ -552,19 +552,20 @@ export class KegiatanService {
         const staffName = (staffRole: string) =>
             members.find((member) => member.role === staffRole)?.name || "-"
 
-        const attendanceByMemberAndActivity = new Map<string, string>()
-        const statusCodes: Record<string, string> = {
-            hadir: "H",
-            izin: "I",
-            alpha: "A",
-            sakit: "S"
+        const statusColors: Record<string, string> = {
+            hadir: "FF34A853", 
+            izin: "FFFFFF00", 
+            sakit: "FF3C78D8", 
+            alpha: "FFFF0000" 
         }
+
+        const attendanceByMemberAndActivity = new Map<string, string>()
         for (const record of attendance) {
-            const code = statusCodes[String(record.keterangan)]
-            if (code) {
+            const colorCode = statusColors[String(record.keterangan).toLowerCase()]
+            if (colorCode) {
                 attendanceByMemberAndActivity.set(
                     `${Number(record.memberId)}:${Number(record.activityId)}`,
-                    code
+                    colorCode
                 )
             }
         }
@@ -700,15 +701,25 @@ export class KegiatanService {
                     const cell = row.getCell(column)
                     cell.font = { name: "Times New Roman", size: 12 }
                     cell.border = thinBorder
-                    if (column === 2 || column === 4) {
+                    
+                    if (column === 2 || column === 4 || column === 5) {
                         cell.alignment = { horizontal: "center", vertical: "middle" }
                     }
+
                     if (column >= attendanceColumn) {
                         const activity = activities[column - attendanceColumn]
                         cell.alignment = { horizontal: "center", vertical: "middle" }
-                        cell.value = activity
-                            ? attendanceByMemberAndActivity.get(`${Number(member.id)}:${Number(activity.id)}`) ?? ""
-                            : ""
+                        if (activity) {
+                            const colorCode = attendanceByMemberAndActivity.get(`${Number(member.id)}:${Number(activity.id)}`)
+                            if (colorCode) {
+                                cell.value = ""
+                                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colorCode } }
+                            } else {
+                                cell.value = ""
+                            }
+                        } else {
+                            cell.value = ""
+                        }
                     }
                 }
                 rowNumber++
@@ -719,14 +730,14 @@ export class KegiatanService {
         const legendItems = [
             { label: "HADIR", color: "FF34A853" },
             { label: "IZIN", color: "FFFFFF00" },
-            { label: "ALPA", color: "FFFF0000" },
-            { label: "TIDAK ADA EKSTRAKURIKULER", color: "FF3C78D8" }
+            { label: "SAKIT", color: "FF3C78D8" },
+            { label: "ALPA", color: "FFFF0000" }
         ]
         for (const item of legendItems) {
             worksheet.mergeCells(rowNumber, firstColumn, rowNumber, 4)
             const legend = worksheet.getCell(rowNumber, firstColumn)
             legend.value = item.label
-            legend.font = { name: "Times New Roman", size: 12 }
+            legend.font = { name: "Times New Roman", bold: true, size: 12, color: { argb: "FF000000"} }
             legend.alignment = { horizontal: "center", vertical: "middle" }
             legend.fill = { type: "pattern", pattern: "solid", fgColor: { argb: item.color } }
             
