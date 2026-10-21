@@ -6,7 +6,7 @@ exports.up = function(knex) {
   return knex.schema.createTable('users', function(table){
     table.increments()
     table.string('name')
-    table.integer('nis').unique(),
+    table.integer('nis').index().unique(),
     table.text('password'),
     table.boolean('is_admin').defaultTo(false),
     table.enum('kelas', ['X', 'XI', 'XII','XIII']).nullable(),

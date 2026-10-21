@@ -8,8 +8,8 @@ exports.up = function(knex) {
     table.string('title').notNullable()
     table.text('description').notNullable()
     table.string('location').notNullable()
-    table.timestamp('waktu')
-    table.integer('ekskul_id').unsigned()
+    table.timestamp('waktu').index()
+    table.integer('ekskul_id').unsigned().index()
     
     table.foreign('ekskul_id').references('ekskul.id').onDelete('CASCADE')
   })

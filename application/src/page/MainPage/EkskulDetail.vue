@@ -261,7 +261,7 @@ onMounted(getDetail);
 
                 <div
                   v-if="latestKegiatan.length"
-                  class="mt-5 flex flex-col divide-y divide-slate-100"
+                  class="mt-5 flex flex-col divide-y divide-slate-200/10"
                 >
                   <article
                     v-for="item in latestKegiatan"

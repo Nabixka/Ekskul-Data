@@ -188,7 +188,7 @@ onMounted(() => {
 
       <template v-else-if="kegiatan">
         <header
-          class="bg-white rounded-2xl p-5 md:p-7 border border-rose-100 shadow-sm flex items-start gap-4"
+          class="bg-white rounded-2xl p-5 md:p-7 border border-rose-100 dark:border-slate-100 shadow-sm flex items-start gap-4"
         >
           <div
             class="w-12 h-12 rounded-xl bg-rose-50 text-[#BE123C] flex items-center justify-center shrink-0"

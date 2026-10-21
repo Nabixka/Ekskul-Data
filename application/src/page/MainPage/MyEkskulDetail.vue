@@ -84,6 +84,39 @@ const formKegiatan = ref({
   waktu: "",
 });
 
+const isModalTemplateOpen = ref(false);
+const defaultClipboardTemplate = `📢 *PENGUMUMAN KEGIATAN* 📢
+
+📌 *Nama Kegiatan:* {title}
+
+🗓 *Waktu:* {waktu}
+
+📍 *Lokasi:* {location}
+
+📝 *Deskripsi:* {description}
+
+---
+✨ *Jangan sampai terlewat! Mari bergabung dan ramaikan kegiatan ini!* ✨`;
+
+const customClipboardTemplate = ref(
+  localStorage.getItem(`ekskul_clipboard_template_${id}`) || defaultClipboardTemplate
+);
+
+const saveCustomTemplate = () => {
+  localStorage.setItem(`ekskul_clipboard_template_${id}`, customClipboardTemplate.value);
+  isModalTemplateOpen.value = false;
+  errorCode.value = 200;
+  message.value = "Template clipboard berhasil disimpan!";
+};
+
+const resetCustomTemplate = () => {
+  customClipboardTemplate.value = defaultClipboardTemplate;
+  localStorage.removeItem(`ekskul_clipboard_template_${id}`);
+  isModalTemplateOpen.value = false;
+  errorCode.value = 200;
+  message.value = "Template clipboard dikembalikan ke default.";
+};
+
 const listSection = ref([
   { name: "About", icon: "lucide:info" },
   { name: "Anggota", icon: "lucide:users" },
@@ -635,14 +668,13 @@ const handleSubmitKegiatan = async () => {
 
   isSubmittingKegiatan.value = true;
   try {
-
     const res = await api.post(`/kegiatan/ekskul/${id}`, formKegiatan.value);
 
     if (res.data?.data) {
       kegiatanDetail.value.unshift(res.data.data);
-      copyKegiatanAnnouncement(formKegiatan.value)
-      errorCode.value = 200
-      message.value = "Berhasil Membuat Kegiatan, Text telah dicopy"
+      copyKegiatanAnnouncement(formKegiatan.value);
+      errorCode.value = 200;
+      message.value = "Berhasil Membuat Kegiatan, Text telah dicopy";
     } else {
       kegiatanDetail.value = [];
       hasLoadedKegiatan.value = false;
@@ -660,25 +692,18 @@ const handleSubmitKegiatan = async () => {
   }
 };
 
-
 const copyKegiatanAnnouncement = async (data) => {
+  const activeTemplate =
+    localStorage.getItem(`ekskul_clipboard_template_${id}`) || defaultClipboardTemplate;
 
-  const text = 
-  `📢 *PENGUMUMAN KEGIATAN* 📢
+  const text = activeTemplate
+    .replace(/{title}/g, data.title || "-")
+    .replace(/{waktu}/g, formatDate(data.waktu) || "-")
+    .replace(/{location}/g, data.location || "-")
+    .replace(/{description}/g, data.description || "-");
 
-📌 *Nama Kegiatan:* ${data.title}
-
-🗓 *Waktu:* ${formatDate(data.waktu)}
-
-📍 *Lokasi:* ${data.location}
-
-📝 *Deskripsi:* ${data.description}
-
----
-✨ *Jangan sampai terlewat! Mari bergabung dan ramaikan kegiatan ini!* ✨
-`
-  await navigator.clipboard.writeText(text)
-}
+  await navigator.clipboard.writeText(text);
+};
 
 const getKegiatanStatus = (waktu) => {
   if (!waktu) return "upcoming";
@@ -775,7 +800,6 @@ const handleNavigate = (kegiatanId) => {
   router.push(`/my-ekskul/${id}/kegiatan/${kegiatanId}`);
 };
 
-
 onMounted(() => {
   getDetail();
 });
@@ -821,8 +845,8 @@ onMounted(() => {
               {{ ekskulDetail.bidang || "Umum" }}
             </span>
             <span>•</span>
-            <span
-              class="font-semibold">Peran Kamu:
+            <span class="font-semibold"
+              >Peran Kamu:
               <strong class="font-bold">{{
                 ekskulDetail.role || "Anggota"
               }}</strong></span
@@ -992,7 +1016,7 @@ onMounted(() => {
           v-else-if="currentSection === 'Kegiatan'"
           class="flex flex-col gap-5"
         >
-          <!-- Header & Tombol Aksi (Tambah & Download) -->
+          <!-- Header & Tombol Aksi (Tambah, Download & Template) -->
           <div
             class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4"
           >
@@ -1003,7 +1027,17 @@ onMounted(() => {
               Agenda Kegiatan
             </h3>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button
+                v-if="canManageKegiatanAndDokumentasi"
+                @click="isModalTemplateOpen = true"
+                class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs md:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                title="Ubah Template Text Clipboard"
+              >
+                <Icon icon="lucide:file-text" width="16" />
+                Template Teks
+              </button>
+
               <button
                 v-if="canManageKegiatanAndDokumentasi"
                 @click="downloadLaporanKegiatan"
@@ -1191,7 +1225,7 @@ onMounted(() => {
                   }}</span>
                 </div>
                 <button
-                  @click="router.push(`/my-ekskul/${id}/kegiatan/${item.id}`)"
+                  @click.stop="router.push(`/my-ekskul/${id}/kegiatan/${item.id}`)"
                   class="self-start mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[#BE123C] hover:text-[#9F1239]"
                 >
                   Lihat detail
@@ -1270,7 +1304,7 @@ onMounted(() => {
                 v-model="searchNamaAbsensi"
                 type="search"
                 placeholder="Cari nama atau NIS anggota..."
-                class="w-100 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-nest-600 focus:outline-none"
+                class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-nest-600 focus:outline-none"
               />
             </div>
             <select
@@ -1661,100 +1695,100 @@ onMounted(() => {
               }}</strong>
             </p>
           </div>
+        </div>
+
+        <!-- TAB: LAPORAN -->
+        <div
+          v-else-if="currentSection === 'Laporan'"
+          class="flex flex-col gap-5"
+        >
+          <div class="flex items-start gap-3 border-b border-slate-100 pb-4">
+            <div class="rounded-xl bg-rose-50 p-3 text-[#BE123C]">
+              <Icon icon="lucide:cloud-upload" width="22" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">
+                Upload laporan {{ ekskulDetail.name }}
+              </h3>
+              <p class="mt-1 text-sm text-slate-500">
+                Laporan disimpan otomatis pada folder tahun dan bulan berjalan
+                di Google Drive.
+              </p>
+            </div>
           </div>
 
-          <!-- TAB: LAPORAN -->
-          <div
-            v-else-if="currentSection === 'Laporan'"
-            class="flex flex-col gap-5"
+          <form
+            @submit.prevent="handleUploadReport"
+            class="flex max-w-2xl flex-col gap-4"
           >
-            <div class="flex items-start gap-3 border-b border-slate-100 pb-4">
-              <div class="rounded-xl bg-rose-50 p-3 text-[#BE123C]">
-                <Icon icon="lucide:cloud-upload" width="22" />
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-slate-800">
-                  Upload laporan {{ ekskulDetail.name }}
-                </h3>
-                <p class="mt-1 text-sm text-slate-500">
-                  Laporan disimpan otomatis pada folder tahun dan bulan berjalan
-                  di Google Drive.
-                </p>
-              </div>
+            <label
+              for="report-file"
+              class="text-sm font-semibold text-slate-700"
+            >
+              File laporan (Word atau Excel)
+            </label>
+            <input
+              id="report-file"
+              type="file"
+              accept=".doc,.docx,.xls,.xlsx"
+              :disabled="isUploadingReport"
+              @change="handleSelectReportFile"
+              class="max-w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-semibold file:text-[#9F1239] hover:file:bg-rose-100 disabled:opacity-60"
+            />
+            <p class="text-xs text-slate-500">
+              Format .doc, .docx, .xls, .xlsx · Maksimal 10 MiB
+            </p>
+
+            <div
+              v-if="selectedReportFile"
+              class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+            >
+              <Icon icon="lucide:file-check-2" width="20" class="text-[#BE123C]" />
+              <span class="min-w-0 flex-1 break-all text-sm font-medium text-slate-700">
+                {{ selectedReportFile.name }}
+              </span>
+              <span class="shrink-0 text-xs text-slate-500">
+                {{ (selectedReportFile.size / (1024 * 1024)).toFixed(2) }} MiB
+              </span>
             </div>
 
-            <form
-              @submit.prevent="handleUploadReport"
-              class="flex max-w-2xl flex-col gap-4"
+            <div
+              v-if="reportUploadMessage"
+              role="status"
+              :class="
+                reportUploadError
+                  ? 'border-rose-200 bg-rose-50 text-rose-800'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              "
+              class="flex items-start gap-2 rounded-xl border p-3 text-sm"
             >
-              <label
-                for="report-file"
-                class="text-sm font-semibold text-slate-700"
-              >
-                File laporan (Word atau Excel)
-              </label>
-              <input
-                id="report-file"
-                type="file"
-                accept=".doc,.docx,.xls,.xlsx"
-                :disabled="isUploadingReport"
-                @change="handleSelectReportFile"
-                class="max-w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-rose-50 file:px-3 file:py-2 file:font-semibold file:text-[#9F1239] hover:file:bg-rose-100 disabled:opacity-60"
-              />
-              <p class="text-xs text-slate-500">
-                Format .doc, .docx, .xls, .xlsx · Maksimal 10 MiB
-              </p>
-
-              <div
-                v-if="selectedReportFile"
-                class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
-              >
-                <Icon icon="lucide:file-check-2" width="20" class="text-[#BE123C]" />
-                <span class="min-w-0 flex-1 break-all text-sm font-medium text-slate-700">
-                  {{ selectedReportFile.name }}
-                </span>
-                <span class="shrink-0 text-xs text-slate-500">
-                  {{ (selectedReportFile.size / (1024 * 1024)).toFixed(2) }} MiB
-                </span>
-              </div>
-
-              <div
-                v-if="reportUploadMessage"
-                role="status"
-                :class="
+              <Icon
+                :icon="
                   reportUploadError
-                    ? 'border-rose-200 bg-rose-50 text-rose-800'
-                    : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    ? 'lucide:circle-alert'
+                    : 'lucide:circle-check'
                 "
-                class="flex items-start gap-2 rounded-xl border p-3 text-sm"
-              >
-                <Icon
-                  :icon="
-                    reportUploadError
-                      ? 'lucide:circle-alert'
-                      : 'lucide:circle-check'
-                  "
-                  width="18"
-                  class="mt-0.5 shrink-0"
-                />
-                {{ reportUploadMessage }}
-              </div>
+                width="18"
+                class="mt-0.5 shrink-0"
+              />
+              {{ reportUploadMessage }}
+            </div>
 
-              <button
-                type="submit"
-                :disabled="isUploadingReport || !selectedReportFile"
-                class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Icon
-                  :icon="isUploadingReport ? 'lucide:loader-2' : 'lucide:upload'"
-                  :class="isUploadingReport ? 'animate-spin' : ''"
-                  width="17"
-                />
-                {{ isUploadingReport ? "Mengunggah..." : "Upload ke Google Drive" }}
-              </button>
-            </form>
-          </div>
-        </main>
+            <button
+              type="submit"
+              :disabled="isUploadingReport || !selectedReportFile"
+              class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-[#BE123C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#9F1239] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Icon
+                :icon="isUploadingReport ? 'lucide:loader-2' : 'lucide:upload'"
+                :class="isUploadingReport ? 'animate-spin' : ''"
+                width="17"
+              />
+              {{ isUploadingReport ? "Mengunggah..." : "Upload ke Google Drive" }}
+            </button>
+          </form>
+        </div>
+      </main>
     </div>
 
     <!-- Modal Form Transaksi Kas -->
@@ -1905,6 +1939,7 @@ onMounted(() => {
         </form>
       </div>
     </Transition>
+
     <MessageModal
       :open="Boolean(uploadMessage)"
       :message="uploadMessage"
@@ -2033,6 +2068,83 @@ onMounted(() => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Modal Ubah Template Clipboard -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="isModalTemplateOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+      >
+        <div
+          class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 flex flex-col gap-5"
+        >
+          <div
+            class="flex items-center justify-between border-b border-slate-100 pb-3"
+          >
+            <h3
+              class="text-lg font-bold text-slate-800 flex items-center gap-2"
+            >
+              <Icon icon="lucide:file-pen-line" class="text-[#E0234E]" />
+              Atur Template Teks Clipboard
+            </h3>
+            <button
+              @click="isModalTemplateOpen = false"
+              class="text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <Icon icon="lucide:x" width="20" />
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Sesuaikan format teks yang otomatis disalin saat membuat kegiatan baru. Gunakan placeholder berikut: <br>
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600">{title}</code>, 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600">{waktu}</code>, 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600">{location}</code>, 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600">{description}</code>
+            </p>
+            <textarea
+              v-model="customClipboardTemplate"
+              rows="8"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-nest-600 transition-all resize-y"
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-between mt-2">
+            <button
+              type="button"
+              @click="resetCustomTemplate"
+              class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-xs transition-colors"
+            >
+              Reset Default
+            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="isModalTemplateOpen = false"
+                class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-xs transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                @click="saveCustomTemplate"
+                class="px-5 py-2.5 rounded-xl bg-nest-600 hover:bg-nest-700 text-white font-semibold text-xs transition-colors shadow-sm"
+              >
+                Simpan Template
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Transition>

@@ -5,11 +5,11 @@
 exports.up = function(knex) {
     return knex.schema.createTable('peminjaman_ruang', function(table){
         table.increments()
-        table.integer('ruang_id').unsigned()
+        table.integer('ruang_id').unsigned().index()
         table.text('description')
         table.string('peminjam')
-        table.enum('status', ['Kosong', 'Diajukan', 'Penuh'])
-        table.timestamp('waktu_peminjaman')
+        table.enum('status', ['Kosong', 'Diajukan', 'Penuh']).index()
+        table.timestamp('waktu_peminjaman').index()
         
         table.foreign('ruang_id').references('ruang.id').onDelete('CASCADE')
     })

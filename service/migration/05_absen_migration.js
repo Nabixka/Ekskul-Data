@@ -6,8 +6,8 @@ exports.up = function(knex) {
   return knex.schema.createTable('absen', function(table){
     table.increments()
     table.enum('keterangan', ['hadir', 'alpha', 'sakit', 'izin'])
-    table.integer('kegiatan_id').unsigned()
-    table.integer('member_ekskul_id').unsigned()
+    table.integer('kegiatan_id').unsigned().index()
+    table.integer('member_ekskul_id').unsigned().index()
 
     table.foreign('kegiatan_id').references('kegiatan.id').onDelete('CASCADE')
     table.foreign('member_ekskul_id').references('member_ekskul.id').onDelete('CASCADE')

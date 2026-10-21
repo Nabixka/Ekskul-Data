@@ -5,13 +5,15 @@
 exports.up = function(knex) {
   return knex.schema.createTable('member_ekskul', function(table){
     table.increments()
-    table.integer('nis_user').unsigned()
-    table.integer('ekskul_id').unsigned()
+    table.integer('nis_user').unsigned().index()
+    table.integer('ekskul_id').unsigned().index()
     table.enum('role', ['Pembina', 'Ketua', 'Wakil Ketua', 'Bendahara', 'Sekretaris', 'Humas', 'Member'])
     table.timestamp('join_date')
 
     table.foreign('nis_user').references('users.nis').onDelete('CASCADE')
     table.foreign('ekskul_id').references('ekskul.id').onDelete('CASCADE')
+
+    table.index(['nis_user', 'ekskul_id'], 'idx_member_nis_ekskul')
   })
 };
 
