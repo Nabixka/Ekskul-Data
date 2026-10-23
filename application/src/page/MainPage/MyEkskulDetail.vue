@@ -118,7 +118,7 @@ const resetCustomTemplate = () => {
 };
 
 const listSection = ref([
-  { name: "About", icon: "lucide:info" },
+  { name: "About", icon: "ix:about" },
   { name: "Anggota", icon: "lucide:users" },
   { name: "Kegiatan", icon: "lucide:calendar-range" },
   { name: "Absensi", icon: "reicon:checklist" },

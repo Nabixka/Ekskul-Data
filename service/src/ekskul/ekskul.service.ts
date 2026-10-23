@@ -63,6 +63,34 @@ export class EkskulService {
         }
     }
 
+    // Update Ekskul
+    async updateEkskul(req: { is_admin: boolean}, ekskul_id: number, name?: string, banner?: Express.Multer.File, bidang?: string){
+        if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")
+
+        if(!name && !banner && !bidang){
+            return {
+                message: "Tidak Ada Data Yang Berubah"
+            }
+        }
+
+        let payload: Record<string, any> = {}
+        if(name) payload.name = name
+        if(banner) payload.banner = `/uploads/ekskul/banner/${banner.filename}`
+        if(bidang) payload.bidang = bidang
+
+        const updateQuery = await this.databaseService.connection("ekskul")
+        .update(payload)
+        .where("id", ekskul_id)
+
+        return {
+            message: "Berhasil Update Data Ekskul",
+            data: {
+                ekskul_id: ekskul_id,
+                ...payload
+            }
+        }
+    }
+
     // Delete Ekskul
     async deleteEkskul(req: { is_admin: boolean }, id: number){
         if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")

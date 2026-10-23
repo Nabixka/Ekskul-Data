@@ -26,20 +26,25 @@ export class RuangService {
         const mappingRuangId = getAllRuang.map((item) => item.id)
 
         const weekDates: string[] = []
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 5; i++) {
             const date = new Date(monday)
             date.setDate(monday.getDate() + i)
             weekDates.push(date.toISOString().split('T')[0])
         }
 
+        const payload: any[] = []
         for (const ruangId of mappingRuangId) {
             for (const targetDate of weekDates) {
-                await this.databaseService.connection("peminjaman_ruang").insert({
+                payload.push({
                     ruang_id: ruangId,
-                    status: 'Kosong',
+                    status: "Kosong",
                     waktu_peminjaman: targetDate
                 })
             }
+        }
+
+        if (payload.length > 0) {
+        await this.databaseService.connection("peminjaman_ruang").insert(payload)
         }
 
         console.log("Berhasil Membuat Peminjaman Ruang Hari Ini ")

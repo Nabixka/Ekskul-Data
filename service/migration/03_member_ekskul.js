@@ -7,7 +7,7 @@ exports.up = function(knex) {
     table.increments()
     table.integer('nis_user').unsigned().index()
     table.integer('ekskul_id').unsigned().index()
-    table.enum('role', ['Pembina', 'Ketua', 'Wakil Ketua', 'Bendahara', 'Sekretaris', 'Humas', 'Member'])
+    table.enum('role', ['Ketua', 'Wakil Ketua', 'Bendahara', 'Sekretaris', 'Humas', 'Member'])
     table.timestamp('join_date')
 
     table.foreign('nis_user').references('users.nis').onDelete('CASCADE')
