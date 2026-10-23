@@ -97,7 +97,7 @@ export class KasService {
   private async getReportData(ekskulId: number, monthValue?: string, yearValue?: string) {
     const period = this.parsePeriod(monthValue, yearValue)
     const ekskul = await this.databaseService.connection('ekskul')
-      .select('name')
+      .select('name', 'pembina', 'pelatih')
       .where({ id: ekskulId })
       .first()
     if (!ekskul) throw new NotFoundException('Ekskul tidak ditemukan')
@@ -162,7 +162,8 @@ export class KasService {
 
     return {
       ekskulName: ekskul.name as string,
-      pembina: members.find((member) => member.role === 'Pembina')?.name || '-',
+      pembina: ekskul.pembina?.trim() || '-',
+      pelatih: ekskul.pelatih?.trim() || '-',
       ketua: members.find((member) => member.role === 'Ketua')?.name || '-',
       period,
       transactions: transactions.map((transaction) => ({
@@ -273,7 +274,10 @@ export class KasService {
     roster.getCell('A6').value = 'Ketua Ekstrakurikuler'
     roster.getCell('B6').value = `: ${report.ketua}`
     roster.mergeCells('B6:C6')
-    for (const rowNumber of [5, 6]) {
+    roster.getCell('A7').value = 'Pelatih'
+    roster.getCell('B7').value = `: ${report.pelatih}`
+    roster.mergeCells('B7:C7')
+    for (const rowNumber of [5, 6, 7]) {
       roster.getCell(`A${rowNumber}`).font = { name: 'Times New Roman', bold: true, size: 11 }
       roster.getCell(`B${rowNumber}`).font = { name: 'Times New Roman', bold: true, size: 11 }
     }

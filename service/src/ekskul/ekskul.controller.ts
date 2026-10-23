@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { EkskulService } from './ekskul.service';
 import { ValidateEkskulExist } from '../Pipe/validateEkskulExist';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -37,7 +37,7 @@ export class EkskulController {
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
           const ext = extname(file.originalname)
-          cb(null, `${file.filename}-${uniqueSuffix}${ext}`)
+          cb(null, `${uniqueSuffix}${ext}`)
         }
       })
     })
@@ -46,9 +46,34 @@ export class EkskulController {
     @Request() req,
     @Body('name') name: string ,
     @Body('bidang') bidang: string,
+    @Body('pembina') pembina: string,
+    @Body('pelatih') pelatih: string,
+    @Body('about') about: string,
     @UploadedFile() banner: Express.Multer.File,
   ) {
-    return this.ekskulService.createEkskul(req.user, name, banner, bidang)
+    return this.ekskulService.createEkskul(req.user, name, banner, bidang, pembina, pelatih, about)
+  }
+
+  @Put('/:ekskul_id')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(
+    FileInterceptor('banner', {
+      storage: diskStorage({
+        destination: './uploads/ekskul/banner',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`)
+        }
+      })
+    })
+  )
+  updateEkskul(
+    @Request() req,
+    @Param('ekskul_id', ValidateEkskulExist) ekskul_id: string,
+    @Body() data: { name?: string; bidang?: string; pembina?: string; pelatih?: string; about?: string },
+    @UploadedFile() banner?: Express.Multer.File,
+  ) {
+    return this.ekskulService.updateEkskul(req.user, Number(ekskul_id), data, banner)
   }
 
   // Delete Ekskul

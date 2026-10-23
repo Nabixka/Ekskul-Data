@@ -21,17 +21,24 @@ const listEkskul = ref([]);
 const searchEkskul = ref("");
 const selectedBidang = ref("");
 const isLoading = ref(true);
+const isSaving = ref(false);
 const message = ref("");
+const messageVariant = ref("error");
+const editingEkskulId = ref(null);
+const openActionId = ref(null);
+const deleteTarget = ref(null);
 
-const form = ref({
+const createEmptyForm = () => ({
   name: "",
   bidang: "",
-  description: "",
+  about: "",
+  pembina: "",
+  pelatih: "",
   bannerFile: null,
   bannerPreview: null,
 });
-
-const modelCreate = ref(false);
+const form = ref(createEmptyForm());
+const isFormOpen = ref(false);
 
 const getEkskul = async () => {
   isLoading.value = true;
@@ -39,7 +46,7 @@ const getEkskul = async () => {
     const res = await api.get("/ekskul");
     listEkskul.value = res.data.data;
   } catch (error) {
-    if (error.response.status === 401) {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
       router.push("/");
     }
@@ -71,28 +78,104 @@ const filteredEkskul = computed(() => {
 const handleFileUpload = (e) => {
   const file = e.target.files[0];
   if (file) {
+    if (form.value.bannerFile && form.value.bannerPreview) {
+      URL.revokeObjectURL(form.value.bannerPreview);
+    }
     form.value.bannerFile = file;
 
     form.value.bannerPreview = URL.createObjectURL(file);
   }
 };
 
-const handleCreateEkskul = async () => {
-  isLoading.value = true;
+const openCreateModal = () => {
+  if (form.value.bannerFile && form.value.bannerPreview) {
+    URL.revokeObjectURL(form.value.bannerPreview);
+  }
+  editingEkskulId.value = null;
+  form.value = createEmptyForm();
+  isFormOpen.value = true;
+};
+
+const openEditModal = (ekskul) => {
+  editingEkskulId.value = ekskul.id;
+  form.value = {
+    name: ekskul.name || "",
+    bidang: ekskul.bidang || "",
+    about: ekskul.about || "",
+    pembina: ekskul.pembina || "",
+    pelatih: ekskul.pelatih || "",
+    bannerFile: null,
+    bannerPreview: ekskul.banner ? `${API_URL}${ekskul.banner}` : null,
+  };
+  openActionId.value = null;
+  isFormOpen.value = true;
+};
+
+const closeForm = (force = false) => {
+  if (isSaving.value && !force) return;
+  if (form.value.bannerFile && form.value.bannerPreview) {
+    URL.revokeObjectURL(form.value.bannerPreview);
+  }
+  isFormOpen.value = false;
+};
+
+const handleSaveEkskul = async () => {
+  if (!form.value.name.trim() || !form.value.bidang) {
+    message.value = "Nama dan bidang ekskul wajib diisi.";
+    messageVariant.value = "error";
+    return;
+  }
+  if (!editingEkskulId.value && !form.value.bannerFile) {
+    message.value = "Banner ekskul wajib diunggah.";
+    messageVariant.value = "error";
+    return;
+  }
+
+  isSaving.value = true;
   try {
     const formData = new FormData();
-    formData.append("name", form.value.name);
+    formData.append("name", form.value.name.trim());
     formData.append("bidang", form.value.bidang);
-    formData.append("description", form.value.description);
-    formData.append("banner", form.value.bannerFile);
+    formData.append("about", form.value.about);
+    formData.append("pembina", form.value.pembina);
+    formData.append("pelatih", form.value.pelatih);
+    if (form.value.bannerFile) formData.append("banner", form.value.bannerFile);
 
-    const res = await api.post("/ekskul", formData);
-    getEkskul();
+    if (editingEkskulId.value) {
+      await api.put(`/ekskul/${editingEkskulId.value}`, formData);
+      message.value = "Data ekskul berhasil diperbarui.";
+    } else {
+      await api.post("/ekskul", formData);
+      message.value = "Ekskul berhasil ditambahkan.";
+    }
+    messageVariant.value = "success";
+    closeForm(true);
+    await getEkskul();
   } catch (error) {
     message.value =
-      error.response.data?.message || "Terjadi Kesalahan Pada Server";
+      error.response?.data?.message || "Terjadi Kesalahan Pada Server";
+    messageVariant.value = "error";
   } finally {
-    isLoading.value = false;
+    isSaving.value = false;
+  }
+};
+
+const handleDeleteEkskul = async () => {
+  if (!deleteTarget.value) return;
+  isSaving.value = true;
+  try {
+    await api.delete(`/ekskul/${deleteTarget.value.id}`);
+    message.value = `Ekskul ${deleteTarget.value.name} berhasil dihapus.`;
+    messageVariant.value = "success";
+    deleteTarget.value = null;
+    await getEkskul();
+  } catch (error) {
+    deleteTarget.value = null;
+    message.value =
+      error.response?.data?.message || "Gagal menghapus ekskul.";
+    messageVariant.value = "error";
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -103,34 +186,34 @@ onMounted(() => {
 
 <template>
   <!-- Modal -->
-  <div v-if="modelCreate" class="fixed z-50 min-h-screen w-full">
+  <div v-if="isFormOpen" class="fixed inset-0 z-50 overflow-y-auto">
     <!-- Blur -->
     <div
-      @click="modelCreate = false"
-      class="bg-black/30 backdrop-blur w-full min-h-screen absolute z-50"
+      @click="closeForm"
+      class="bg-black/30 backdrop-blur fixed inset-0 z-50"
     ></div>
 
     <!-- Card -->
-    <div class="flex justify-center items-center min-h-screen">
+    <div class="relative z-[51] flex min-h-screen items-center justify-center p-3">
       <div
-        class="absolute z-51 w-full p-3 lg:w-2/5 max-w-xl overflow-hidden rounded-2xl"
+        class="w-full max-w-xl overflow-hidden rounded-2xl shadow-xl"
       >
         <!-- Card Body -->
-        <form @submit.prevent="handleCreateEkskul()" class="bg-white p-3 rounded-2xl">
+        <form @submit.prevent="handleSaveEkskul" class="max-h-[90vh] overflow-y-auto bg-white p-3 rounded-2xl">
           <!-- Header -->
           <div class="flex p-3 justify-between">
             <div>
               <h3 class="text-lg font-bold text-slate-800">
-                Tambah Dokumentasi
+                {{ editingEkskulId ? "Edit Ekskul" : "Tambah Ekskul" }}
               </h3>
               <p class="mt-1 text-sm text-slate-500">
-                Pilih kegiatan dan gambar yang akan diunggah.
+                Lengkapi informasi ekstrakurikuler.
               </p>
             </div>
             <button
               type="button"
-              @click="modelCreate = false"
-              :disabled="isUploadingDokumentasi"
+              @click="closeForm"
+              :disabled="isSaving"
               class="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
               aria-label="Tutup modal"
             >
@@ -165,13 +248,33 @@ onMounted(() => {
               </select>
             </div>
 
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold text-slate-700">Nama Pembina</label>
+              <input
+                v-model="form.pembina"
+                class="border border-slate-200 rounded-lg py-1 p-2"
+                type="text"
+                placeholder="Masukkan Nama Pembina"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold text-slate-700">Nama Pelatih</label>
+              <input
+                v-model="form.pelatih"
+                class="border border-slate-200 rounded-lg py-1 p-2"
+                type="text"
+                placeholder="Masukkan Nama Pelatih"
+              />
+            </div>
+
             <!-- Deksripsi Ekskul -->
             <div class="flex flex-col gap-1">
               <label class="text-sm font-semibold text-slate-700"
                 >Deksripsi Ekskul</label
               >
               <textarea
-                v-model="form.description"
+                v-model="form.about"
                 rows="3"
                 cols="3"
                 class="border border-slate-200  rounded-lg py-1 p-2"
@@ -226,6 +329,7 @@ onMounted(() => {
                   accept="image/png, image/jpeg, image/jpg"
                   @change="handleFileUpload"
                   class="absolute inset-0 opacity-0 cursor-pointer"
+                  :required="!editingEkskulId"
                 />
               </div>
             </div>
@@ -234,15 +338,17 @@ onMounted(() => {
           <!-- Button -->
           <div class="flex justify-end gap-3 p-3">
             <button
-              @click="modelCreate = false"
+              type="button"
+              @click="closeForm"
               class="border border-slate-200  px-5 py-1 rounded-lg"
+              :disabled="isSaving"
             >
               Batal
             </button>
             <button
               class="bg-[#BE123C] hover:bg-[#9F1239] px-5 py-1 rounded-lg font-semibold text-white"
             >
-              Tambah
+              {{ isSaving ? "Menyimpan..." : editingEkskulId ? "Simpan Perubahan" : "Tambah" }}
             </button>
           </div>
         </form>
@@ -311,7 +417,7 @@ onMounted(() => {
               />
             </div>
             <button
-              @click="modelCreate = true"
+              @click="openCreateModal"
               class="bg-[#BE123C] hover:bg-[#9F1239] rounded-xl border shadow-sm text-white font-bold border-slate-200 py-2 px-4 flex items-center text-sm gap-1 cursor-pointer"
             >
               <Icon icon="ant-design:plus-outlined" />Tambah Ekskul Baru
@@ -343,45 +449,76 @@ onMounted(() => {
           v-else
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          <button
-            @click="router.push(`/admin/ekskul/${list.id}`)"
+          <article
             v-for="list in filteredEkskul"
             :key="list.id"
-            class="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer"
+            class="group relative overflow-visible rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
           >
-            <!-- Card Banner with Zoom Effect -->
-            <div class="w-full h-44 overflow-hidden relative bg-slate-100">
-              <img
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                :src="`${API_URL}${list.banner}`"
-                :alt="list.name"
-              />
-            </div>
+            <button
+              type="button"
+              @click="router.push(`/admin/ekskul/${list.id}`)"
+              class="flex w-full flex-col overflow-hidden rounded-2xl text-left"
+            >
+              <div class="relative h-44 w-full overflow-hidden bg-slate-100">
+                <img
+                  class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  :src="`${API_URL}${list.banner}`"
+                  :alt="list.name"
+                />
+              </div>
 
-            <!-- Card Detail -->
-            <div class="p-4 flex justify-between items-center mt-auto">
-              <!-- Left -->
-              <div class="flex flex-col items-start gap-1">
-                <h4
-                  class="font-semibold text-slate-800 text-base group-hover:text-nest-600 transition-colors"
-                >
-                  {{ list.name }}
-                </h4>
+              <div class="mt-auto flex items-center justify-between p-4">
+                <div class="flex flex-col items-start gap-1">
+                  <h4
+                    class="text-base font-semibold text-slate-800 transition-colors group-hover:text-nest-600"
+                  >
+                    {{ list.name }}
+                  </h4>
+                  <span
+                    class="w-fit rounded-full border border-nest-100 bg-nest-50 px-2.5 py-0.5 text-xs text-nest-600"
+                  >
+                    {{ list.bidang }}
+                  </span>
+                </div>
                 <span
-                  class="bg-nest-50 text-nest-600 border border-nest-100 w-fit px-2.5 py-0.5 text-xs font-medium rounded-full"
+                  class="flex items-center justify-center rounded-full bg-nest-500 p-2 text-white shadow-sm transition-transform duration-200 group-hover:translate-x-1 group-hover:bg-nest-600"
                 >
-                  {{ list.bidang }}
+                  <Icon class="h-4 w-4" icon="grommet-icons:form-next" />
                 </span>
               </div>
+            </button>
 
-              <!-- Right -->
-              <div
-                class="bg-nest-500 group-hover:bg-nest-600 rounded-full p-2 text-white shadow-sm transition-transform group-hover:translate-x-1 duration-200 flex items-center justify-center"
+            <div class="absolute right-3 top-3 z-10">
+              <button
+                type="button"
+                :aria-label="`Aksi untuk ${list.name}`"
+                :aria-expanded="openActionId === list.id"
+                @click.stop="openActionId = openActionId === list.id ? null : list.id"
+                class="rounded-lg bg-white/95 dark:bg-nest-500 p-2 text-slate-700 shadow transition hover:bg-white dark:hover:bg-nest-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
               >
-                <Icon class="w-4 h-4" icon="grommet-icons:form-next" />
+                <Icon icon="lucide:ellipsis" width="20" />
+              </button>
+              <div
+                v-if="openActionId === list.id"
+                class="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+              >
+                <button
+                  type="button"
+                  @click.stop="openEditModal(list)"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100/80"
+                >
+                  <Icon icon="lucide:pencil" width="16" /> Edit
+                </button>
+                <button
+                  type="button"
+                  @click.stop="openActionId = null; deleteTarget = list"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-rose-600 transition hover:bg-slate-100/80"
+                >
+                  <Icon icon="lucide:trash-2" width="16" /> Hapus
+                </button>
               </div>
             </div>
-          </button>
+          </article>
         </div>
       </section>
     </main>
@@ -389,6 +526,15 @@ onMounted(() => {
   <MessageModal
     :open="Boolean(message)"
     :message="message"
+    :variant="messageVariant"
     @close="message = ''"
+  />
+  <MessageModal
+    :open="Boolean(deleteTarget)"
+    :message="`Yakin ingin menghapus ekskul ${deleteTarget?.name}? Tindakan ini tidak dapat dibatalkan.`"
+    variant="confirm"
+    confirm-label="Hapus"
+    @close="deleteTarget = null"
+    @confirm="handleDeleteEkskul"
   />
 </template>

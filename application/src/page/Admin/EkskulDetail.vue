@@ -79,15 +79,9 @@ const ketua = computed(() => {
   return ketuaName.length > 0 ? ketuaName[0].name : "-";
 });
 const pembina = computed(() => {
-  if (!ekskulDetail.value.member) return "-";
-  const filterPembina = ekskulDetail.value.member.filter(
-    (item) => item.role === "Pembina",
-  );
-
-  if (filterPembina.length === 0) return "-";
-
-  return filterPembina.map((e) => e.name).join(", ");
+  return ekskulDetail.value.ekskul?.pembina?.trim() || "-";
 });
+const pelatih = computed(() => ekskulDetail.value.ekskul?.pelatih?.trim() || "-");
 
 // Ref Section
 const currentSection = ref("About");
@@ -695,6 +689,18 @@ onMounted(() => {
                 <div class="text-sm">
                   <h5 class="text-xs text-slate-500 dark:text-slate-400">Pembina</h5>
                   <h5 class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">{{ pembina }}</h5>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-rose-50/60 dark:hover:bg-rose-500/[0.07]">
+                <Icon
+                  width="20"
+                  class="mt-0.5 shrink-0 text-[#BE123C] dark:text-rose-300"
+                  icon="lucide:user-round-cog"
+                />
+                <div class="text-sm">
+                  <h5 class="text-xs text-slate-500 dark:text-slate-400">Pelatih</h5>
+                  <h5 class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">{{ pelatih }}</h5>
                 </div>
               </div>
             </div>

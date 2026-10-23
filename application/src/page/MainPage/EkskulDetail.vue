@@ -22,6 +22,14 @@ const joinMessage = ref("");
 const isSuccessJoin = ref(false);
 
 const latestKegiatan = computed(() => kegiatan.value.slice(0, 3));
+const staff = computed(() => [
+  { role: "Pembina", name: ekskul.value?.pembina?.trim() || "-" },
+  { role: "Pelatih", name: ekskul.value?.pelatih?.trim() || "-" },
+  {
+    role: "Ketua",
+    name: pengurus.value.find((person) => person.role === "Ketua")?.name || "-",
+  },
+]);
 
 const getDetail = async () => {
   isLoading.value = true;
@@ -191,25 +199,25 @@ onMounted(getDetail);
                         Struktur Organisasi
                       </p>
                       <h2 class="text-base font-bold text-slate-900 md:text-lg">
-                        Pembina & Ketua
+                        Pembina, Pelatih & Ketua
                       </h2>
                     </div>
                   </div>
                 </div>
 
                 <div
-                  v-if="pengurus.length"
+                  v-if="staff.length"
                   class="mt-5 grid gap-3.5 sm:grid-cols-2"
                 >
                   <article
-                    v-for="person in pengurus"
-                    :key="`${person.nis}-${person.role}`"
+                    v-for="person in staff"
+                    :key="person.role"
                     class="group flex items-center gap-3.5 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 transition hover:border-nest-200 hover:bg-white hover:shadow-sm dark:bg-slate-900/50 dark:hover:bg-slate-800"
                   >
                     <div
                       class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-nest-100 font-bold text-nest-700 shadow-inner dark:bg-nest-950 dark:text-nest-200"
                     >
-                      {{ person.name?.charAt(0)?.toUpperCase() || "?" }}
+                      {{ person.name !== "-" ? person.name.charAt(0).toUpperCase() : "-" }}
                     </div>
                     <div class="min-w-0">
                       <h3
@@ -228,7 +236,7 @@ onMounted(getDetail);
                   class="mt-5 rounded-2xl border border-dashed border-slate-200 p-8 text-center"
                 >
                   <p class="text-sm text-slate-400">
-                    Informasi pembina dan ketua belum tersedia.
+                    Informasi pembina, pelatih, dan ketua belum tersedia.
                   </p>
                 </div>
               </section>

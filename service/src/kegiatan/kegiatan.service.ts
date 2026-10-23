@@ -502,7 +502,7 @@ export class KegiatanService {
         const periodEnd = new Date(Date.UTC(year, month, 1) - JAKARTA_OFFSET_MS)
         const [ekskul, members, activities] = await Promise.all([
             this.databaseService.connection("ekskul")
-                .select("name")
+                .select("name", "pembina", "pelatih")
                 .where({ id: ekskulId })
                 .first(),
             this.databaseService.connection("member_ekskul")
@@ -549,7 +549,7 @@ export class KegiatanService {
                 const classDifference = String(a.jurusan ?? "").localeCompare(String(b.jurusan ?? ""), "id")
                 return classDifference || String(a.name ?? "").localeCompare(String(b.name ?? ""), "id")
             })
-        const staffName = (staffRole: string) =>
+        const memberStaffName = (staffRole: string) =>
             members.find((member) => member.role === staffRole)?.name || "-"
 
         const statusColors: Record<string, string> = {
@@ -607,9 +607,9 @@ export class KegiatanService {
         worksheet.getCell("B4").value = `TAHUN AJARAN ${academicYearStart}/${academicYearStart + 1}`
 
         for (const [rowNumber, label, value] of [
-            [6, "Pembina", staffName("Pembina")],
-            [7, "Ketua Ekstrakurikuler", staffName("Ketua")],
-            [8, "Pelatih", "-"]
+            [6, "Pembina", ekskul.pembina?.trim() || "-"],
+            [7, "Ketua Ekstrakurikuler", memberStaffName("Ketua")],
+            [8, "Pelatih", ekskul.pelatih?.trim() || "-"]
         ] as const) {
             worksheet.mergeCells(rowNumber, 2, rowNumber, 3)
             worksheet.mergeCells(rowNumber, 4, rowNumber, 5)

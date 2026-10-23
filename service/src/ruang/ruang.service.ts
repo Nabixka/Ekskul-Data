@@ -6,7 +6,7 @@ import { DatabaseService } from '../database/database.service';
 export class RuangService {
     constructor(private databaseService: DatabaseService) { }
 
-    @Cron('0 0 * * MON', {
+    @Cron('36 13 * * *', {
         timeZone: 'Asia/Jakarta'
     })
     async createRuangHariIni() {
@@ -26,7 +26,7 @@ export class RuangService {
         const mappingRuangId = getAllRuang.map((item) => item.id)
 
         const weekDates: string[] = []
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) {
             const date = new Date(monday)
             date.setDate(monday.getDate() + i)
             weekDates.push(date.toISOString().split('T')[0])

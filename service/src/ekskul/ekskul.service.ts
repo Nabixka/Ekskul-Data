@@ -49,13 +49,28 @@ export class EkskulService {
     }
 
     // Create Ekskul
-    async createEkskul(req: { is_admin: boolean }, name: string, banner: Express.Multer.File, bidang: string){
+    async createEkskul(
+        req: { is_admin: boolean },
+        name: string,
+        banner: Express.Multer.File,
+        bidang: string,
+        pembina?: string,
+        pelatih?: string,
+        about?: string
+    ){
         if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")
 
         if(!name || !banner || !bidang) throw new BadRequestException("Lengkapi Data yang dibutuhkan")
 
         const path = `/uploads/ekskul/banner/${banner.filename}`
-        const [create] = await this.databaseService.connection("ekskul").insert({ name: name, banner: path, bidang: bidang}).returning("*")
+        const [create] = await this.databaseService.connection("ekskul").insert({
+            name: name,
+            banner: path,
+            bidang: bidang,
+            pembina: pembina?.trim() || null,
+            pelatih: pelatih?.trim() || null,
+            about: about?.trim() || null
+        }).returning("*")
 
         return {
             message: "Berhasil Membuat Ekskul",
@@ -64,30 +79,43 @@ export class EkskulService {
     }
 
     // Update Ekskul
-    async updateEkskul(req: { is_admin: boolean}, ekskul_id: number, name?: string, banner?: Express.Multer.File, bidang?: string){
+    async updateEkskul(
+        req: { is_admin: boolean },
+        ekskul_id: number,
+        data: { name?: string; bidang?: string; pembina?: string; pelatih?: string; about?: string },
+        banner?: Express.Multer.File
+    ){
         if(req.is_admin !== true) throw new ForbiddenException("Hanya Sekolah Yang Dapat Melakukannya")
 
-        if(!name && !banner && !bidang){
+        if(!data.name && !banner && !data.bidang && data.pembina === undefined && data.pelatih === undefined && data.about === undefined){
             return {
                 message: "Tidak Ada Data Yang Berubah"
             }
         }
 
-        let payload: Record<string, any> = {}
-        if(name) payload.name = name
+        const payload: Record<string, unknown> = {}
+        if(data.name !== undefined) {
+            if (!data.name.trim()) throw new BadRequestException("Nama ekskul wajib diisi")
+            payload.name = data.name.trim()
+        }
         if(banner) payload.banner = `/uploads/ekskul/banner/${banner.filename}`
-        if(bidang) payload.bidang = bidang
+        if(data.bidang !== undefined) {
+            if (!data.bidang.trim()) throw new BadRequestException("Bidang ekskul wajib diisi")
+            payload.bidang = data.bidang.trim()
+        }
+        if(data.pembina !== undefined) payload.pembina = data.pembina.trim() || null
+        if(data.pelatih !== undefined) payload.pelatih = data.pelatih.trim() || null
+        if(data.about !== undefined) payload.about = data.about.trim() || null
 
-        const updateQuery = await this.databaseService.connection("ekskul")
+        const [updated] = await this.databaseService.connection("ekskul")
         .update(payload)
         .where("id", ekskul_id)
+        .returning("*")
+        if (!updated) throw new NotFoundException("Ekskul Tidak Ada")
 
         return {
             message: "Berhasil Update Data Ekskul",
-            data: {
-                ekskul_id: ekskul_id,
-                ...payload
-            }
+            data: updated
         }
     }
 
